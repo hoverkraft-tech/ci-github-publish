@@ -1,0 +1,41 @@
+name: "Create deployment"
+description: "Action to create a new deployment"
+author: Hoverkraft
+branding:
+  icon: arrow-right-circle
+  color: gray-dark
+
+outputs:
+  deployment-id:
+    description: "The id of the created deployment"
+    value: ${{ steps.create-deployment.outputs.deployment-id }}
+
+inputs:
+  environment:
+    description: "The environment to deploy to"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - id: create-deployment
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const issueNumber = context.issue?.number ?? undefined;
+
+          const ref = issueNumber
+            ? `refs/pull/${issueNumber}/head`
+            : github.ref;
+
+          const { data: deployment } = await github.rest.repos.createDeployment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref,
+            environment: `${{ inputs.environment }}`,
+            auto_merge: false,
+            transient_environment: `${{ inputs.environment }}`.startsWith('review-apps'),
+            required_contexts: [],
+          });
+
+          core.setOutput('deployment-id', deployment.id);

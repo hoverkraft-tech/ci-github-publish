@@ -1,0 +1,88 @@
+name: "Delete deployment(s)"
+description: "Action to delete some deployment(s) for the current ref. It also deletes the associated environment(s) if it is a review-app"
+author: Hoverkraft
+branding:
+  icon: trash-2
+  color: gray-dark
+
+inputs:
+  token:
+    description: "The token to use to delete the environment(s)"
+    required: false
+
+outputs:
+  deployment-ids:
+    description: "The id(s) of the deleted deployment(s). Json array format"
+    value: ${{ steps.delete-deployments.outputs.deployment-ids }}
+  environments:
+    description: "The name(s) of the environment(s) related to  deleted deployment(s). Json array format"
+    value: ${{ steps.delete-deployments.outputs.environments }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: delete-deployments
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const issueNumber = context.issue?.number ?? undefined;
+
+          const ref = issueNumber
+            ? `refs/pull/${issueNumber}/head`
+            : github.ref;
+
+          const deployments = await github.paginate(github.rest.repos.listDeployments, {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref,
+          });
+
+          const deploymentIds = [];
+          const environments = new Set();
+
+          const { data: { html_url } } = await github.rest.actions.getWorkflowRun({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id: context.runId,
+          });
+
+          for (const deployment of deployments) {
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.id,
+              state: "inactive",
+              log_url: html_url,
+              auto_inactive: true,
+            });
+
+            await github.rest.repos.deleteDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.id,
+            });
+
+            deploymentIds.push(deployment.id);
+            environments.add(deployment.environment);
+          }
+
+          core.setOutput('deployment-ids', JSON.stringify(deploymentIds));
+          core.setOutput('environments', JSON.stringify(Array.from(environments)));
+
+    - id: delete-environments
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          const environments = JSON.parse(core.getInput('environments'));
+
+          // Clean up the environment if it is a review-app
+          for (const environment of environments) {
+            if (environment.startsWith('review-apps')) {
+              await github.rest.repos.deleteAnEnvironment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                environment_name: environment,
+              });
+            }
+          }

@@ -1,0 +1,230 @@
+# Release Actions
+# ==========================
+# Reusable workflow that performs actions and workflows release.
+# - Generates README for changed actions and workflows (documentation, versioning, etc.)
+# - Commits and pushes the changes to the main branch
+
+name: Release Actions
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: "Json array of runner(s) to use. See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job."
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      update-all:
+        description: "Update all actions and workflows, regardless of changes."
+        required: false
+        default: false
+        type: boolean
+      github-app-id:
+        description: "GitHub App ID to generate GitHub token in place of private-access-token. See https://github.com/actions/create-github-app-token."
+        required: false
+        type: string
+    secrets:
+      github-token:
+        description: "GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write). See [actions/create-and-merge-pull-request](../../actions/create-and-merge-pull-request)"
+      github-app-key:
+        description: "GitHub App private key to generate GitHub token in place of github-token. See https://github.com/actions/create-github-app-token."
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-release:
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    outputs:
+      changed-actions: ${{ steps.get-changed-actions.outputs.result }}
+      changed-workflows: ${{ steps.get-changed-workflows.outputs.result }}
+      latest-tag: ${{ steps.get-latest-tag.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: get-latest-tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+
+      - id: changed-files
+        if: ${{ inputs.update-all == false }}
+        uses: tj-actions/changed-files@v45.0.5
+        with:
+          files: |
+            ./actions/*
+            ./.github/workflows/*
+          dir_names_exclude_current_dir: true
+
+      - id: changed-variables
+        shell: bash
+        run: |
+          CHANGED_FILES="${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+          echo "changed-files=$CHANGED_FILES" >> "$GITHUB_OUTPUT"
+
+          CURRENT_WORKFLOW=$(echo "${{ github.workflow_ref }}" | sed "s|${{ github.repository }}/||g" | sed 's/@.*//g')
+          CURRENT_WORKFLOW_HAS_CHANGED=$([[ "$CHANGED_FILES" == *"$CURRENT_WORKFLOW"* ]] && echo "true" || echo "false")
+          UPDATE_ALL="${{ inputs.update-all }}"
+
+          FORCE_UPDATE=$([[ "$CURRENT_WORKFLOW_HAS_CHANGED" = "true" || "$UPDATE_ALL" = "true" ]] && echo "true" || echo "false")
+          echo "force-update=$FORCE_UPDATE" >> "$GITHUB_OUTPUT"
+
+      - id: get-changed-actions
+        shell: bash
+        run: |
+          CHANGED_FILES="${{ steps.changed-variables.outputs.changed-files }}"
+          FORCE_UPDATE="${{ steps.changed-variables.outputs.force-update }}"
+
+          CHANGED_ACTIONS=()
+          while read -r FILE; do
+            ACTION_HAS_CHANGED=$([[ "$CHANGED_FILES" == *"$FILE"* ]] && echo "true" || echo "false")
+            SHOULD_UPDATE_FILE=$([[ "$FORCE_UPDATE" = "true" || "$ACTION_HAS_CHANGED" = "true" ]] && echo "true" || echo "false")
+            echo "::debug::File $FILE has changed: $ACTION_HAS_CHANGED, should update file: $SHOULD_UPDATE_FILE"
+
+            if [ "$SHOULD_UPDATE_FILE" == "true" ]; then
+              CHANGED_ACTIONS+=("$(dirname "$FILE")")
+            fi
+          done < <(find actions -name "action.yml" -type f)
+
+          echo "::debug::Changed files: ${CHANGED_ACTIONS[*]}"
+          JSON_CHANGED_ACTIONS=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${CHANGED_ACTIONS[@]}");
+          echo "result<<EOF" >> "$GITHUB_OUTPUT" && echo "$JSON_CHANGED_ACTIONS" >> "$GITHUB_OUTPUT" && echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - id: get-changed-workflows
+        shell: bash
+        run: |
+          CHANGED_FILES="${{ steps.changed-variables.outputs.changed-files }}"
+          FORCE_UPDATE="${{ steps.changed-variables.outputs.force-update }}"
+
+          CHANGED_WORKFLOWS=()
+          for FILE in .github/workflows/*.yml; do
+            # Ignore internal workflows
+            if [[ $(basename "$FILE") == __* ]]; then
+              continue
+            fi
+
+            WORKFLOW_HAS_CHANGED=$([[ "$CHANGED_FILES" == *"$FILE"* ]] && echo "true" || echo "false")
+            SHOULD_UPDATE_FILE=$([[ "$FORCE_UPDATE" = "true" || "$WORKFLOW_HAS_CHANGED" = "true" ]] && echo "true" || echo "false")
+            echo "::debug::File $FILE has changed: $WORKFLOW_HAS_CHANGED, should update file: $SHOULD_UPDATE_FILE"
+
+            if [ "$SHOULD_UPDATE_FILE" == "true" ]; then
+              CHANGED_WORKFLOWS+=("$FILE")
+            fi
+          done
+
+          echo "::debug::Changed files: ${CHANGED_WORKFLOWS[*]}"
+          JSON_CHANGED_WORKFLOWS=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${CHANGED_WORKFLOWS[@]}");
+          echo "result<<EOF" >> "$GITHUB_OUTPUT" && echo "$JSON_CHANGED_WORKFLOWS" >> "$GITHUB_OUTPUT" && echo "EOF" >> "$GITHUB_OUTPUT"
+
+  generate-actions-readme:
+    needs: prepare-release
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    if: ${{ needs.prepare-release.outputs.changed-actions != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        action: ${{ fromJson(needs.prepare-release.outputs.changed-actions) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: action-slug
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.15.0
+        with:
+          value: ${{ matrix.action }}
+
+      - id: prepare-readme-generator
+        run: |
+          jq '.paths.action = "${{ matrix.action }}/action.yml"' .ghadocs.json > .ghadocs.json.tmp
+          mv .ghadocs.json.tmp .ghadocs.json
+
+          jq '.paths.readme = "${{ matrix.action }}/README.md"' .ghadocs.json > .ghadocs.json.tmp
+          mv .ghadocs.json.tmp .ghadocs.json
+
+          WORKSPACE_PATH=$(echo "${{ github.workspace }}" | sed 's/\/\([^/]\+\)/\/*\1/')
+          echo "readme-file=${WORKSPACE_PATH}/${{ matrix.action }}/README.md" >> "$GITHUB_OUTPUT"
+
+      - name: 📖 Generate README
+        uses: bitflight-devops/github-action-readme-generator@v1.8.0
+        with:
+          action: ${{ matrix.action }}/action.yml
+          readme: ${{ matrix.action }}/README.md
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          pretty: true
+          versioning_enabled: true
+          version_prefix: ""
+          version_override: ${{ needs.prepare-release.outputs.latest-tag }}
+          branding_as_title_prefix: true
+        env:
+          INPUT_SHOW_LOGO: "true"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: changed-files-${{ steps.action-slug.outputs.result }}
+          path: ${{ steps.prepare-readme-generator.outputs.readme-file }}
+
+  generate-workflows-readme:
+    needs: prepare-release
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    if: ${{ needs.prepare-release.outputs.changed-workflows != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow: ${{ fromJson(needs.prepare-release.outputs.changed-workflows) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: workflow-slug
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.15.0
+        with:
+          value: ${{ matrix.workflow }}
+
+      - name: 📖 Generate README
+        id: generate-readme
+        run: |
+          # Readme file is same name but without yml by .md extension
+          WORKFLOW_FILE="${{ matrix.workflow }}"
+          README_FILE="${WORKFLOW_FILE%.*}.md"
+
+          WORKSPACE_PATH=$(echo "${{ github.workspace }}" | sed 's/\/\([^/]\+\)/\/*\1/')
+          echo "readme-file=${WORKSPACE_PATH}/${README_FILE}" >> "$GITHUB_OUTPUT"
+
+          WORKFLOW_FULL_PATH="${{ github.repository }}/${WORKFLOW_FILE}"
+          sed -i "s|${WORKFLOW_FULL_PATH}@.*|${WORKFLOW_FULL_PATH}@${{ needs.prepare-release.outputs.latest-tag }}|g" "${README_FILE}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: changed-files-${{ steps.workflow-slug.outputs.result }}
+          path: ${{ steps.generate-readme.outputs.readme-file }}
+
+  publish-actions-readme:
+    needs: [prepare-release, generate-actions-readme, generate-workflows-readme]
+    if: always() && (needs.prepare-release.outputs.changed-actions != '[]' || needs.prepare-release.outputs.changed-workflows != '[]')
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: changed-files-*
+          merge-multiple: true
+          path: /
+
+      - uses: actions/create-github-app-token@v1
+        if: inputs.github-app-id
+        id: generate-token
+        with:
+          app-id: ${{ inputs.github-app-id }}
+          private-key: ${{ secrets.github-app-key }}
+
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.15.0
+        with:
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          branch: docs/actions-workflows-documentation-update
+          title: "docs: update actions and workflows documentation"
+          body: Update actions and workflows documentation
+          commit-message: |
+            docs: update actions and workflows documentation
+
+            [skip ci]

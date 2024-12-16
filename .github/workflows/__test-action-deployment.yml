@@ -1,0 +1,43 @@
+name: Internal - Tests for deployment actions
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  tests:
+    name: Tests for deployment actions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: create-deployment
+        uses: ./actions/deployment/create
+        with:
+          environment: "review-apps"
+
+      - name: Check create outputs
+        run: |
+          if [ -z "${{ steps.create-deployment.outputs.deployment-id }}" ]; then
+            echo "Create deployment id output is not set"
+            exit 1
+          fi
+
+      - id: update-deployment
+        uses: ./actions/deployment/update
+        with:
+          deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
+          state: "in_progress"
+
+      - id: delete-deployment
+        uses: ./actions/deployment/delete
+
+      - name: Check delete outputs
+        run: |
+          if [ -z "${{ steps.delete-deployment.outputs.deployment-ids }}" ]; then
+            echo "Delete deployment ids output is not set"
+            exit 1
+          fi

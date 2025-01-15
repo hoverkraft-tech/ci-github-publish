@@ -26,7 +26,12 @@ runs:
 
           const ref = issueNumber
             ? `refs/pull/${issueNumber}/head`
-            : github.ref;
+            : context.ref;
+
+          if (!ref) {
+            core.setFailed('No ref found.');
+            return;
+          }
 
           const { data: deployment } = await github.rest.repos.createDeployment({
             owner: context.repo.owner,

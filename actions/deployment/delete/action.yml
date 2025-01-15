@@ -1,5 +1,5 @@
 name: "Delete deployment(s)"
-description: "Action to delete some deployment(s) for the current ref. It also deletes the associated environment(s) if it is a review-app"
+description: "Action to delete some deployment(s) for the current ref. It also deletes the associated review apps environment(s) if any."
 author: Hoverkraft
 branding:
   icon: trash-2
@@ -7,15 +7,15 @@ branding:
 
 inputs:
   token:
-    description: "The token to use to delete the environment(s)"
+    description: "The token to use to delete the review apps environment(s). It needs the `repo` scope."
     required: false
 
 outputs:
   deployment-ids:
-    description: "The id(s) of the deleted deployment(s). Json array format"
+    description: "The id(s) of the deleted deployment(s). Json array format."
     value: ${{ steps.delete-deployments.outputs.deployment-ids }}
   environments:
-    description: "The name(s) of the environment(s) related to  deleted deployment(s). Json array format"
+    description: "The name(s) of the environment(s) related to  deleted deployment(s). Json array format."
     value: ${{ steps.delete-deployments.outputs.environments }}
 
 runs:
@@ -66,23 +66,23 @@ runs:
             environments.add(deployment.environment);
           }
 
+          const reviewAppsEnvironments = Array.from(environments).filter((environment) => environment.startsWith('review-apps'));
+
           core.setOutput('deployment-ids', JSON.stringify(deploymentIds));
           core.setOutput('environments', JSON.stringify(Array.from(environments)));
+          core.setOutput('review-apps-environments', JSON.stringify(reviewAppsEnvironments));
 
-    - id: delete-environments
+    - id: delete-review-apps-environments
+      if: steps.delete-deployments.outputs.review-apps-environments != '[]'
       uses: actions/github-script@v7
       with:
         github-token: ${{ inputs.token }}
         script: |
-          const environments = JSON.parse(core.getInput('environments'));
-
-          // Clean up the environment if it is a review-app
-          for (const environment of environments) {
-            if (environment.startsWith('review-apps')) {
-              await github.rest.repos.deleteAnEnvironment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                environment_name: environment,
-              });
-            }
+          const reviewAppsEnvironments = JSON.parse(`${{ steps.delete-deployments.outputs.review-apps-environments }}`);
+          for (const environment of reviewAppsEnvironments) {
+            await github.rest.repos.deleteAnEnvironment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              environment_name: environment,
+            });
           }

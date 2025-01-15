@@ -16,3 +16,4 @@ jobs:
   test-action-docker-build-image:
     needs: linter
     uses: ./.github/workflows/__test-action-deployment.yml
+    secrets: inherit

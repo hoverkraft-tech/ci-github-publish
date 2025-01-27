@@ -25,6 +25,7 @@ Set permissions to write deployments.
 
 ```yaml
 permissions:
+  actions: read
   deployments: write
 ```
 

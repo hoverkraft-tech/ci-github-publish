@@ -11,6 +11,10 @@ Opinionated GitHub Actions and workflows for streamlined release, deployment, an
 
 ## Actions
 
+### Deploy
+
+#### - [GitHub Pages](actions/deploy/github-pages/README.md)
+
 ### Deployment
 
 #### - [Create](actions/deployment/create/README.md)

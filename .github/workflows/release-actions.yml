@@ -61,7 +61,7 @@ jobs:
         uses: tj-actions/changed-files@v45.0.6
         with:
           files: |
-            ./actions/*
+            ./actions/**
             ./.github/workflows/*
           dir_names_exclude_current_dir: true
 

@@ -1,0 +1,30 @@
+name: "Jampack"
+description: "Action to run Jampack post-processing tool on given static assets."
+author: Hoverkraft
+branding:
+  icon: package
+  color: gray-dark
+
+inputs:
+  path:
+    description: "Path of the directory containing the static assets."
+    required: true
+    default: "."
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: "/tmp/.jampack"
+        key: jampack-${{ github.run_id }}
+        restore-keys: |
+          jampack
+
+    - uses: actions/setup-node@v4
+      with:
+        cache: npm
+
+    - shell: bash
+      run: |
+        npx @divriots/jampack --cache_folder "/tmp/.jampack" ${{ inputs.path }}
+        rm -rf ${{ inputs.path }}/_jampack

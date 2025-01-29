@@ -1,0 +1,71 @@
+name: "Deploy - Github Pages"
+description: "Action to deploy a static site to Github Pages."
+author: Hoverkraft
+branding:
+  icon: send
+  color: gray-dark
+
+inputs:
+  build-artifact-name:
+    description: 'The name of the "build" artifact to download.'
+    required: false
+    default: "build"
+  build-assets-path:
+    description: "The path to the build assets to deploy."
+    required: false
+    default: "."
+  budget-path:
+    description: "The path to the performance budget file. See <../lighthouse/README.md>."
+    required: false
+    default: "./budget.json"
+
+outputs:
+  url:
+    description: "The URL of the deployed site."
+    value: ${{ steps.deployment.outputs.page_url }}
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
+      run: mkdir -p ./self-github-pages-action/ && cp -r $GITHUB_ACTION_PATH/../* ./self-github-pages-action/
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: /
+
+    - shell: bash
+      run: |
+        if [ ! -d ${{ inputs.build-assets-path }} ]; then
+          echo "::error::Build assets path does not exist: ${{ inputs.build-assets-path }}"
+          exit 1
+        fi
+
+    - uses: ./self-github-pages-action/jampack
+      with:
+        path: ${{ inputs.build-assets-path }}
+
+    - name: 📦 Upload website build artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ${{ inputs.build-assets-path }}
+
+    - name: ⚙️ Setup Pages
+      uses: actions/configure-pages@v5
+
+    - name: 🚀 Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+    - name: 🔭 Check the site is up
+      uses: srt32/uptime@v0.2.1
+      with:
+        url-to-hit: ${{ steps.deployment.outputs.page_url }}
+        expected-statuses: "200"
+
+    - uses: ./self-github-pages-action/lighthouse
+      with:
+        urls: ${{ steps.deployment.outputs.page_url }}
+        budget-path: ${{ inputs.budget-path }}

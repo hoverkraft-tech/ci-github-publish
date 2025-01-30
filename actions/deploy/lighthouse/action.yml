@@ -23,4 +23,3 @@ runs:
         urls: ${{ inputs.urls }}
         budgetPath: ${{ inputs.budget-path }}
         uploadArtifacts: true
-        temporaryPublicStorage: true

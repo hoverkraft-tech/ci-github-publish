@@ -30,6 +30,16 @@ Action to create a new deployment
 <!-- end description -->
 <!-- start contents -->
 <!-- end contents -->
+
+## Usage
+
+Set permissions to write deployments.
+
+```yaml
+permissions:
+  deployments: write
+```
+
 <!-- start usage -->
 
 ```yaml
@@ -41,14 +51,6 @@ Action to create a new deployment
 ```
 
 <!-- end usage -->
-
-Set permissions to write deployments.
-
-```yaml
-permissions:
-  deployments: write
-```
-
 <!-- start inputs -->
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

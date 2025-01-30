@@ -31,6 +31,8 @@ Action to delete some deployment(s) for the current ref. It also deletes the ass
 <!-- start contents -->
 <!-- end contents -->
 
+## Usage
+
 Set permissions to write deployments.
 
 ```yaml

@@ -31,6 +31,8 @@ Action to update a deployment. Create a new status.
 <!-- start contents -->
 <!-- end contents -->
 
+## Usage
+
 Set permissions to write deployments.
 
 ```yaml

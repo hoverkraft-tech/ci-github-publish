@@ -1,5 +1,5 @@
-name: "Deploy - Github Pages"
-description: "Action to deploy a static site to Github Pages."
+name: "Deploy - GitHub Pages"
+description: "Action to deploy a static site to GitHub Pages."
 author: Hoverkraft
 branding:
   icon: send
@@ -11,7 +11,7 @@ inputs:
     required: false
     default: "build"
   build-assets-path:
-    description: "The path to the build assets to deploy. Default: "
+    description: "The path to the build assets to deploy. Can be absolute or relative $GITHUB_WORKSPACE."
     required: false
   budget-path:
     description: "The path to the performance budget file. See <../lighthouse/README.md>."
@@ -26,34 +26,44 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - id: download-artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.build-artifact-name }}
+        path: "/"
+
+    - id: prepare-variables
+      shell: bash
+      run: |
+        DOWNLOAD_PATH="${{ steps.download-artifact.outputs.download-path }}"
+        if [ "$DOWNLOAD_PATH" = "/" ]; then
+          DOWNLOAD_PATH="$GITHUB_WORKSPACE"
+        fi
+
+        BUILD_ASSETS_PATH="${{ inputs.build-assets-path }}"
+        if [[ ! "$BUILD_ASSETS_PATH" =~ ^/ ]]; then
+          BUILD_ASSETS_PATH="$DOWNLOAD_PATH/$BUILD_ASSETS_PATH"
+        fi
+
+        if [ ! -d "$BUILD_ASSETS_PATH" ]; then
+          echo "::error::Build assets does not exist in downloaded artifact: $BUILD_ASSETS_PATH"
+          exit 1
+        fi
+
+        echo "build-assets-path=$BUILD_ASSETS_PATH" >> "$GITHUB_OUTPUT"
+
     - shell: bash
       # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
       run: mkdir -p ./self-github-pages-action/ && cp -r $GITHUB_ACTION_PATH/../* ./self-github-pages-action/
 
-    - id: download-artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ inputs.artifact-name }}
-        path: /
-
-    - shell: bash
-      run: |
-        DOWNLOAD_PATH="${{ steps.download-artifact.outputs.download-path }}"
-        BUILD_ASSETS_PATH="$DOWNLOAD_PATH/${{ inputs.build-assets-path }}"
-
-        if [ ! -d "$BUILD_ASSETS_PATH" ]; then
-          echo "::error::Build assets path does not exist in downloaded artifact"
-          exit 1
-        fi
-
     - uses: ./self-github-pages-action/jampack
       with:
-        path: ${{ inputs.build-assets-path }}
+        path: ${{ steps.prepare-variables.outputs.build-assets-path }}
 
     - name: 📦 Upload website build artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ${{ inputs.build-assets-path }}
+        path: ${{ steps.prepare-variables.outputs.build-assets-path }}
 
     - name: ⚙️ Setup Pages
       uses: actions/configure-pages@v5

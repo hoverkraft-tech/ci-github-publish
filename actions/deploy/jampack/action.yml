@@ -13,16 +13,26 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/cache@v4
+    - uses: actions/setup-node@v4.1.0
+
+    - id: npm-cache-dir
+      shell: bash
+      run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/cache@v4.2.0
+      id: npm-cache
+      with:
+        path: ${{ steps.npm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-node-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - uses: actions/cache@v4.2.0
       with:
         path: "/tmp/.jampack"
-        key: jampack-${{ github.run_id }}
+        key: ${{ runner.os }}-jampack-${{ github.run_id }}
         restore-keys: |
-          jampack
-
-    - uses: actions/setup-node@v4
-      with:
-        cache: npm
+          ${{ runner.os }}-jampack-
 
     - shell: bash
       run: |

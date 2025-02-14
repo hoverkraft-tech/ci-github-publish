@@ -58,7 +58,7 @@ jobs:
 
       - id: changed-files
         if: ${{ inputs.update-all == false }}
-        uses: tj-actions/changed-files@v45.0.6
+        uses: tj-actions/changed-files@v45.0.7
         with:
           files: |
             ./actions/**
@@ -137,7 +137,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - id: action-slug
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.16.0
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.17.0
         with:
           value: ${{ matrix.action }}
 
@@ -184,7 +184,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - id: workflow-slug
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.16.0
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.17.0
         with:
           value: ${{ matrix.workflow }}
 
@@ -226,7 +226,7 @@ jobs:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.16.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.17.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: docs/actions-workflows-documentation-update

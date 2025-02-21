@@ -1,0 +1,101 @@
+# Release Actions
+# ==========================
+# Reusable workflow that performs actions and workflows release.
+# - Generates README for changed actions and workflows (documentation, versioning, etc.)
+# - Commits and pushes the changes to the main branch
+
+name: Release Actions
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          Json array of runner(s) to use.
+          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+    secrets:
+      github-token:
+        description: |
+          GitHub token with permissions `contents: write`, `pull-requests: write`.
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pull-request-labeler:
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: release-drafter/release-drafter@v6.1.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          disable-releaser: true
+
+  release-configuration:
+    if: github.event_name == 'push' && github.event.ref == github.event.repository.default_branch
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    steps:
+      - id: get-config
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const configPath = '.github/release-drafter.yml';
+            core.setOutput('path', configPath);
+
+            const config = `
+            template: |
+              # What's Changed
+              $CHANGES
+              **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...$RESOLVED_VERSION
+            name-template: "Version $RESOLVED_VERSION"
+            tag-template: "$RESOLVED_VERSION"
+            prerelease-identifier: "rc"
+            version-resolver:
+              major:
+                labels:
+                  - "release-major"
+              minor:
+                labels:
+                  - "release-minor"
+              patch:
+                labels:
+                  - "release-patch"
+              default: patch
+            autolabeler:
+              - label: "release-major"
+                title:
+                  - "/^BREAKING CHANGE:/"
+              - label: "release-minor"
+                title:
+                  - "/^feat:/"
+                  - "/^feat\\(.+\\):/"
+            `;
+
+            core.setOutput('config', config);
+
+      - if: steps.get-config.outputs.config
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          sparse-checkout: ${{ steps.get-config.outputs.path }}
+
+      - if: steps.get-config.outputs.config
+        shell: bash
+        run: |
+          echo "${{ steps.get-config.outputs.config }}" > ${{ steps.get-config.outputs.path }}
+
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.16.0
+        with:
+          github-token: ${{ github.token }}
+          branch: ci/prepare-release-config
+          title: "ci: prepare release configuration"
+          body: "Prepare release configuration"
+          commit-message: |
+            ci: prepare release configuration
+
+            [skip ci]

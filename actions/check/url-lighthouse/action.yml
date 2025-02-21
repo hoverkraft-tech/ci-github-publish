@@ -1,13 +1,13 @@
-name: "Lighthouse"
-description: "Action to run Lighthouse audits on given URLs."
+name: "Check - Url - Lighthouse"
+description: "Action to run Lighthouse audits on given URL."
 author: Hoverkraft
 branding:
   icon: sun
   color: gray-dark
 
 inputs:
-  urls:
-    description: "The URLs to audit using Lighthouse."
+  url:
+    description: "The URL to audit using Lighthouse."
     required: true
   budget-path:
     description: "The path to the performance budget file. See <https://web.dev/articles/use-lighthouse-for-performance-budgets>."
@@ -17,9 +17,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: 🚦 Audit URLs using Lighthouse
-      uses: treosh/lighthouse-ci-action@v12
+    - uses: treosh/lighthouse-ci-action@v12
       with:
-        urls: ${{ inputs.urls }}
+        urls: ${{ inputs.url }}
         budgetPath: ${{ inputs.budget-path }}
         uploadArtifacts: true

@@ -1,0 +1,23 @@
+name: "Check - Url - Uptime"
+description: "Action to run uptime check on given URL."
+author: Hoverkraft
+branding:
+  icon: sun
+  color: gray-dark
+
+inputs:
+  url:
+    description: "The URL to check."
+    required: true
+  expected-statuses:
+    description: "Expected HTTP status codes. Comma separated list."
+    required: false
+    default: "200"
+
+runs:
+  using: composite
+  steps:
+    - uses: srt32/uptime@v0.2.1
+      with:
+        url-to-hit: ${{ inputs.url }}
+        expected-statuses: ${{ inputs.expected-statuses }}

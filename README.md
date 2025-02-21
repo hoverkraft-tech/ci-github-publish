@@ -11,11 +11,25 @@ Opinionated GitHub Actions and workflows for streamlined release, deployment, an
 
 ## Actions
 
+### Checks
+
+_Actions for validating the result of a deploy._
+
+#### - [URL - Lighthouse](actions/check/url-lighthouse/README.md)
+
+#### - [URL - Uptime](actions/check/url-uptime/README.md)
+
 ### Deploy
+
+_Actions for deploying to various platforms._
+
+#### - [Argocd App of Apps](actions/deploy/argocd-app-of-apps/README.md)
 
 #### - [GitHub Pages](actions/deploy/github-pages/README.md)
 
 ### Deployment
+
+_Actions for managing deployments._
 
 #### - [Create](actions/deployment/create/README.md)
 
@@ -25,13 +39,19 @@ Opinionated GitHub Actions and workflows for streamlined release, deployment, an
 
 ### Release
 
+_Actions for managing releases._
+
 #### - [Create](actions/release/create/README.md)
 
 ## Reusable Workflows
 
-### - [Prepare release](.github/workflows/prepare-release.md)
+### Releases
 
-### - [Release actions](.github/workflows/release-actions.md)
+_Reusable workflows for managing release process._
+
+#### - [Prepare release](.github/workflows/prepare-release.md)
+
+#### - [Release actions](.github/workflows/release-actions.md)
 
 ## Contributing
 

@@ -90,7 +90,7 @@ jobs:
         run: |
           echo "${{ steps.get-config.outputs.config }}" > ${{ steps.get-config.outputs.path }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.16.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.17.0
         with:
           github-token: ${{ github.token }}
           branch: ci/prepare-release-config

@@ -23,7 +23,13 @@ Opinionated GitHub Actions and workflows for streamlined release, deployment, an
 
 #### - [Update](actions/deployment/update/README.md)
 
+### Release
+
+#### - [Create](actions/release/create/README.md)
+
 ## Reusable Workflows
+
+### - [Prepare release](.github/workflows/prepare-release.md)
 
 ### - [Release actions](.github/workflows/release-actions.md)
 

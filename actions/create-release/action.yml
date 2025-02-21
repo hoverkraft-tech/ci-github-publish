@@ -1,0 +1,27 @@
+name: "Create release"
+description: "Action to create a new release"
+author: Hoverkraft
+branding:
+  icon: bookmark
+  color: gray-dark
+
+inputs:
+  pre-release:
+    description: "Whether the release is a pre-release"
+    required: false
+    default: "false"
+
+outputs:
+  version:
+    description: "The tag of the release"
+    value: ${{ steps.get-release-tag.outputs.tag }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - id: get-release-tag
+      uses: mooltiverse/nyx-github-action@main

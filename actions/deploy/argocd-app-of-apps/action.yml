@@ -1,0 +1,123 @@
+name: Deploy to ArgoCD App of Apps
+description: |
+  Action to deploy an application to a repository implementing ArgoCD App of Apps pattern.
+  See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern>
+
+  the workflow dispatches an event to the target repository.
+  The target repository should implement the reusable workflow [argocd-app-of-apps-handle-dispatch](../../../.github/workflows/argocd-app-of-apps-handle-dispatch.md).
+
+inputs:
+  target-repository:
+    description: "Target repository implementing ArgoCD App of Apps pattern"
+    required: true
+  dispatch-token:
+    description: "GitHub Token for dispatch an event to a remote repository. See <https://github.com/peter-evans/repository-dispatch#usage>"
+    required: true
+  chart:
+    description: "Chart to deploy. Example: ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0"
+    required: true
+  chart-values:
+    description: "Chart values to be sent to deployment"
+    required: true
+  target:
+    description: "Destination where to deploy given chart"
+    required: true
+  url:
+    description: "The URL which respond to deployed application"
+    required: true
+
+outputs:
+  url:
+    description: "URL of the deployed application"
+    value: ${{ steps.deployment.outputs.url }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: set-chart-values
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const deployChartValuesInput = `${{ inputs.deploy-chart-values }}`;
+
+          let deployChartValues;
+          try{
+            deployChartValues = JSON.parse(deployChartValuesInput);
+          } catch (e) {
+            core.setFailed(`Invalid JSON for deploy-chart-values: ${e.message}`);
+          }
+
+          const chartInput = `${{ inputs.chart }}`;
+          const version = chartInput.split(":").pop();
+          if (!version) {
+            core.setFailed(`Unable to extract version from given chart input: ${chartInput}`);
+          }
+
+          const placeholders = [
+            { match: /{{\s*url\s*}}/, value: `${{ inputs.url }}` },
+            { match: /{{\s*version\s*}}/, value: version }
+          ];
+
+          deployChartValues = deployChartValues.map((deployChartValue) => {
+            for (const placeholder of placeholders) {
+              deployChartValue.value = deployChartValue.value.replace(placeholder.match, placeholder.value);
+            }
+            return deployChartValue;
+          });
+
+          core.setOutput("chart-values", JSON.stringify(deployChartValues));
+
+    - uses: peter-evans/repository-dispatch@v3
+      with:
+        token: ${{ inputs.dispatch-token }}
+        repository: ${{ inputs.target-repository }}
+        event-type: deploy
+        client-payload: |
+          {
+            "repository": "${{ github.event.repository.name }}",
+            "chart": "${{ inputs.chart }}",
+            "target": "${{ inputs.target }}",
+            "url": "${{ inputs.url }}",
+            "chart-values": ${{ toJSON(steps.set-chart-values.outputs.chart-values) }}
+          }
+
+    # FIXME: should be notified by argocd
+    - name: Wait for new version to be synced
+      shell: bash
+      run: sleep 180s
+
+    - id: deployment
+      shell: bash
+      run: echo "url=https://${{ inputs.url }}" >> $GITHUB_OUTPUT
+
+    # jscpd:ignore-start
+
+    # Url checks
+    - uses: ./self-github-pages-action/check/url-uptime
+      with:
+        url: ${{ steps.deployment.outputs.page_url }}
+
+    - uses: ./self-github-pages-action/check/url-lighthouse
+      with:
+        url: ${{ steps.deployment.outputs.page_url }}
+        budget-path: ${{ inputs.budget-path }}
+
+    # jscpd:ignore-end
+
+    - shell: bash
+      run: |
+        STEP_SUMMARY=$(cat << EOF
+        ### Application has been deployed to _${{ inputs.target }}_ :rocket:
+
+        Here it is: <${{ steps.deployment.outputs.url }}>
+
+        \`\`\`
+        ${{ steps.deployment.outputs.url }}
+        \`\`\`
+
+        * Target: ${{ inputs.target }}
+        * Chart: ${{ inputs.chart }}
+        EOF
+        )
+
+        echo "$STEP_SUMMARY" >> $GITHUB_STEP_SUMMARY

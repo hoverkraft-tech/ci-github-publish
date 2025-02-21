@@ -1,8 +1,9 @@
-# Release Actions
+# Prepare release
 # ==========================
-# Reusable workflow that performs actions and workflows release.
-# - Generates README for changed actions and workflows (documentation, versioning, etc.)
-# - Commits and pushes the changes to the main branch
+# Reusable workflow that performs release preparation tasks:
+#
+# - Add proper labels to pull requests
+# - Ensure release configuration is up to date
 
 name: Release Actions
 

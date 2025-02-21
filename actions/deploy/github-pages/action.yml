@@ -72,13 +72,16 @@ runs:
       id: deployment
       uses: actions/deploy-pages@v4
 
-    - name: 🔭 Check the site is up
-      uses: srt32/uptime@v0.2.1
-      with:
-        url-to-hit: ${{ steps.deployment.outputs.page_url }}
-        expected-statuses: "200"
+    # jscpd:ignore-start
 
-    - uses: ./self-github-pages-action/lighthouse
+    # Url checks
+    - uses: ./self-github-pages-action/check/url-uptime
       with:
-        urls: ${{ steps.deployment.outputs.page_url }}
+        url: ${{ steps.deployment.outputs.page_url }}
+
+    - uses: ./self-github-pages-action/check/url-lighthouse
+      with:
+        url: ${{ steps.deployment.outputs.page_url }}
         budget-path: ${{ inputs.budget-path }}
+
+    # jscpd:ignore-end

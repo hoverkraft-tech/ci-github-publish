@@ -85,3 +85,18 @@ runs:
         budget-path: ${{ inputs.budget-path }}
 
     # jscpd:ignore-end
+
+    - shell: bash
+      run: |
+        STEP_SUMMARY=$(cat << EOF
+        ### Github Page has been deployed :rocket:
+
+        Here it is: <${{ steps.deployment.outputs.page_url }}>
+
+        \`\`\`
+        ${{ steps.deployment.outputs.page_url }}
+        \`\`\`
+        EOF
+        )
+
+        echo "$STEP_SUMMARY" >> $GITHUB_STEP_SUMMARY

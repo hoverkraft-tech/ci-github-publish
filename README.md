@@ -23,7 +23,7 @@ _Actions for validating the result of a deploy._
 
 _Actions for deploying to various platforms._
 
-#### - [Argocd App of Apps](actions/deploy/argocd-app-of-apps/README.md)
+#### - [Helm repository dispatch](actions/deploy/helm-repository-dispatch/README.md)
 
 #### - [GitHub Pages](actions/deploy/github-pages/README.md)
 
@@ -50,6 +50,8 @@ _Actions for managing releases._
 _Reusable workflows for managing release process._
 
 #### - [Prepare release](.github/workflows/prepare-release.md)
+
+#### - [Release & Deploy chart](.github/workflows/release-deploy-chart.yml)
 
 #### - [Release actions](.github/workflows/release-actions.md)
 

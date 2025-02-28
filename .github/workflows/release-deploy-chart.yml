@@ -1,0 +1,229 @@
+# Release & deploy chart
+# ==========================
+# Reusable workflow that performs some release(s) and deployment(s) of a chart.
+#
+# - Builds OCI images.
+# - Creates a release (tag).
+# - Releases the chart.
+# - Supports multiple chained environments.
+# - Supports multiple deployment types.
+# - Allows to clean up previous environments after successful deployment.
+
+name: Release & Deploy chart
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          Json array of runner(s) to use.
+          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      environments:
+        description: |
+          Environments to use.
+          See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>.
+
+          Can be a comma separated list (e.g. `staging,production`), a multiline string (e.g. `staging\nproduction"`) or json array, e.g. `["staging", "production"]`.
+        type: string
+      deploy-type:
+        description: |
+          Type of deployment to perform.
+          Supported values:
+            - [`helm-repository-dispatch`](../../actions/deploy/helm-repository-dispatch/README.md).
+        type: string
+      oci-registry:
+        type: string
+        description: "OCI registry where to pull and push images and chart."
+        required: true
+      images:
+        description: |
+          Images to build parameters.
+          See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/.github/workflows/docker-build-images.md>.
+        type: string
+        required: true
+      chart-values:
+        description: |
+          Define chart values to be filled.
+          See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.
+        type: string
+        required: true
+    secrets:
+      oci-registry-password:
+        description: "OCI registry password."
+        required: true
+
+permissions:
+  contents: write
+  issues: read
+  packages: write
+  pull-requests: read
+  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+  id-token: write
+
+jobs:
+  prepare-release:
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    outputs:
+      images: ${{ steps.set-images-tag.outputs.images }}
+      tag: ${{ steps.create-release.outputs.tag }}
+      environments: ${{ steps.prepare-environments.outputs.environments }}
+    steps:
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@v3
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          echo "self-workflow" >> .gitignore
+          echo "self-workflow" >> .dockerignore
+
+      - id: prepare-environments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const environmentsInput = `${{ inputs.environments }}`.trim();
+
+            if (!environmentsInput) {
+              core.setFailed(`Input "environments" expected to be non-empty.`);
+            }
+
+            let environments;
+
+            // If is JSON array, parse it
+            if(environmentsInput.startsWith('[')) {
+              try{
+                environments = JSON.parse(environmentsInput);
+              } catch (e) {
+                core.setFailed(`Invalid JSON for "environments" input: ${e.message}`);
+              }
+
+              if (!Array.isArray(environments)) {
+                core.setFailed(`Input "environments" expected to be a JSON array.`);
+              }
+            } else {
+              // If is comma separated list, split it
+              environments = environmentsInput.split(/[\s,]+/);
+
+              // If is multiline string, split it
+              if (environmentsInput.includes('\n')) {
+                environments = environmentsInput.split(/\s*\n\s*/);
+              }
+
+              if (!environments.length) {
+                core.setFailed(`Input "environments" expected to be non-empty.`);
+              }
+            }
+
+            core.setOutput("environments", JSON.stringify(environments));
+
+      - id: create-release
+        uses: ./self-workflow/actions/release/create
+
+      - id: set-images-tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = `${{ steps.create-release.outputs.tag }}`;
+
+            const imagesInput = `${{ inputs.images }}`;
+
+            // Check if is valid Json
+            let images = null;
+            try {
+              images = JSON.parse(imagesInput);
+            } catch (error) {
+              throw new Error(`"images" input is not a valid JSON: ${error}`);
+            }
+
+            // Check if images are valid
+            if (!Array.isArray(images)) {
+              throw new Error(`"images" input is not a valid array: ${images}`);
+            }
+
+            images.forEach((image) => { image.tag = tag; });
+
+            core.setOutput('images', JSON.stringify(images));
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@v4
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+
+  build-oci-images:
+    needs: prepare-release
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@0.20.2
+    with:
+      oci-registry: ${{ inputs.oci-registry }}
+      images: ${{ needs.prepare-release.outputs.images }}
+    secrets:
+      oci-registry-password: ${{ secrets.oci-registry-password }}
+
+  release-helm-chart:
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    needs: [build-oci-images, prepare-release]
+    outputs:
+      chart: ${{ steps.release.outputs.chart }}
+    steps:
+      - id: release
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@0.20.2
+        with:
+          oci-registry: ${{ inputs.oci-registry }}
+          chart-values: ${{ inputs.chart-values }}
+          tag: ${{ needs.prepare-release.outputs.tag }}
+          built-images: ${{ needs.build-oci-images.outputs.built-images }}
+          oci-registry-password: ${{ secrets.oci-registry-password }}
+
+  deploy-chart:
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    needs: [prepare-release, release-helm-chart]
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        environment: ${{ fromJson(needs.prepare-release.outputs.environments) }}
+    environment: ${{ matrix.environment }}
+    steps:
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@v3
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          echo "self-workflow" >> .gitignore
+          echo "self-workflow" >> .dockerignore
+
+      - if: ${{ inputs.deploy-type == 'helm-repository-dispatch' }}
+        uses: ./self-workflow/actions/deploy/helm-repository-dispatch
+        with:
+          chart: ${{ needs.release-helm-chart.outputs.chart }}
+          environment: ${{ matrix.environment }}
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@v4
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions

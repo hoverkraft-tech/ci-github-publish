@@ -1,0 +1,118 @@
+name: Deploy Helm chart via a repository dispatch
+description: |
+  Action to deploy an Helm chart via GitHub repository dispatch event.
+  See <https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event>.
+  See <https://github.com/peter-evans/repository-dispatch>.
+
+  The target repository should implement a workflow that handle this dispatch event.
+  See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#repository_dispatch>.
+
+inputs:
+  dispatch-token:
+    description: "GitHub Token for dispatch an event to a remote repository. See <https://github.com/peter-evans/repository-dispatch#usage>."
+    required: true
+  chart:
+    description: |
+      Chart to deploy. Example: "ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0".
+    required: true
+  chart-values:
+    description: |
+      Chart values to be sent to deployment. JSON array.
+      Example: '[{"path":".application.test","value":"ok"}]'.
+    required: false
+  repository:
+    description: "Target repository where to deploy given chart."
+    required: true
+  environment:
+    description: "Destination where to deploy given chart."
+    required: true
+  url:
+    description: "The URL which respond to deployed application."
+    required: true
+
+outputs:
+  url:
+    description: "URL of the deployed application"
+    value: ${{ steps.deployment.outputs.url }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: set-chart-values
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const chartValuesInput = `${{ inputs.chart-values }}`.trim();
+
+          if (!chartValuesInput.length) {
+            core.setOutput("chart-values", JSON.stringify([]));
+            return;
+          }
+
+          let chartValues;
+          try{
+            chartValues = JSON.parse(chartValuesInput);
+          } catch (e) {
+            core.setFailed(`Invalid JSON for chart-values: ${e.message}`);
+          }
+
+          if (!Array.isArray(chartValues)) {
+            core.setFailed(`Input "chart-values" expected to be a JSON array.`);
+          }
+
+          core.setOutput("chart-values", JSON.stringify(chartValues));
+
+    - uses: peter-evans/repository-dispatch@v3
+      with:
+        token: ${{ inputs.dispatch-token }}
+        repository: ${{ inputs.repository }}
+        event-type: deploy
+        client-payload: |
+          {
+            "repository": "${{ github.event.repository.name }}",
+            "chart": "${{ inputs.chart }}",
+            "environment": "${{ inputs.target }}",
+            "url": "${{ inputs.url }}",
+            "chart-values": ${{ toJSON(steps.set-chart-values.outputs.chart-values) }}
+          }
+
+    # FIXME: should be notified by argocd
+    - name: Wait for new version to be synced
+      shell: bash
+      run: sleep 180s
+
+    - id: deployment
+      shell: bash
+      run: echo "url=https://${{ inputs.url }}" >> $GITHUB_OUTPUT
+
+    # jscpd:ignore-start
+
+    # Url checks
+    - uses: ./self-github-pages-action/check/url-uptime
+      with:
+        url: ${{ steps.deployment.outputs.page_url }}
+
+    - uses: ./self-github-pages-action/check/url-lighthouse
+      with:
+        url: ${{ steps.deployment.outputs.page_url }}
+        budget-path: ${{ inputs.budget-path }}
+
+    # jscpd:ignore-end
+
+    - shell: bash
+      run: |
+        STEP_SUMMARY=$(cat << EOF
+        ### Application has been deployed to _${{ inputs.target }}_ :rocket:
+
+        Here it is: <${{ steps.deployment.outputs.url }}>
+
+        \`\`\`
+        ${{ steps.deployment.outputs.url }}
+        \`\`\`
+
+        * Target: ${{ inputs.target }}
+        * Chart: ${{ inputs.chart }}
+        EOF
+        )
+
+        echo "$STEP_SUMMARY" >> $GITHUB_STEP_SUMMARY

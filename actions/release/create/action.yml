@@ -6,17 +6,21 @@ branding:
   color: gray-dark
 
 inputs:
-  token:
-    description: "GitHub token"
-    required: true
   prerelease:
     description: "Whether the release is a prerelease"
     default: "false"
+  github-token:
+    description: |
+      GitHub Token for creating the release.
+      Permissions: 
+        - contents: write
+    required: false
+    default: ${{ github.token }}
 
 outputs:
-  version:
-    description: "The version of the release"
-    value: ${{ steps.get-version.outputs.version }}
+  tag:
+    description: "The tag of the release"
+    value: ${{ steps.get-tag.outputs.tag }}
 
 runs:
   using: "composite"
@@ -28,20 +32,20 @@ runs:
     - id: release
       uses: release-drafter/release-drafter@v6.1.0
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
         publish: true
         prerelease: ${{ inputs.pre-release }}
         disable-autolabeler: true
 
     - uses: actions/github-script@v7
-      id: get-version
+      id: get-tag
       with:
         script: |
-          const version = `${{ steps.release.outputs.tag_name }}`.trim();
+          const tag = `${{ steps.release.outputs.tag_name }}`.trim();
           if (tag.length) {
-            core.setOutput("version", version);
+            core.setOutput("tag", tag);
             return;
           }
 
-          core.setFailed("No version found from release-drafter outputs");
+          core.setFailed("No tag found from release-drafter outputs");

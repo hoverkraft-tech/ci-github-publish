@@ -21,12 +21,12 @@ define run_linter
 	docker run \
 		-e DEFAULT_WORKSPACE="$$DEFAULT_WORKSPACE" \
 		-e FILTER_REGEX_INCLUDE="$(filter-out $@,$(MAKECMDGOALS))" \
+		-e KUBERNETES_KUBECONFORM_OPTIONS="--schema-location default --schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'" \
 		$(1) \
 		-v $$VOLUME \
 		--rm \
 		$$LINTER_IMAGE
 endef
-
 
 #############################
 # Argument fix workaround

@@ -1,0 +1,166 @@
+# Deploy - Start
+# ==========================
+# Reusable workflow that performs the beginning of a deployment.
+#
+# Trigger:
+# - Can be triggered by a comment.
+#
+# Environment:
+# - Support dynamic env when comming from issue or pull-request event
+#
+# URL:
+# - Deployment url can be provided as input or can be extracted from the variables (or environment variables).
+#   See <https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables>
+#   Supported variables:
+#   - `{ENVIRONMENT}_URL`, example: `STAGING_URL`
+#   - `URL`
+
+name: Deploy - Start
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          Json array of runner(s) to use.
+          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      environment:
+        description: |
+          Environment where to deploy.
+          If trigger is from an issue event (or pull-request), environment will be set to `environment:issue_number`.
+          See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>.
+        type: string
+        required: false
+      trigger-on-comment:
+        description: |
+          Comment trigger to start the workflow.
+          See <https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment>.
+        type: string
+        default: "/deploy"
+        required: false
+    outputs:
+      trigger:
+        description: "Trigger event that started the workflow."
+        value: ${{ jobs.prepare-deploy.outputs.trigger }}
+      environment:
+        description: "Environment where to deploy."
+        value: ${{ jobs.prepare-deploy.outputs.environment }}
+      deployment-id:
+        description: "Deployment ID to use for the deployment."
+        value: ${{ jobs.start-deploy.outputs.deployment-id }}
+
+permissions:
+  deployments: write
+  actions: read
+  issues: write
+  pull-requests: write
+  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+  id-token: write
+
+jobs:
+  prepare-deploy:
+    name: Check if should deploy
+    runs-on: ubuntu-latest
+    outputs:
+      trigger: ${{ steps.trigger.outputs.trigger }}
+      environment: ${{ steps.set-environment.outputs.environment }}
+    steps:
+      - id: not-created-issue-comment
+        if: github.event_name != 'issue_comment'
+        run: echo "result=true" >> "$GITHUB_OUTPUT"
+
+      - uses: shanegenschaw/pull-request-comment-trigger@v3.0.0
+        id: trigger-on-comment
+        if: ${{ steps.not-created-issue-comment.outputs.result != 'true' && inputs.trigger-on-comment }}
+        with:
+          trigger: ${{ inputs.trigger-on-comment }}
+          prefix_only: true
+          reaction: eyes
+        env:
+          GITHUB_TOKEN: "${{ github.token }}"
+
+      - id: trigger
+        if: ${{ steps.not-created-issue-comment.outputs.result == 'true' || steps.trigger-on-comment.outputs.triggered == 'true' }}
+        run: |
+          if [ "${{ steps.not-created-issue-comment.outputs.result }}" = "true" ]; then            
+            echo "trigger=${{ github.event_name }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ steps.trigger-on-comment.outputs.triggered }}" = "true" ]; then
+            echo "trigger=${{ github.event_name }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+      - id: get-issue-number
+        if: ${{ steps.trigger.outputs.trigger == 'issue_comment' }}
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@0.16.1
+
+      - id: set-environment
+        if: ${{ steps.trigger.outputs.trigger }}
+        run: |
+          ENVIRONMENT="${{ inputs.environment }}"
+
+          ISSUE_NUMBER="${{ steps.get-issue-number.outputs.issue-number }}"
+          if [ -n "$ISSUE_NUMBER" ]; then
+            if [ -z "$ENVIRONMENT" ]; then
+              ENVIRONMENT="review-apps"
+            fi
+
+            ENVIRONMENT="${ENVIRONMENT}:${ISSUE_NUMBER}"
+          fi
+
+          if [ -z "$ENVIRONMENT" ]; then
+            echo "::error ::Environment not set. Please set the environment input."
+            exit 1
+          fi
+
+          echo "environment=${ENVIRONMENT}" >> "$GITHUB_OUTPUT"
+
+  start-deploy:
+    name: Start deploy
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    needs: prepare-deploy
+    if: needs.prepare-deploy.outputs.trigger
+    environment: ${{ needs.prepare-deploy.outputs.environment }}
+    outputs:
+      deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
+    steps:
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@v3
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          echo "self-workflow" >> .gitignore
+          echo "self-workflow" >> .dockerignore
+
+      - id: create-deployment
+        uses: ./self-workflow/actions/deployment/create
+        with:
+          environment: ${{ needs.prepare-deploy.outputs.environment }}
+
+      - uses: ./self-workflow/actions/deployment/update
+        with:
+          deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
+          state: "in_progress"
+          description: "Starting deployment to ${{ needs.prepare-deploy.outputs.environment }}..."
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@v4
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions

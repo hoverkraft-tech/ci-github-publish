@@ -13,7 +13,11 @@ jobs:
   linter:
     uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@0.18.0
 
-  test-action-docker-build-image:
+  test-action-deployment:
     needs: linter
     uses: ./.github/workflows/__test-action-deployment.yml
     secrets: inherit
+
+  test-action-deploy-argocd-application-manifest:
+    needs: linter
+    uses: ./.github/workflows/__test-action-deploy-argocd-application-manifest.yml

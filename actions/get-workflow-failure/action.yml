@@ -1,0 +1,42 @@
+name: "Get workflow failure"
+description: "Action to get workflow failed jobs, if any."
+author: Hoverkraft
+branding:
+  icon: zap-off
+  color: gray-dark
+
+outputs:
+  failed-jobs:
+    description: "List of failed jobs."
+    value: ${{ steps.get-deployment-result.outputs.failed-jobs }}
+  has-failed:
+    description: "True if there are failed jobs."
+    value: ${{ steps.get-deployment-result.outputs.has-failed }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: get-deployment-result
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: { jobs } } = await github.rest.actions.listJobsForWorkflowRun({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id: context.runId,
+          });
+
+          const failureConclusions = ["failure", "timed_out"];
+          const failedJobs = jobs
+            .filter(job => failureConclusions.includes(job.conclusion))
+            .reduce((acc, job) => {
+              acc.push({
+                name: job.name,
+                conclusion: job.conclusion,
+                html_url: job.html_url,
+              });
+              return acc;
+          }, []);
+
+          core.setOutput("failed-jobs", JSON.stringify(failedJobs));
+          core.setOutput("has-failed", failedJobs.length > 0);

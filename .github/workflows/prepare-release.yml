@@ -17,44 +17,55 @@ on:
         type: string
         default: '["ubuntu-latest"]'
         required: false
+      github-app-id:
+        description: |
+          GitHub App ID to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
+        required: false
+        type: string
     secrets:
       github-token:
         description: |
           GitHub token with permissions `contents: write`, `pull-requests: write`.
+      github-app-key:
+        description: |
+          GitHub App private key to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
   pull-request-labeler:
     runs-on: ${{ fromJson(inputs.runs-on) }}
-    if: github.event_name == 'pull_request'
+    if: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: release-drafter/release-drafter@v6.1.0
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
         with:
           disable-releaser: true
 
   release-configuration:
-    if: github.event_name == 'push' && github.event.ref == github.event.repository.default_branch
+    if: ${{ github.event_name == 'push' && github.event.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    env:
+      CONFIG_PATH: .github/release-drafter.yml
     steps:
       - id: get-config
         uses: actions/github-script@v7
         with:
           script: |
-            const configPath = '.github/release-drafter.yml';
-            core.setOutput('path', configPath);
+            const configPath = process.env.CONFIG_PATH;
 
             const config = `
             template: |
               # What's Changed
-              $CHANGES
-              **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...$RESOLVED_VERSION
-            name-template: "Version $RESOLVED_VERSION"
-            tag-template: "$RESOLVED_VERSION"
+              \$CHANGES
+              **Full Changelog**: https://github.com/\$OWNER/\$REPOSITORY/compare/\$PREVIOUS_TAG...\$RESOLVED_VERSION
+            name-template: "Version \$RESOLVED_VERSION"
+            tag-template: "\$RESOLVED_VERSION"
             prerelease-identifier: "rc"
             version-resolver:
               major:
@@ -74,25 +85,56 @@ jobs:
               - label: "release-minor"
                 title:
                   - "/^feat:/"
-                  - "/^feat\\(.+\\):/"
+                  - "/^feat\\\\(.+\\\\):/"
             `;
 
-            core.setOutput('config', config);
+            // Get the config file from the repository
+            try {
+              const { data: { content } } = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: configPath,
+              });
 
-      - if: steps.get-config.outputs.config
-        uses: actions/checkout@v4
+              const decodedContent = Buffer.from(content, 'base64').toString('utf-8');
+              if (decodedContent === config) {
+                core.info('No changes to the release configuration file.');
+                return null;
+              }
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+            }
+
+            core.setOutput('config', config.trim());
+
+      - uses: actions/checkout@v4
+        if: steps.get-config.outputs.config
         with:
-          ref: ${{ github.event.repository.default_branch }}
-          sparse-checkout: ${{ steps.get-config.outputs.path }}
+          ref: refs/heads/${{ github.event.repository.default_branch }}
+          sparse-checkout: ${{ env.CONFIG_PATH }}
 
-      - if: steps.get-config.outputs.config
-        shell: bash
-        run: |
-          echo "${{ steps.get-config.outputs.config }}" > ${{ steps.get-config.outputs.path }}
+      - uses: actions/github-script@v7
+        if: steps.get-config.outputs.config
+        with:
+          script: |
+            const fs = require('node:fs');
+            const configContent = ${{ toJSON(steps.get-config.outputs.config) }};
+            const configPath = process.env.CONFIG_PATH;
+            fs.writeFileSync(configPath, configContent, 'utf8');
+
+      - uses: actions/create-github-app-token@v1
+        if: ${{ steps.get-config.outputs.config && inputs.github-app-id }}
+        id: generate-token
+        with:
+          app-id: ${{ inputs.github-app-id }}
+          private-key: ${{ secrets.github-app-key }}
 
       - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.18.0
+        if: steps.get-config.outputs.config
         with:
-          github-token: ${{ github.token }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: ci/prepare-release-config
           title: "ci: prepare release configuration"
           body: "Prepare release configuration"

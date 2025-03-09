@@ -1,0 +1,98 @@
+# Deploy - Multiple environments
+# ==========================
+# Reusable workflow that performs some deployment(s).
+#
+# - Supports multiple chained environments.
+
+name: Deploy - Multiple environments
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          Json array of runner(s) to use.
+          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      environments:
+        description: |
+          Environments to use.
+          See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>.
+          Can be :
+            - a comma separated list (e.g. `staging,production`)
+            - a multiline string (e.g. `staging\nproduction"`)
+            - json array, e.g. `["staging", "production"]`.
+            - json array of objects, e.g. `[{"name": "staging"}, {"name": "production"}]`
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-environments:
+    name: Prepare environments
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    outputs:
+      environments: ${{ steps.prepare-environments.outputs.environments }}
+    steps:
+      - id: prepare-environments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const environmentsInput = `${{ inputs.environments }}`.trim();
+
+            if (!environmentsInput) {
+              core.setFailed(`Input "environments" expected to be non-empty.`);
+            }
+
+            let environments;
+
+            // If is JSON array, parse it
+            if (environmentsInput.startsWith('[')) {
+              try{
+                environments = JSON.parse(environmentsInput);
+              } catch (e) {
+                core.setFailed(`Invalid JSON for "environments" input: ${e.message}`);
+              }
+
+              if (!Array.isArray(environments)) {
+                core.setFailed(`Input "environments" expected to be a JSON array.`);
+              }
+            } else {
+              // If is comma separated list, split it
+              environments = environmentsInput.split(/[\s,]+/);
+
+              // If is multiline string, split it
+              if (environmentsInput.includes('\n')) {
+                environments = environmentsInput.split(/\s*\n\s*/);
+              }
+            }
+
+            // Remove empty values
+            environments = environments.filter((environment) => environment);
+
+            if (!environments.length) {
+              core.setFailed(`Input "environments" expected to be non-empty.`);
+            }
+
+            // Check if environments are valid            
+            environments = environments.map((environment,key) => {
+              if (typeof environment === 'string') {
+                return {
+                  name: environment,
+                }
+              } else if (typeof environment === 'object') {
+                if (!environment.name) {
+                  core.setFailed(`Input "environments[${key}].name" expected to be a string.`);
+                }
+
+                return environment;
+              } else {
+                core.setFailed(`Input "environments[${key}]" expected to be a string or an object.`);
+              }
+            });
+
+            core.setOutput("environments", JSON.stringify(environments));

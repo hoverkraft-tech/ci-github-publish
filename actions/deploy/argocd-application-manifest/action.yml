@@ -1,0 +1,93 @@
+name: "Deploy - ArgoCD Application manifest"
+description: |
+  Prepares the ArgoCD application manifest for deployment. Fills in the required fields and updates the Helm chart values.
+  This action is used to deploy an application using ArgoCD.
+  It updates the application manifest with the provided values and deploys it to the specified namespace.
+  It supports vendor-specific updates for the chart version and other properties:
+  - Updates the `tags.datadoghq.com/version` key to the chart version.
+
+inputs:
+  namespace:
+    description: "Namespace to deploy the application"
+    required: true
+  chart-name:
+    description: "Name of the Helm chart"
+    required: true
+  chart-repository:
+    description: "Repository URL of the Helm chart"
+    required: true
+  chart-version:
+    description: "Version of the Helm chart"
+    required: true
+  chart-values:
+    description: |
+      Values to be replaced in the chart. Example:
+        [
+          { "path": "application.appUri", "value": "https://my-app-review-app-1234.my-org.com" }
+        ]
+    required: false
+  manifest-file:
+    description: "Path to the application manifest file"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - id: common-chart-yq-updates
+      uses: actions/github-script@v7.0.1
+      with:
+        script: |
+          const chartValuesInput = ${{ toJSON(inputs.chart-values) }};
+          let chartValues = null;
+          try {
+            chartValues = JSON.parse(chartValuesInput);
+          } catch (error) {
+            core.setFailed(`"chart-values" input is not a valid JSON: ${error}`);
+            return;
+          }
+
+          if (!Array.isArray(chartValues)) {
+            core.setFailed(`"chart-values" input is not an array`);
+            return;
+          }
+
+          // Check each item
+          for (const key in chartValues) {
+            // Check mandatory properties
+            for (const property of ['path', 'value']) {
+              if (!chartValues[key].hasOwnProperty(property)) {
+                core.setFailed(`"chart-values[${key}].${property}" is missing`);
+                return;
+              }
+            }
+          }
+
+          const yqUpdates = chartValues.map(chartValue => `${chartValue.path} = "${chartValue.value}" |`).join("\n");
+
+          core.setOutput('cmd', yqUpdates);
+
+    - id: vendor-specific-chart-yq-updates
+      uses: actions/github-script@v7.0.1
+      with:
+        script: |
+          // Datadog
+          const yqUpdates = `(.. | select(has("tags.datadoghq.com/version")))."tags.datadoghq.com/version" = "${{ inputs.chart-version }}" |`;
+
+          core.setOutput('cmd', yqUpdates);
+
+    - uses: mikefarah/yq@v4.45.1
+      with:
+        cmd: |
+          yq -i '
+            .metadata.name = "${{ inputs.namespace }}" |
+            .spec.destination.namespace = "${{ inputs.namespace }}" |
+            .spec.source.chart = "${{ inputs.chart-name }}" |
+            .spec.source.repoURL = "${{ inputs.chart-repository }}" |
+            .spec.source.targetRevision = "${{ inputs.chart-version }}" |
+            .spec.source.helm.values |= (
+                from_yaml |
+                ${{ steps.common-chart-yq-updates.outputs.cmd }}
+                ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
+                to_yaml
+            )
+          ' ${{ inputs.manifest-file }}

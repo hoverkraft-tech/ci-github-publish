@@ -1,0 +1,177 @@
+# Deploy - Finish
+# ==========================
+# Reusable workflow that performs the end of a deployment.
+#
+# - Can be triggered by a comment.
+# - Supports multiple deployment types.
+# - Deployment url can be provided as input or can be extracted from the variables (or environment variables).
+#   See <https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables>
+#   Supported variables:
+#   - `{ENVIRONMENT}_URL`, example: `STAGING_URL`
+#   - `URL`
+
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          Json array of runner(s) to use.
+          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      environment:
+        description: |
+          Environment where to deploy.
+          If trigger is from an issue event (or pull-request), environment will be set to `environment:issue_number`.
+          See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>.
+        type: string
+        required: true
+      deployment-id:
+        description: |
+          Deployment ID to use for the deployment.
+          See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments>.
+        type: string
+        required: true
+      budget-path:
+        description: |
+          Path to the budget file to use for the Lighthouse check.
+          See [`url-lighthouse`](../../actions/check/url-lighthouse/action.yml/README.md).
+        type: string
+        required: false
+        default: "./budget.json"
+      extra:
+        description: |
+          Extra information to send to the deployment summary.
+          Should be a JSON object.
+        type: string
+        required: false
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: write
+  actions: read
+  deployments: write
+  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+  id-token: write
+
+jobs:
+  get-finished-deployment:
+    name: Get finished deployment
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    environment: ${{ inputs.environment }}
+    outputs:
+      url: ${{ steps.get-finished-deployment.outputs.url }}
+    steps:
+      # jscpd:ignore-start
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@v3
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          echo "self-workflow" >> .gitignore
+          echo "self-workflow" >> .dockerignore
+      # jscpd:ignore-end
+      - id: get-workflow-failure
+        if: ${{ inputs.deployment-id }}
+        uses: ./self-workflow/actions/get-workflow-failure
+
+      - id: get-finished-deployment
+        if: ${{ inputs.deployment-id && steps.get-workflow-failure.outputs.has-failed != 'true' }}
+        uses: ./self-workflow/actions/deployment/get-finished
+        with:
+          deployment-id: ${{ inputs.deployment-id }}
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@v4
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+
+  deploy-checks:
+    name: Deploy checks
+    needs: [get-finished-deployment]
+    if: ${{ needs.get-finished-deployment.outputs.url }}
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    steps:
+      # jscpd:ignore-start
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@v3
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      # jscpd:ignore-start
+      - uses: ./self-workflow/actions/check/url-uptime
+        with:
+          url: ${{ needs.get-finished-deployment.outputs.url }}
+
+      - uses: ./self-workflow/actions/check/url-lighthouse
+        with:
+          url: ${{ needs.get-finished-deployment.outputs.url }}
+          budget-path: ${{ inputs.budget-path }}
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@v4
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+
+  deploy-result:
+    name: Deploy result
+    if: ${{ always() }}
+    needs: [get-finished-deployment, deploy-checks]
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    steps:
+      # jscpd:ignore-start
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@v3
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      # jscpd:ignore-end
+      - uses: ./self-workflow/actions/deploy/report
+        with:
+          deployment-id: ${{ inputs.deployment-id }}
+          environment: ${{ inputs.environment }}
+          url: ${{ needs.get-finished-deployment.outputs.url }}
+          extra: ${{ inputs.extra }}
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@v4
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions

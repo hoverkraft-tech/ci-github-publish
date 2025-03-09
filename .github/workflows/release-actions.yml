@@ -23,7 +23,7 @@ on:
         type: boolean
       github-app-id:
         description: |
-          GitHub App ID to generate GitHub token in place of private-access-token.
+          GitHub App ID to generate GitHub token in place of github-token.
           See <https://github.com/actions/create-github-app-token>.
         required: false
         type: string
@@ -42,6 +42,7 @@ permissions:
 
 jobs:
   prepare-release:
+    name: Prepare Release
     runs-on: ${{ fromJson(inputs.runs-on) }}
     outputs:
       changed-actions: ${{ steps.get-changed-actions.outputs.result }}
@@ -126,6 +127,7 @@ jobs:
           echo "result<<EOF" >> "$GITHUB_OUTPUT" && echo "$JSON_CHANGED_WORKFLOWS" >> "$GITHUB_OUTPUT" && echo "EOF" >> "$GITHUB_OUTPUT"
 
   generate-actions-readme:
+    name: Generate Actions README
     needs: prepare-release
     runs-on: ${{ fromJson(inputs.runs-on) }}
     if: ${{ needs.prepare-release.outputs.changed-actions != '[]' }}
@@ -173,6 +175,7 @@ jobs:
           path: ${{ steps.prepare-readme-generator.outputs.readme-file }}
 
   generate-workflows-readme:
+    name: Generate Workflows README
     needs: prepare-release
     runs-on: ${{ fromJson(inputs.runs-on) }}
     if: ${{ needs.prepare-release.outputs.changed-workflows != '[]' }}
@@ -206,7 +209,8 @@ jobs:
           name: changed-files-${{ steps.workflow-slug.outputs.result }}
           path: ${{ steps.generate-readme.outputs.readme-file }}
 
-  publish-actions-readme:
+  publish-documentation:
+    name: Publish Documentation
     needs: [prepare-release, generate-actions-readme, generate-workflows-readme]
     if: always() && (needs.prepare-release.outputs.changed-actions != '[]' || needs.prepare-release.outputs.changed-workflows != '[]')
     runs-on: ${{ fromJson(inputs.runs-on) }}
@@ -219,12 +223,16 @@ jobs:
           merge-multiple: true
           path: /
 
+      # jscpd:ignore-start
+
       - uses: actions/create-github-app-token@v1
         if: inputs.github-app-id
         id: generate-token
         with:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
+
+      # jscpd:ignore-end
 
       - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.18.0
         with:

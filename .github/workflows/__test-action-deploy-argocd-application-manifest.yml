@@ -1,0 +1,45 @@
+name: Internal - Tests for argocd-application-manifest action
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests for argocd-application-manifest action
+    runs-on: ubuntu-latest
+    env:
+      TEST_APPLICATION_MANIFEST_TEMPLATE: tests/test-app/template.yml.tpl
+      TEST_APPLICATION_MANIFEST: test-app.yml
+      TEST_EXPECTED_APPLICATION_MANIFEST: tests/test-app/expected.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Arrange - Create test application manifest
+        run: |
+          cp "$TEST_APPLICATION_MANIFEST_TEMPLATE" "$TEST_APPLICATION_MANIFEST"
+
+      - name: Act - Deploy Argocd Application Manifest
+        id: argocd-application-manifest
+        uses: ./actions/deploy/argocd-application-manifest
+        with:
+          manifest-file: $TEST_APPLICATION_MANIFEST
+          namespace: test-app-pr-100
+          chart-name: test-app
+          chart-repository: ghcr.io/my-org/test-app/charts
+          chart-version: 1.0.0-rc.0-pr-100-abac0800
+          chart-values: |
+            [
+              { "path": ".ingress.hosts[0].host", "value": "https://pr-100-test-app.my-org.com" }
+            ]
+
+      - name: Assert - Check generated file is valid YAML
+        uses: mikefarah/yq@v4.45.1
+        with:
+          cmd: yq "$TEST_APPLICATION_MANIFEST" >/dev/null
+
+      - name: Assert - Check generated file is as expected
+        run: |
+          diff -u "$TEST_EXPECTED_APPLICATION_MANIFEST" "$TEST_APPLICATION_MANIFEST"

@@ -6,6 +6,11 @@
 # - Creates a release (tag).
 # - Releases the chart.
 # - Supports multiple chained environments.
+# - Deployment url can be provided as input or can be extracted from the variables (or environment variables).
+#   See <https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables>
+#   Supported variables:
+#   - `{ENVIRONMENT}_URL`, example: `STAGING_URL`
+#   - `URL`
 # - Supports multiple deployment types.
 # - Allows to clean up previous environments after successful deployment.
 
@@ -25,36 +30,80 @@ on:
         description: |
           Environments to use.
           See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>.
-
-          Can be a comma separated list (e.g. `staging,production`), a multiline string (e.g. `staging\nproduction"`) or json array, e.g. `["staging", "production"]`.
+          Can be :
+            - a comma separated list (e.g. `staging,production`)
+            - a multiline string (e.g. `staging\nproduction"`)
+            - json array, e.g. `["staging", "production"]`.
+            - json array of objects, e.g. `[{"name": "staging"}, {"name": "production"}]`
         type: string
+        required: true
       deploy-type:
         description: |
           Type of deployment to perform.
           Supported values:
             - [`helm-repository-dispatch`](../../actions/deploy/helm-repository-dispatch/README.md).
         type: string
+        required: false
+        default: helm-repository-dispatch
+      deploy-inputs:
+        description: |
+          Inputs to pass to the deployment action.
+          JSON object, depending on the deploy-type.
+          For example, for `helm-repository-dispatch`:
+            {
+              "repository": "my-org/my-repo"
+            }
+        type: string
       oci-registry:
         type: string
         description: "OCI registry where to pull and push images and chart."
-        required: true
+        required: false
+        default: ghcr.io
       images:
         description: |
           Images to build parameters.
           See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/.github/workflows/docker-build-images.md>.
         type: string
         required: true
+      chart-name:
+        description: |
+          Chart name to release.
+          See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.
+        required: false
+        type: string
+        default: application
+      chart-path:
+        description: |
+          Path to the chart to release.
+          See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.
+        required: false
+        type: string
+        default: charts/application
       chart-values:
         description: |
           Define chart values to be filled.
           See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.
         type: string
         required: true
+      github-app-id:
+        description: |
+          GitHub App ID to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
+        required: false
+        type: string
     secrets:
       oci-registry-password:
         description: "OCI registry password."
         required: true
-
+      github-token:
+        description: |
+          GitHub token for deploying.
+          Permissions:
+            - contents: write
+      github-app-key:
+        description: |
+          GitHub App private key to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
 permissions:
   contents: write
   issues: read
@@ -64,11 +113,12 @@ permissions:
   id-token: write
 
 jobs:
-  prepare-release:
+  prepare-release-deploy:
+    name: Prepare release and deployment
     runs-on: ${{ fromJson(inputs.runs-on) }}
     outputs:
       images: ${{ steps.set-images-tag.outputs.images }}
-      tag: ${{ steps.create-release.outputs.tag }}
+      version: ${{ steps.create-release.outputs.version }}
       environments: ${{ steps.prepare-environments.outputs.environments }}
     steps:
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
@@ -99,7 +149,7 @@ jobs:
             let environments;
 
             // If is JSON array, parse it
-            if(environmentsInput.startsWith('[')) {
+            if (environmentsInput.startsWith('[')) {
               try{
                 environments = JSON.parse(environmentsInput);
               } catch (e) {
@@ -117,11 +167,31 @@ jobs:
               if (environmentsInput.includes('\n')) {
                 environments = environmentsInput.split(/\s*\n\s*/);
               }
-
-              if (!environments.length) {
-                core.setFailed(`Input "environments" expected to be non-empty.`);
-              }
             }
+
+            // Remove empty values
+            environments = environments.filter((environment) => environment);
+
+            if (!environments.length) {
+              core.setFailed(`Input "environments" expected to be non-empty.`);
+            }
+
+            // Check if environments are valid            
+            environments = environments.map((environment,key) => {
+              if (typeof environment === 'string') {
+                return {
+                  name: environment,
+                }
+              } else if (typeof environment === 'object') {
+                if (!environment.name) {
+                  core.setFailed(`Input "environments[${key}].name" expected to be a string.`);
+                }
+
+                return environment;
+              } else {
+                core.setFailed(`Input "environments[${key}]" expected to be a string or an object.`);
+              }
+            });
 
             core.setOutput("environments", JSON.stringify(environments));
 
@@ -132,9 +202,9 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const tag = `${{ steps.create-release.outputs.tag }}`;
+            const version = ${{ toJSON(steps.create-release.outputs.version) }};
 
-            const imagesInput = `${{ inputs.images }}`;
+            const imagesInput = ${{ toJSON(inputs.images) }};
 
             // Check if is valid Json
             let images = null;
@@ -149,7 +219,7 @@ jobs:
               throw new Error(`"images" input is not a valid array: ${images}`);
             }
 
-            images.forEach((image) => { image.tag = tag; });
+            images.forEach((image) => { image.tag = version; });
 
             core.setOutput('images', JSON.stringify(images));
 
@@ -164,38 +234,114 @@ jobs:
             actions
 
   build-oci-images:
-    needs: prepare-release
+    name: Build OCI images
+    needs: prepare-release-deploy
     uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@0.20.2
     with:
       oci-registry: ${{ inputs.oci-registry }}
-      images: ${{ needs.prepare-release.outputs.images }}
+      images: ${{ needs.prepare-release-deploy.outputs.images }}
     secrets:
       oci-registry-password: ${{ secrets.oci-registry-password }}
 
-  release-helm-chart:
+  release-chart:
+    name: Release chart
     runs-on: ${{ fromJson(inputs.runs-on) }}
-    needs: [build-oci-images, prepare-release]
+    needs: [build-oci-images, prepare-release-deploy]
     outputs:
-      chart: ${{ steps.release.outputs.chart }}
+      chart: ${{ steps.release.outputs.image }}
     steps:
+      - id: set-chart-values
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = ${{ toJSON(needs.prepare-release-deploy.outputs.version) }};
+
+            const builtImagesInput = ${{ toJSON(needs.build-oci-images.outputs.built-images) }};
+            let builtImages = null;
+            try {
+              builtImages = JSON.parse(builtImagesInput);
+            } catch (error) {
+              throw new Error(`"built-images" input is not a valid JSON: ${error}`);
+            }
+            if (!builtImages) {
+              throw new Error(`"built-images" input is empty`);
+            }
+            if (typeof builtImages !== 'object') {
+              throw new Error(`"built-images" input is not an object`);
+            }
+
+            const chartValuesInput = ${{ toJSON(inputs.chart-values) }};
+            let chartValues = null;
+            try {
+              chartValues = JSON.parse(chartValuesInput);
+            } catch (error) {
+              throw new Error(`"chart-values" input is not a valid JSON: ${error}`);
+            }
+            if (!Array.isArray(chartValues)) {
+              throw new Error(`"chart-values" input is not an array`);
+            }
+
+            function injectChartValue(chartValue, key) {
+              if (typeof chartValue !== 'object') {
+                throw new Error(`"chart-values[${key}]" input is not an object`);
+              }
+
+              // Check mandatory properties
+              for (const property of ['path']) {
+                if (!chartValue.hasOwnProperty(property)) {
+                  throw new Error(`"chart-values[${key}].${property}" input is missing`);
+                }
+              }
+
+              if (chartValue.image !== undefined) {
+                const builtImage = builtImages[chartValue.image];
+                if (!builtImage) {
+                  throw new Error(`Image "${chartValue.image}" not found in "built-images" input`);
+                }
+                return [
+                  { ...chartValue, path: `${chartValue.path}.registry`, value: builtImage.registry },
+                  { ...chartValue, path: `${chartValue.path}.repository`, value: builtImage.repository },
+                  { ...chartValue, path: `${chartValue.path}.tag`, value: builtImage.tags[0] },
+                ];
+              }
+              else if (chartValue.value !== undefined) {
+                // Handle placeholders
+                const placeholders = [
+                  { match: /{{\s*tag\s*}}/g, value: version },
+                ];
+
+                for (const placeholder of placeholders) {
+                  chartValue.value = chartValue.value.replace(placeholder.match, placeholder.value);
+                }
+              }
+
+              return chartValue;
+            }
+
+            const values = chartValues.map(injectChartValue).flat();
+
+            core.setOutput('values', JSON.stringify(values));
+
       - id: release
         uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@0.20.2
         with:
+          chart: ${{ inputs.chart-name }}
+          path: ${{ inputs.chart-path }}
+          tag: ${{ needs.prepare-release-deploy.outputs.version }}
+          values: ${{ steps.set-chart-values.outputs.chart-values }}
           oci-registry: ${{ inputs.oci-registry }}
-          chart-values: ${{ inputs.chart-values }}
-          tag: ${{ needs.prepare-release.outputs.tag }}
-          built-images: ${{ needs.build-oci-images.outputs.built-images }}
           oci-registry-password: ${{ secrets.oci-registry-password }}
 
   deploy-chart:
+    name: Deploy chart
     runs-on: ${{ fromJson(inputs.runs-on) }}
-    needs: [prepare-release, release-helm-chart]
+    needs: [prepare-release-deploy, release-chart]
     strategy:
-      fail-fast: false
+      fail-fast: true
       max-parallel: 1
       matrix:
-        environment: ${{ fromJson(needs.prepare-release.outputs.environments) }}
-    environment: ${{ matrix.environment }}
+        environment: ${{ fromJson(needs.prepare-release-deploy.outputs.environments) }}
+    environment: ${{ matrix.environment.name }}
     steps:
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
@@ -212,11 +358,56 @@ jobs:
           echo "self-workflow" >> .gitignore
           echo "self-workflow" >> .dockerignore
 
+      - id: prepare-deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Repository
+            const repository = `${{ fromJSON(inputs.deploy-inputs).repository }}`.trim();
+
+            if (repository) {
+              core.setOutput("repository", repository);
+
+              const [ownerName, repoName] = repository.split('/');
+              core.setOutput("owner", ownerName);
+            }
+
+            // URL
+            const url = `${{ matrix.environment.url }}`.trim();
+            if (url) {
+              core.setOutput("url", url);
+            } else {
+              // Try to get it from the env vars
+              const allowedEnvVars = [
+                `${{ matrix.environment.name }}_URL`.toUpperCase().replace(/-/g, '_'),
+                `URL`,
+              ];
+
+              for (const envVar of allowedEnvVars) {
+                const envVarValue = process.env[envVar];
+                if (envVarValue) {
+                  core.setOutput("url", envVarValue);
+                  break;
+                }
+              }
+            }
+
+      - uses: actions/create-github-app-token@v1
+        if: ${{ inputs.github-app-id }}
+        id: generate-token
+        with:
+          app-id: ${{ inputs.github-app-id }}
+          private-key: ${{ secrets.github-app-key }}
+          owner: ${{ steps.prepare-deployment.outputs.owner }}
+
       - if: ${{ inputs.deploy-type == 'helm-repository-dispatch' }}
         uses: ./self-workflow/actions/deploy/helm-repository-dispatch
         with:
-          chart: ${{ needs.release-helm-chart.outputs.chart }}
-          environment: ${{ matrix.environment }}
+          chart: ${{ needs.release-chart.outputs.chart }}
+          environment: ${{ matrix.environment.name }}
+          url: ${{ steps.prepare-deployment.outputs.url }}
+          repository: ${{ steps.prepare-deployment.outputs.repository }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - uses: actions/checkout@v4

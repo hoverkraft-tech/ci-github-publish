@@ -6,12 +6,16 @@ branding:
   color: gray-dark
 
 inputs:
-  token:
-    description: "GitHub token"
-    required: true
   prerelease:
     description: "Whether the release is a prerelease"
     default: "false"
+  github-token:
+    description: |
+      GitHub Token for creating the release.
+      Permissions: 
+        - contents: write
+    required: false
+    default: ${{ github.token }}
 
 outputs:
   version:
@@ -28,7 +32,7 @@ runs:
     - id: release
       uses: release-drafter/release-drafter@v6.1.0
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
         publish: true
         prerelease: ${{ inputs.pre-release }}
@@ -39,7 +43,7 @@ runs:
       with:
         script: |
           const version = `${{ steps.release.outputs.tag_name }}`.trim();
-          if (tag.length) {
+          if (version.length) {
             core.setOutput("version", version);
             return;
           }

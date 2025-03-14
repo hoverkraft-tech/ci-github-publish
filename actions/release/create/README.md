@@ -33,14 +33,17 @@ Action to create a release
 ```yaml
 - uses: hoverkraft-tech/ci-github-publish@0.2.0
   with:
-    # Description: GitHub token
-    #
-    token: ""
-
     # Description: Whether the release is a prerelease
     #
     # Default: false
     prerelease: ""
+
+    # Description: GitHub Token for creating the release. Permissions:
+    #
+    # - contents: write
+    #
+    # Default: ${{ github.token }}
+    github-token: ""
 ```
 
 <!-- end usage -->

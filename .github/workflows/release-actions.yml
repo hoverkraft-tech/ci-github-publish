@@ -58,7 +58,7 @@ jobs:
 
       - id: changed-files
         if: ${{ inputs.update-all == false }}
-        uses: tj-actions/changed-files@v45.0.7
+        uses: tj-actions/changed-files@v45.0.8
         with:
           files: |
             ./actions/**

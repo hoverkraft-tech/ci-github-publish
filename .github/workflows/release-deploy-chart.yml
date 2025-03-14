@@ -165,7 +165,7 @@ jobs:
 
   build-oci-images:
     needs: prepare-release
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@0.20.2
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@0.23.0
     with:
       oci-registry: ${{ inputs.oci-registry }}
       images: ${{ needs.prepare-release.outputs.images }}
@@ -179,7 +179,7 @@ jobs:
       chart: ${{ steps.release.outputs.chart }}
     steps:
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@0.20.2
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@0.23.0
         with:
           oci-registry: ${{ inputs.oci-registry }}
           chart-values: ${{ inputs.chart-values }}

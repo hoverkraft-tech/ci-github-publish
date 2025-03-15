@@ -73,7 +73,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 
 | **Output**       | **Description**                 |
 | ---------------- | ------------------------------- |
-| <code>url</code> | URL of the deployed application |
+| <code>URL</code> | URL of the deployed application |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

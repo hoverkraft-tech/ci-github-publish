@@ -1,0 +1,128 @@
+# Clean a deployment in an ArgoCD App Of Apps Pattern context.
+# See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern>.
+# This workflow is triggered by a repository dispatch event
+# https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch
+# Payload:
+# {
+#   "event_type": "clean-deploy",
+#   "client_payload": {
+#     "repository": "repository name (e.g. my-repository)",
+#     "review_apps": ["An array of names of the review apps to be cleaned (e.g. ["pr-123"]; ["2.0.0-rc.0", "2.0.0-rc.1"])"]
+#   }
+# }
+#
+
+name: Clean deploy for ArgoCD App of Apps
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          Json array of runner(s) to use.
+          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  deploy-files-to-clean:
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: check-client-payload
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const environment = ${{ toJSON(github.event.client_payload.environment) }};
+            if (!environment) {
+              core.setFailed("Environment is not defined in the client payload");
+              return;
+            }
+            core.setOutput("environment", environment);
+
+            const globber = await glob.create(`./*/apps/${clientPayload.environment}`);
+            const paths = await globber.glob();
+            if (paths.length === 0) {
+              core.setFailed(`No environment dir found for ${clientPayload.environment}`);
+              return;
+            }
+
+            if (paths.length > 1) {
+              core.setFailed(`Multiple environment dirs found for ${clientPayload.environment}`);
+              return;
+            }
+
+            const environmentDir = paths[0];
+
+            const repository = ${{ toJSON(github.event.client_payload.repository) }};
+
+            if (!repository) {
+              core.setFailed("Repository is not defined in the client payload");
+              return;
+            }
+
+            const applicationDir = `${environmentDir}/apps/${repository}`;
+            if (!fs.existsSync(applicationDir)) {
+              core.setFailed(`No application dir found for "${repository}" in "${environmentDir}"`);
+              return;
+            }
+            core.setOutput("application-dir", applicationDir);
+
+            // Check if the application dir has a manifest dir
+            const rootDir = path.resolve(`${environmentDir}/..`);
+            const manifestDir = `${rootDir}/manifests/${environment}/${repository}`;
+            if (!fs.existsSync(manifestDir)) {
+              core.setFailed(`No manifest dir found in "${manifestDir}"`);
+              return;
+            }
+
+            core.setOutput("manifest-dir", manifestDir);
+
+      - id: remove-files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const applicationDir = ${{ toJSON(steps.check-client-payload.outputs.application-dir) }};
+            const manifestDir = ${{ toJSON(steps.check-client-payload.outputs.manifest-dir) }};
+
+            let hasChanges = false;
+
+            const applicationFile = `${applicationDir}/${repository}.yml`;
+            if(fs.existsSync(applicationFile)) {
+              fs.unlinkSync(applicationFile);
+              hasChanges = true;
+            }
+
+            const manifestFile = `${manifestDir}/${repository}.yml`;
+            if(fs.existsSync(manifestFile)) {
+              fs.unlinkSync(manifestFile);
+              hasChanges = true;
+            }
+
+            core.setOutput("has-changes", hasChanges);
+
+      - uses: actions/create-github-app-token@v1
+        if: steps.remove-files.outputs.has-changes == 'true'
+        id: generate-token
+        with:
+          app-id: ${{ vars.CI_BOT_APP_ID }}
+          private-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
+
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.16.0
+        if: steps.remove-files.outputs.has-changes == 'true'
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          branch: chore/clean-review-apps-${{ github.event.client_payload.repository }}
+          title: "feat(${{ github.event.client_payload.repository }}): clean review apps"
+          body: Clean review apps of ${{ github.event.client_payload.repository }}
+          commit-message: |
+            feat(${{ github.event.client_payload.repository }}): clean review apps
+
+            [skip ci]

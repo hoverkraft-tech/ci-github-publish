@@ -8,14 +8,9 @@ description: |
   See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#repository_dispatch>.
 
 inputs:
-  github-token:
-    description: |
-      GitHub Token for dispatch an event to a remote repository.
-      Permissions: 
-        - contents: write
-      See <https://github.com/peter-evans/repository-dispatch#usage>.
-    required: false
-    default: ${{ github.token }}
+  deployment-id:
+    description: "Deployment ID to be used in the ArgoCD application manifest"
+    required: true
   chart:
     description: |
       Chart to deploy. Example: "ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0".
@@ -34,6 +29,14 @@ inputs:
   url:
     description: "The URL which respond to deployed application."
     required: true
+  github-token:
+    description: |
+      GitHub Token for dispatch an event to a remote repository.
+      Permissions: 
+        - contents: write
+      See <https://github.com/peter-evans/repository-dispatch#usage>.
+    required: false
+    default: ${{ github.token }}
 
 outputs:
   url:

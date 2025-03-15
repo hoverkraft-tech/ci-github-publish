@@ -115,6 +115,7 @@ jobs:
     name: Start deploy
     uses: ./.github/workflows/deploy-start.yml
     with:
+      runs-on: ${{ inputs.runs-on }}
       environment: ${{ inputs.environment }}
 
   prepare-deploy:
@@ -193,6 +194,7 @@ jobs:
     needs: prepare-deploy
     uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@0.20.2
     with:
+      runs-on: ${{ inputs.runs-on }}
       oci-registry: ${{ inputs.oci-registry }}
       images: ${{ needs.prepare-deploy.outputs.images }}
     secrets:
@@ -290,7 +292,7 @@ jobs:
   deploy-chart:
     name: Deploy chart
     runs-on: ${{ fromJson(inputs.runs-on) }}
-    needs: [prepare-deploy, release-chart]
+    needs: [deploy-start, prepare-deploy, release-chart]
     steps:
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
@@ -352,6 +354,7 @@ jobs:
       - if: ${{ inputs.deploy-type == 'helm-repository-dispatch' }}
         uses: ./self-workflow/actions/deploy/helm-repository-dispatch
         with:
+          deployment-id: ${{ needs.deploy-start.outputs.deployment-id }}
           chart: ${{ needs.release-chart.outputs.chart }}
           environment: ${{ inputs.environment }}
           url: ${{ steps.prepare-deployment.outputs.url }}
@@ -374,6 +377,7 @@ jobs:
     needs: [deploy-start, deploy-chart]
     uses: ./.github/workflows/deploy-finish.yml
     with:
+      runs-on: ${{ inputs.runs-on }}
       deployment-id: ${{ needs.deploy-start.outputs.deployment-id }}
       environment: ${{ needs.deploy-start.outputs.environment }}
       extra: ${{ toJSON(needs.deploy-chart.outputs) }}

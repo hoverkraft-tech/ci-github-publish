@@ -25,6 +25,7 @@ jobs:
         id: argocd-application-manifest
         uses: ./actions/deploy/argocd-application-manifest
         with:
+          deployment-id: 999
           manifest-file: $TEST_APPLICATION_MANIFEST
           namespace: test-app-pr-100
           chart-name: test-app

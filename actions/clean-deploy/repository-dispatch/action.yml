@@ -1,0 +1,38 @@
+name: Clean deploy via a repository dispatch
+description: |
+  Action to clean a deployment via GitHub repository dispatch event.
+  See <https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event>.
+  See <https://github.com/peter-evans/repository-dispatch>.
+
+  The target repository should implement a workflow that handle this dispatch event.
+  See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#repository_dispatch>.
+
+inputs:
+  github-token:
+    description: |
+      GitHub Token for dispatch an event to a remote repository.
+      Permissions: 
+        - contents: write
+      See <https://github.com/peter-evans/repository-dispatch#usage>.
+    required: false
+    default: ${{ github.token }}
+  repository:
+    description: "Target repository where the deployment should be cleaned."
+    required: true
+  environment:
+    description: "Deployment destination to be cleaned."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: peter-evans/repository-dispatch@v3
+      with:
+        token: ${{ inputs.github-token }}
+        repository: ${{ inputs.repository }}
+        event-type: clean-deploy
+        client-payload: |
+          {
+            "repository": "${{ github.event.repository.name }}",
+            "environment": "${{ inputs.environment }}"
+          }

@@ -7,6 +7,9 @@ description: |
   - Updates the `tags.datadoghq.com/version` key to the chart version.
 
 inputs:
+  deployment-id:
+    description: "Deployment ID to be used in the ArgoCD application manifest"
+    required: true
   namespace:
     description: "Namespace to deploy the application"
     required: true
@@ -80,11 +83,12 @@ runs:
         cmd: |
           yq -i '
             .metadata.name = "${{ inputs.namespace }}" |
+            .metadata.annotations["argocd.argoproj.io/deployment-id"] = "${{ inputs.deployment-id }}" |
             .spec.destination.namespace = "${{ inputs.namespace }}" |
-            .spec.source.chart = "${{ inputs.chart-name }}" |
-            .spec.source.repoURL = "${{ inputs.chart-repository }}" |
-            .spec.source.targetRevision = "${{ inputs.chart-version }}" |
-            .spec.source.helm.values |= (
+            .spec.sources[0].chart = "${{ inputs.chart-name }}" |
+            .spec.sources[0].repoURL = "${{ inputs.chart-repository }}" |
+            .spec.sources[0].targetRevision = "${{ inputs.chart-version }}" |
+            .spec.sources[0].helm.values |= (
                 from_yaml |
                 ${{ steps.common-chart-yq-updates.outputs.cmd }}
                 ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}

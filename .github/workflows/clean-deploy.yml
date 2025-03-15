@@ -1,0 +1,129 @@
+# Clean deploy
+# ==========================
+# Reusable workflow to clean a deployment of an Helm chart.
+name: "Clean deploy"
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          Json array of runner(s) to use.
+          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      github-app-id:
+        description: |
+          GitHub App ID to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
+        required: false
+        type: string
+      clean-deploy-type:
+        description: |
+          Type of 
+          Supported values:
+            - [`repository-dispatch`](../../actions/clean-deploy/repository-dispatch/README.md).
+        type: string
+        required: false
+        default: helm-repository-dispatch
+      clean-deploy-parameters:
+        description: |
+          Inputs to pass to the clean action.
+          JSON object, depending on the clean-deploy-type.
+          For example, for `repository-dispatch`:
+            {
+              "repository": "my-org/my-repo"
+            }
+        type: string
+    secrets:
+      github-token:
+        description: |
+          GitHub token for deploying.
+          Permissions:
+            - contents: write
+      github-app-key:
+        description: |
+          GitHub App private key to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
+
+permissions:
+  contents: write
+  issues: write
+  packages: write
+  pull-requests: write
+  actions: read
+  deployments: write
+  # FIXME: This is a workaround for having workflow ref. See https://github.com/orgs/community/discussions/38659
+  id-token: write
+
+jobs:
+  clean-deploy:
+    name: Clean deploy
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    steps:
+      - id: get-issue-number
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@0.16.1
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@v3
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          echo "self-workflow" >> .gitignore
+          echo "self-workflow" >> .dockerignore
+
+      - id: prepare-cleaning
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Repository
+            const repository = `${{ fromJSON(inputs.clean-deploy-parameters).repository }}`.trim();
+
+            if (repository) {
+              core.setOutput("repository", repository);
+
+              const [ownerName, repoName] = repository.split('/');
+              core.setOutput("owner", ownerName);
+            }
+
+      - uses: actions/create-github-app-token@v1
+        if: ${{ inputs.github-app-id }}
+        id: generate-token
+        with:
+          app-id: ${{ inputs.github-app-id }}
+          private-key: ${{ secrets.github-app-key }}
+          owner: ${{ steps.prepare-cleaning.outputs.owner }}
+
+      - if: ${{ inputs.clean-deploy-type == 'repository-dispatch' }}
+        uses: ./self-workflow/actions/clean-deploy/repository-dispatch
+        with:
+          environment: ${{ inputs.environment }}
+          repository: ${{ steps.prepare-cleaning.outputs.repository }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+
+      - uses: ./self-workflow/actions/deployment/delete
+        with:
+          token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@0.16.1
+        with:
+          title: "Deployment has been deleted :wastebasket:."
+          body: "The deployment of the current pull request has been deleted if it was existing."
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@v4
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions

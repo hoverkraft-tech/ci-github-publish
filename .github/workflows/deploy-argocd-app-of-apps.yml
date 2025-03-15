@@ -1,4 +1,4 @@
-# Deploy workflow to deploy a Helm chart in a ArgoCD App Of Apps Pattern context.
+# Deploy workflow to deploy a Helm chart in an ArgoCD App Of Apps Pattern context.
 # See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern>.
 #
 # This workflow is triggered by a repository dispatch event.
@@ -7,6 +7,7 @@
 # {
 #   "event_type": "deploy",
 #   "client_payload": {
+#     "deployment-id": "unique deployment id (e.g. 1234)",
 #     "environment": "where to deploy application (e.g. reviews-app, staging, production)",
 #     "repository": "repository name (e.g. my-repository)",
 #     "chart": "full chart name image tag (e.g. ghcr.io/my-org/my-repository/charts/application:0.1.14-pr-82-xxx)",
@@ -16,7 +17,7 @@
 #
 # It supports templated Application.
 
-name: Deploy
+name: Deploy ArgoCD App of Apps
 
 on:
   workflow_call:
@@ -27,13 +28,6 @@ on:
           See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
         type: string
         default: '["ubuntu-latest"]'
-        required: false
-      concurrency:
-        description: |
-          Name of the concurrency group to use.
-          See <https://docs.github.com/en/actions/using-jobs/using-concurrency>.
-        type: string
-        default: "ci-commit"
         required: false
       template-filename:
         description: Filename of the template to use.
@@ -57,7 +51,7 @@ on:
           See <https://github.com/actions/create-github-app-token>.
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
   # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
   id-token: write
@@ -74,6 +68,7 @@ jobs:
       manifest-template: ${{ steps.files-variables.outputs.manifest-template }}
       manifest-file: ${{ steps.files-variables.outputs.manifest-file }}
       namespace: ${{ steps.slugify-namespace.outputs.result }}
+      deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
     steps:
       - uses: actions/checkout@v4
 
@@ -81,6 +76,16 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require("node:fs");
+            const path = require("node:path");
+
+            const deploymentId = ${{ toJSON(github.event.client_payload['deployment-id']) }};
+            if (!deploymentId) {
+              core.setFailed("Deployment ID is not defined in the client payload");
+              return;
+            }
+            core.setOutput("deployment-id", deploymentId);
+
             const environment = ${{ toJSON(github.event.client_payload.environment) }};
             if (!environment) {
               core.setFailed("Environment is not defined in the client payload");
@@ -88,15 +93,15 @@ jobs:
             }
             core.setOutput("environment", environment);
 
-            const globber = await glob.create(`./*/apps/${clientPayload.environment}`);
+            const globber = await glob.create(`./*/apps/${environment}/`,{ implicitDescendants: false, matchDirectories: true });
             const paths = await globber.glob();
             if (paths.length === 0) {
-              core.setFailed(`No environment dir found for ${clientPayload.environment}`);
+              core.setFailed(`No environment dir found for ${environment}`);
               return;
             }
 
             if (paths.length > 1) {
-              core.setFailed(`Multiple environment dirs found for ${clientPayload.environment}`);
+              core.setFailed(`Multiple environment dirs found for ${environment}: ${paths.join(", ")}`);
               return;
             }
 
@@ -111,7 +116,7 @@ jobs:
 
             core.setOutput("repository", repository);
 
-            const applicationDir = `${environmentDir}/apps/${repository}`;
+            const applicationDir = `${environmentDir}/${repository}`;
             if (!fs.existsSync(applicationDir)) {
               core.setFailed(`No application dir found for "${repository}" in "${environmentDir}"`);
               return;
@@ -119,24 +124,28 @@ jobs:
             core.setOutput("application-dir", applicationDir);
 
             // Check if the application dir has a manifest dir
-            const rootDir = path.resolve(`${environmentDir}/..`);
+            const rootDir = path.resolve(`${environmentDir}/../..`);
+
             const manifestDir = `${rootDir}/manifests/${environment}/${repository}`;
             if (!fs.existsSync(manifestDir)) {
               core.setFailed(`No manifest dir found in "${manifestDir}"`);
               return;
             }
 
-            core.setOutput("manifest-dir", manifestDir);
+            core.setOutput("manifest-dir", path.relative(${{ toJSON(github.workspace) }}, manifestDir));
 
       - id: chart-variables
-        uses: ./.github/actions/parse-chart-uri
+        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@0.23.1
         with:
-          chart: ${{ github.event.client_payload.chart }}
+          uri: ${{ github.event.client_payload.chart }}
 
       - id: files-variables
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require("node:fs");
+            const path = require("node:path");
+
             const templateFilename = ${{ toJSON(inputs.template-filename) }};
             if (!templateFilename) {
               core.setFailed(`Template filename is not defined`);
@@ -146,6 +155,7 @@ jobs:
             const repository = ${{ toJSON(steps.check-client-payload.outputs.repository) }};
             const applicationDir = ${{ toJSON(steps.check-client-payload.outputs.application-dir) }};
             const manifestDir = ${{ toJSON(steps.check-client-payload.outputs.manifest-dir) }};
+            const environment = ${{ toJSON(steps.check-client-payload.outputs.environment) }};
 
             // Check if the application dir has a template file
             const applicationTemplateFile = `${applicationDir}/${templateFilename}`;
@@ -177,10 +187,10 @@ jobs:
               core.setOutput("namespace", namespace);
 
               const applicationFile = `${applicationDir}/${templateDiscriminator}.yml`;
-              core.setOutput("application-file", applicationFile);
+              core.setOutput("application-file", path.relative(${{ toJSON(github.workspace) }}, applicationFile));
 
               const manifestFile = `${manifestDir}/${templateDiscriminator}.yml`;
-              core.setOutput("manifest-file", manifestFile);
+              core.setOutput("manifest-file", path.relative(${{ toJSON(github.workspace) }}, manifestFile));
 
               return;
             }
@@ -195,7 +205,7 @@ jobs:
               return;
             }
 
-            core.setOutput("application-file", applicationFile);
+            core.setOutput("application-file", path.relative(${{ toJSON(github.workspace) }}, applicationFile));
 
             const manifestFile = `${manifestDir}/${repository}.yml`;
             if(!fs.existsSync(manifestFile)) {
@@ -203,7 +213,7 @@ jobs:
               return;
             }
 
-            core.setOutput("manifest-file", manifestFile);
+            core.setOutput("manifest-file", path.relative(${{ toJSON(github.workspace) }}, manifestFile));
 
       - id: slugify-namespace
         uses: hoverkraft-tech/ci-github-common/actions/slugify@0.16.0
@@ -213,7 +223,6 @@ jobs:
   publish-manifest:
     needs: prepare-variables
     runs-on: ${{ fromJson(inputs.runs-on) }}
-    concurrency: ${{ inputs.concurrency }}
     steps:
       - uses: actions/checkout@v4
 
@@ -238,6 +247,7 @@ jobs:
       - uses: ./self-workflow/actions/deploy/argocd-application-manifest
         with:
           manifest-file: ${{ needs.prepare-variables.outputs.application-file }}
+          deployment-id: ${{ needs.prepare-variables.outputs.deployment-id }}
           namespace: ${{ needs.prepare-variables.outputs.namespace }}
           chart-name: ${{ needs.prepare-variables.outputs.chart-name }}
           chart-repository: ${{ needs.prepare-variables.outputs.chart-repository }}

@@ -19,9 +19,6 @@ inputs:
   repository:
     description: "Target repository where the deployment should be cleaned."
     required: true
-  environment:
-    description: "Deployment destination to be cleaned."
-    required: true
 
 runs:
   using: "composite"
@@ -33,6 +30,5 @@ runs:
         event-type: clean-deploy
         client-payload: |
           {
-            "repository": "${{ github.event.repository.name }}",
-            "environment": "${{ inputs.environment }}"
+            "repository": "${{ github.event.repository.name }}"
           }

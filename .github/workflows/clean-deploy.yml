@@ -94,6 +94,7 @@ jobs:
               core.setOutput("owner", ownerName);
             }
 
+      # jscpd:ignore-start
       - uses: actions/create-github-app-token@v1
         if: ${{ inputs.github-app-id }}
         id: generate-token
@@ -101,11 +102,11 @@ jobs:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
           owner: ${{ steps.prepare-cleaning.outputs.owner }}
+      # jscpd:ignore-end
 
       - if: ${{ inputs.clean-deploy-type == 'repository-dispatch' }}
         uses: ./self-workflow/actions/clean-deploy/repository-dispatch
         with:
-          environment: ${{ inputs.environment }}
           repository: ${{ steps.prepare-cleaning.outputs.repository }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 

@@ -1,6 +1,9 @@
 name: Deploy - Report
-description: |
-  Action to report deploy result
+author: Hoverkraft
+branding:
+  icon: list
+  color: gray-dark
+description: Action to report deploy result
 
 inputs:
   environment:
@@ -85,7 +88,7 @@ runs:
 
             message = "";
             if (url) {
-              message += `Here it is: [${url}](${url})\n\n\`\`\`\n${url}\n\`\`\`\n\n`;
+              message += `Here it is: <a href="${url}">${url}</a>\n\n\`\`\`\n${url}\n\`\`\`\n\n`;
             }
 
             if (isIssueComment) {
@@ -145,7 +148,7 @@ runs:
     - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@0.16.1
       if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       with:
-        title: ${{ steps.get-deployment-result.outputs.title }}
+        title: "## ${{ steps.get-deployment-result.outputs.title }}"
         body: |
           ${{ steps.get-deployment-result.outputs.message }}
         reactions: ${{ steps.get-deployment-result.outputs.reaction }}

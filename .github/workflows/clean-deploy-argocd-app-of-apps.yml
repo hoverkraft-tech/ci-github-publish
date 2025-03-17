@@ -1,4 +1,6 @@
-# Clean a deployment in an ArgoCD App Of Apps Pattern context.
+# Clean Deploy - ArgoCD App Of Apps
+# ==========================
+# Reusable workflow that clean a deployment in an ArgoCD App Of Apps Pattern context.
 # See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern>.
 # This workflow is triggered by a repository dispatch event
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch
@@ -7,7 +9,7 @@
 #   "event_type": "clean-deploy",
 #   "client_payload": {
 #     "repository": "repository name (e.g. my-repository)",
-#     "review_apps": ["An array of names of the review apps to be cleaned (e.g. ["pr-123"]; ["2.0.0-rc.0", "2.0.0-rc.1"])"]
+#     "environment": "environment name (e.g. production, review-apps:pr-1234)",
 #   }
 # }
 #
@@ -24,18 +26,32 @@ on:
         type: string
         default: '["ubuntu-latest"]'
         required: false
+      github-app-id:
+        description: |
+          GitHub App ID to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
+        required: false
+        type: string
+    secrets:
+      github-token:
+        description: |
+          GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
+          See <https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md>.
+      github-app-key:
+        description: |
+          GitHub App private key to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
-  actions: write
+  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+  id-token: write
 
 jobs:
   deploy-files-to-clean:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     steps:
-      - uses: actions/checkout@v4
-
       - id: check-client-payload
         uses: actions/github-script@v7
         with:
@@ -47,78 +63,72 @@ jobs:
             }
             core.setOutput("environment", environment);
 
-            const globber = await glob.create(`./*/apps/${clientPayload.environment}`);
-            const paths = await globber.glob();
-            if (paths.length === 0) {
-              core.setFailed(`No environment dir found for ${clientPayload.environment}`);
-              return;
-            }
-
-            if (paths.length > 1) {
-              core.setFailed(`Multiple environment dirs found for ${clientPayload.environment}`);
-              return;
-            }
-
-            const environmentDir = paths[0];
-
             const repository = ${{ toJSON(github.event.client_payload.repository) }};
-
             if (!repository) {
               core.setFailed("Repository is not defined in the client payload");
               return;
             }
+            core.setOutput("repository", repository);
 
-            const applicationDir = `${environmentDir}/apps/${repository}`;
-            if (!fs.existsSync(applicationDir)) {
-              core.setFailed(`No application dir found for "${repository}" in "${environmentDir}"`);
-              return;
-            }
-            core.setOutput("application-dir", applicationDir);
+      - uses: actions/checkout@v4
 
-            // Check if the application dir has a manifest dir
-            const rootDir = path.resolve(`${environmentDir}/..`);
-            const manifestDir = `${rootDir}/manifests/${environment}/${repository}`;
-            if (!fs.existsSync(manifestDir)) {
-              core.setFailed(`No manifest dir found in "${manifestDir}"`);
-              return;
-            }
+      # jscpd:ignore-start
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@v3
 
-            core.setOutput("manifest-dir", manifestDir);
+      - uses: actions/checkout@v4
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
+          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
+      # jscpd:ignore-end
+      - id: get-manifest-files
+        uses: ./self-workflow/actions/argocd/get-manifest-files
+        with:
+          environment: ${{ steps.check-client-payload.outputs.environment }}
+          repository: ${{ steps.check-client-payload.outputs.repository }}
 
       - id: remove-files
         uses: actions/github-script@v7
         with:
           script: |
-            const applicationDir = ${{ toJSON(steps.check-client-payload.outputs.application-dir) }};
-            const manifestDir = ${{ toJSON(steps.check-client-payload.outputs.manifest-dir) }};
+            const fs = require("node:fs");
 
             let hasChanges = false;
 
-            const applicationFile = `${applicationDir}/${repository}.yml`;
-            if(fs.existsSync(applicationFile)) {
+            const applicationFile = ${{ toJSON(steps.get-manifest-files.outputs.application-file) }};
+            if (fs.existsSync(applicationFile)) {
               fs.unlinkSync(applicationFile);
               hasChanges = true;
             }
 
-            const manifestFile = `${manifestDir}/${repository}.yml`;
-            if(fs.existsSync(manifestFile)) {
-              fs.unlinkSync(manifestFile);
+            const namespaceFile = ${{ toJSON(steps.get-manifest-files.outputs.namespace-file) }};
+            if (fs.existsSync(namespaceFile)) {
+              fs.unlinkSync(namespaceFile);
               hasChanges = true;
             }
 
             core.setOutput("has-changes", hasChanges);
 
+      # jscpd:ignore-start
       - uses: actions/create-github-app-token@v1
-        if: steps.remove-files.outputs.has-changes == 'true'
+        if: ${{ steps.remove-files.outputs.has-changes == 'true' && inputs.github-app-id }}
         id: generate-token
         with:
-          app-id: ${{ vars.CI_BOT_APP_ID }}
-          private-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
+          app-id: ${{ inputs.github-app-id }}
+          private-key: ${{ secrets.github-app-key }}
+      # jscpd:ignore-end
 
       - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.16.0
         if: steps.remove-files.outputs.has-changes == 'true'
         with:
-          github-token: ${{ steps.generate-token.outputs.token }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: chore/clean-review-apps-${{ github.event.client_payload.repository }}
           title: "feat(${{ github.event.client_payload.repository }}): clean review apps"
           body: Clean review apps of ${{ github.event.client_payload.repository }}
@@ -126,3 +136,13 @@ jobs:
             feat(${{ github.event.client_payload.repository }}): clean review apps
 
             [skip ci]
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@v4
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions

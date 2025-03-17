@@ -9,6 +9,10 @@ inputs:
   deployment-id:
     description: "The id of the deployment to update"
     required: true
+  repository:
+    description: "The repository where the deployment was made"
+    required: false
+    default: "${{ github.event.repository.name }}"
   state:
     description: "The state of the deployment"
     required: true
@@ -18,6 +22,18 @@ inputs:
   url:
     description: "The url of the deployment"
     required: false
+  update-log-url:
+    description: "Update the log URL of the deployment"
+    required: false
+    default: "true"
+  github-token:
+    description: |
+      GitHub Token to update the deployment.
+      Permissions:
+        - deployments: write
+      See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>.
+    required: false
+    default: ${{ github.token }}
 
 runs:
   using: "composite"
@@ -25,19 +41,29 @@ runs:
     - id: create-deployment
       uses: actions/github-script@v7
       with:
+        github-token: ${{ inputs.github-token }}
         script: |
-          const { data: { html_url } } = await github.rest.actions.getWorkflowRun({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            run_id: context.runId,
-          });
+          const repository = `${{ inputs.repository }}`.trim();
+
+          let logUrl = null;
+
+          const shouldUpdateLogUrl = `${{ inputs.update-log-url }}`.trim();
+          if (shouldUpdateLogUrl === "true") {
+            const { data: { html_url } } = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: repository,
+              run_id: context.runId,
+            });
+
+            logUrl = html_url;
+          } 
 
           await github.rest.repos.createDeploymentStatus({
             owner: context.repo.owner,
-            repo: context.repo.repo,
+            repo: repository,
             deployment_id: `${{ inputs.deployment-id }}`,
             state: `${{ inputs.state }}`,
             environment_url: `${{ inputs.url }}`,
-            log_url: html_url,
+            log_url: logUrl ?? undefined,
             auto_inactive: true,
           });

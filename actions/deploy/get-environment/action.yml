@@ -1,0 +1,49 @@
+name: Deploy - Get Environment
+author: Hoverkraft
+branding:
+  icon: flag
+  color: gray-dark
+description: |
+  Action to get the environment to deploy regarding the workflow context.
+  - If the workflow is triggered by an issue event (or pull-request):
+    If an environement is given, the environment will be set to `environment:issue_number`.
+    If no environment is given, the environment will be set to `review-apps:issue_number`.
+  - Else if no environment is given, the action will fail.
+
+inputs:
+  environment:
+    description: Environment where to deploy.
+    required: false
+
+outputs:
+  environment:
+    description: "The proper environment to deploy to."
+    value: ${{ steps.get-environment.outputs.environment }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: get-issue-number
+      if: ${{ github.event_name == 'issue_comment' || github.event_name == 'pull_request' }}
+      uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@0.16.1
+
+    - id: get-environment
+      uses: actions/github-script@v7
+      with:
+        script: |
+          let environment = ${{ toJSON(inputs.environment) }};
+          const issueNumber = ${{ toJSON(steps.get-issue-number.outputs.issue-number) }};
+
+          if (issueNumber) {
+            if (!environment) {
+              environment = 'review-apps';
+            }
+
+            environment = `${environment}:pr-${issueNumber}`;
+          }
+
+          if (!environment) {
+            return core.setFailed('Environment not set. Please set the environment input.');
+          }
+
+          core.setOutput('environment', environment);

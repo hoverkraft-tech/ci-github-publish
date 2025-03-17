@@ -19,7 +19,10 @@ on:
         default: '["ubuntu-latest"]'
         required: false
       environment:
-        description: "Destination where to deploy given chart."
+        description: |
+          Destination where to deploy given chart.
+          Can be an environment name or an environment name with a dynamic identifier.
+          Example: `review-apps:pr-1234`.
         type: string
         required: true
       tag:
@@ -29,7 +32,12 @@ on:
         type: string
         required: false
       url:
-        description: "The URL which respond to deployed application."
+        description: |
+          The URL which respond to deployed application.
+          If not provided, will be set to the environment URL.
+          Url can contains placeholders:
+            - `{{ identifier }}`: will be replaced by the environment identifier.
+          Example: `https://{{ identifier }}.my-application.com`.
         type: string
         required: false
       deploy-type:
@@ -78,6 +86,16 @@ on:
         description: |
           Define chart values to be filled.
           See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.
+          Accept placeholders:
+            - `{{ tag }}`: will be replaced by the tag.
+            - `{{ url }}`: will be replaced by the url.
+          If "path" starts with "deploy", the chart value wil be passed to the deploy action.
+          Example:
+            [
+              { "path": ".image", "image": "application" },
+              { "path": ".application.version", "value": "{{ tag }}" },
+              { "path": "deploy.ingress.hosts[0].host", "value": "{{ url }}" }
+            ]
         type: string
         required: true
       github-app-id:
@@ -206,6 +224,7 @@ jobs:
     needs: [prepare-deploy, build-oci-images]
     outputs:
       chart: ${{ steps.release.outputs.image }}
+      deploy-values: ${{ steps.set-chart-values.outputs.deploy-values }}
     steps:
       - id: set-chart-values
         uses: actions/github-script@v7
@@ -264,7 +283,7 @@ jobs:
               else if (chartValue.value !== undefined) {
                 // Handle placeholders
                 const placeholders = [
-                  { match: /{{\s*tag\s*}}/g, value: tag },
+                  { match: /{{\s*tag\s*}}/g, value: tag }
                 ];
 
                 for (const placeholder of placeholders) {
@@ -277,7 +296,16 @@ jobs:
 
             const values = chartValues.map(injectChartValue).flat();
 
-            core.setOutput('values', JSON.stringify(values));
+            // Separate value that start with "deploy"
+            core.setOutput('values', JSON.stringify(values.filter((value) => !value.path.startsWith('deploy.'))));
+
+            const deployValues = values.filter((value) => value.path.startsWith('deploy.')).map((value) => {
+              // Remove the "deploy." prefix
+              value.path = value.path.replace(/^deploy\./, '.');
+              return value;
+            });
+
+            core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
         uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@0.20.2
@@ -323,25 +351,67 @@ jobs:
               core.setOutput("owner", ownerName);
             }
 
+            const environment = `${{ needs.deploy-start.outputs.environment }}`.trim();
+            if (!environment) {
+              core.setFailed("Environment is not defined");
+              return;
+            }
+
+            const environmentParts = environment.split(':');
+            const environmentName = environmentParts[0];
+            const environmentIdentifier = environmentParts[1];
+
             // URL
-            const url = `${{ inputs.url }}`.trim();
-            if (url) {
-              core.setOutput("url", url);
-            } else {
+            let url = `${{ inputs.url }}`.trim();
+            if (!url) {
               // Try to get it from the env vars
               const allowedEnvVars = [
-                `${{ inputs.environment }}_URL`.toUpperCase().replace(/-/g, '_'),
+                `${environmentName}_URL`.toUpperCase().replace(/-/g, '_'),
                 `URL`,
               ];
 
               for (const envVar of allowedEnvVars) {
                 const envVarValue = process.env[envVar];
                 if (envVarValue) {
-                  core.setOutput("url", envVarValue);
+                  url = envVarValue;
                   break;
                 }
               }
             }
+
+            if (!url) {
+              core.setFailed("URL is not defined");
+              return;
+            }
+
+            // Handle placeholders
+            const placeholders = [
+              { match: /{{\s*identifier\s*}}/g, value: environmentIdentifier },
+            ];
+
+            for (const placeholder of placeholders) {
+              url = url.replace(placeholder.match, placeholder.value);
+            }
+
+            core.setOutput("url", url);
+
+            let deployValues = ${{ needs.release-chart.outputs.deploy-values }};
+
+            if (deployValues) {
+              // Handle placeholders
+              const placeholders = [
+                { match: /{{\s*url\s*}}/g, value: url },
+              ];
+
+              for (const placeholder of placeholders) {
+                deployValues.forEach((value) => {
+                  if (value.value) {
+                    value.value = value.value.replace(placeholder.match, placeholder.value);
+                  }
+                });
+              }
+            }
+            core.setOutput("deploy-values", JSON.stringify(deployValues));
 
       - uses: actions/create-github-app-token@v1
         if: ${{ inputs.github-app-id }}
@@ -356,7 +426,8 @@ jobs:
         with:
           deployment-id: ${{ needs.deploy-start.outputs.deployment-id }}
           chart: ${{ needs.release-chart.outputs.chart }}
-          environment: ${{ inputs.environment }}
+          chart-values: ${{ steps.prepare-deployment.outputs.deploy-values }}
+          environment: ${{ needs.deploy-start.outputs.environment }}
           url: ${{ steps.prepare-deployment.outputs.url }}
           repository: ${{ steps.prepare-deployment.outputs.repository }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}

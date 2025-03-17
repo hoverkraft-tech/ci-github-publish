@@ -24,7 +24,7 @@ inputs:
     description: "Target repository where to deploy given chart."
     required: true
   environment:
-    description: "Destination where to deploy given chart."
+    description: "Environment where to deploy given chart."
     required: true
   url:
     description: "The URL which respond to deployed application."
@@ -77,6 +77,7 @@ runs:
         event-type: deploy
         client-payload: |
           {
+            "deployment-id": "${{ inputs.deployment-id }}",
             "repository": "${{ github.event.repository.name }}",
             "chart": "${{ inputs.chart }}",
             "environment": "${{ inputs.environment }}",

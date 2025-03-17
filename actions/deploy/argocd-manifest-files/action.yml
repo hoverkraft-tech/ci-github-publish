@@ -1,6 +1,11 @@
-name: "Deploy - ArgoCD Application manifest"
+name: "Deploy - ArgoCD Manifest Files"
+author: Hoverkraft
+branding:
+  icon: file-text
+  color: gray-dark
 description: |
-  Prepares the ArgoCD application manifest for deployment. Fills in the required fields and updates the Helm chart values.
+  Prepares the ArgoCD manifest files for deployment. 
+  Fills in the required fields and updates the Helm chart values.
   This action is used to deploy an application using ArgoCD.
   It updates the application manifest with the provided values and deploys it to the specified namespace.
   It supports vendor-specific updates for the chart version and other properties:
@@ -29,8 +34,11 @@ inputs:
           { "path": "application.appUri", "value": "https://my-app-review-app-1234.my-org.com" }
         ]
     required: false
-  manifest-file:
+  application-file:
     description: "Path to the application manifest file"
+    required: true
+  namespace-file:
+    description: "Path to the namespace manifest file"
     required: true
 
 runs:
@@ -78,7 +86,8 @@ runs:
 
           core.setOutput('cmd', yqUpdates);
 
-    - uses: mikefarah/yq@v4.45.1
+    - id: update-application-file
+      uses: mikefarah/yq@v4.45.1
       with:
         cmd: |
           yq -i '
@@ -94,4 +103,13 @@ runs:
                 ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
                 to_yaml
             )
-          ' ${{ inputs.manifest-file }}
+          ' ${{ inputs.application-file }}
+
+    - id: update-namespace-file
+      uses: mikefarah/yq@v4.45.1
+      with:
+        cmd: |
+          yq -i '
+            .metadata.name = "${{ inputs.namespace }}" |
+            .metadata.annotations["app.kubernetes.io/instance"] = "${{ inputs.namespace }}"
+          ' ${{ inputs.namespace-file }}

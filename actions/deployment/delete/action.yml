@@ -85,9 +85,20 @@ runs:
         script: |
           const reviewAppsEnvironments = JSON.parse(`${{ steps.delete-deployments.outputs.review-apps-environments }}`);
           for (const environment of reviewAppsEnvironments) {
-            await github.rest.repos.deleteAnEnvironment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              environment_name: environment,
-            });
+            // Environment may be unavailable if it was already deleted or if the token does not have access to it
+            try {
+              await github.rest.repos.deleteDeployment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                environment_name: environment,
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                core.warning(
+                  `Environment "${environment}" for "${context.repo.owner}/${context.repo.repo}" cannot be deleted as it is not found`
+                )
+              } else {
+                throw error
+              }
+            }
           }

@@ -18,6 +18,6 @@ jobs:
     uses: ./.github/workflows/__test-action-deployment.yml
     secrets: inherit
 
-  test-action-deploy-argocd-application-manifest:
+  test-action-deploy-argocd-manifest-files:
     needs: linter
-    uses: ./.github/workflows/__test-action-deploy-argocd-application-manifest.yml
+    uses: ./.github/workflows/__test-action-deploy-argocd-manifest-files.yml

@@ -1,0 +1,136 @@
+# Finish deploy - ArgoCD App Of Apps
+# ==========================
+# Reusable workflow to finish a deploy process in an ArgoCD App Of Apps Pattern context.
+# See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern>.
+#
+# This workflow is triggered by a repository dispatch event.
+# See <https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch>.
+# Payload:
+# {
+#   "event_type": "finish-deploy",
+#   "client_payload": {
+#     "deployment-id": "unique deployment id (e.g. 1234)",
+#     "repository": "repository name (e.g. my-repository)",
+#     "url": "url of the deployed application (e.g. https://my-application.com)",
+#     "state": "status of the deployment (e.g. success, failure)",
+#     "description": "description of the deployment (e.g. deployment successful)",
+#   }
+# }
+
+name: Finish deploy - ArgoCD App of Apps
+# jscpd:ignore-start
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          Json array of runner(s) to use.
+          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      github-app-id:
+        description: |
+          GitHub App ID to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
+        required: false
+        type: string
+    secrets:
+      github-token:
+        description: |
+          GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
+          See <https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md>.
+      github-app-key:
+        description: |
+          GitHub App private key to generate GitHub token in place of github-token.
+          See <https://github.com/actions/create-github-app-token>.
+# jscpd:ignore-end
+permissions:
+  contents: read
+  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+  id-token: write
+
+jobs:
+  finish-deploy:
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    outputs:
+      repository: ${{ steps.check-client-payload.outputs.repository }}
+      deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: check-client-payload
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentId = ${{ toJSON(github.event.client_payload['deployment-id']) }};
+            if (!deploymentId) {
+              core.setFailed("Deployment ID is not defined in the client payload");
+              return;
+            }
+            core.setOutput("deployment-id", deploymentId);
+
+            const repository = ${{ toJSON(github.event.client_payload['repository']) }};
+            if (!repository) {
+              core.setFailed("Repository is not defined in the client payload");
+              return;
+            }
+            core.setOutput("repository", repository);
+
+            let url = ${{ toJSON(github.event.client_payload['url']) }};
+            if (url) {
+              try {
+                new URL(url);
+              } catch (error) {
+                core.setFailed(`Invalid URL "${url}": ${error.message}`);
+                return;
+              }
+              core.setOutput("url", url);
+            }
+
+            const state = ${{ toJSON(github.event.client_payload['state']) }};
+            if (!state) {
+              core.setFailed("State is not defined in the client payload");
+              return;
+            }
+            core.setOutput("state", state);
+
+            const description = ${{ toJSON(github.event.client_payload['description']) }};
+            if (!description) {
+              core.setFailed("Description is not defined in the client payload");
+              return;
+            }
+            core.setOutput("description", description);
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@v3
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          echo "self-workflow" >> .gitignore
+          echo "self-workflow" >> .dockerignore
+
+      - uses: actions/create-github-app-token@v1
+        if: inputs.github-app-id
+        id: generate-token
+        with:
+          app-id: ${{ inputs.github-app-id }}
+          private-key: ${{ secrets.github-app-key }}
+          owner: ${{ github.repository_owner }}
+
+      - uses: ./self-workflow/actions/deployment/update
+        with:
+          deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
+          repository: ${{ steps.check-client-payload.outputs.repository }}
+          url: ${{ steps.check-client-payload.outputs.url }}
+          state: ${{ steps.check-client-payload.outputs.state }}
+          description: ${{ steps.check-client-payload.outputs.description }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          update-log-url: "false"

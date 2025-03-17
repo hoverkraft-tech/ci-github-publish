@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       trigger: ${{ steps.trigger.outputs.trigger }}
-      environment: ${{ steps.set-environment.outputs.environment }}
+      environment: ${{ steps.get-environment.outputs.environment }}
     steps:
       - id: not-created-issue-comment
         if: github.event_name != 'issue_comment'
@@ -95,30 +95,38 @@ jobs:
             exit 0
           fi
 
-      - id: get-issue-number
-        if: ${{ steps.trigger.outputs.trigger == 'issue_comment' }}
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@0.16.1
-
-      - id: set-environment
+        # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
         if: ${{ steps.trigger.outputs.trigger }}
-        run: |
-          ENVIRONMENT="${{ inputs.environment }}"
+        uses: ChristopherHX/oidc@v3
 
-          ISSUE_NUMBER="${{ steps.get-issue-number.outputs.issue-number }}"
-          if [ -n "$ISSUE_NUMBER" ]; then
-            if [ -z "$ENVIRONMENT" ]; then
-              ENVIRONMENT="review-apps"
-            fi
+      - uses: actions/checkout@v4
+        if: ${{ steps.trigger.outputs.trigger }}
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          echo "self-workflow" >> .gitignore
+          echo "self-workflow" >> .dockerignore
 
-            ENVIRONMENT="${ENVIRONMENT}:${ISSUE_NUMBER}"
-          fi
+      - id: get-environment
+        if: ${{ steps.trigger.outputs.trigger }}
+        uses: ./self-workflow/actions/deploy/get-environment
+        with:
+          environment: ${{ inputs.environment }}
 
-          if [ -z "$ENVIRONMENT" ]; then
-            echo "::error ::Environment not set. Please set the environment input."
-            exit 1
-          fi
-
-          echo "environment=${ENVIRONMENT}" >> "$GITHUB_OUTPUT"
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@v4
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner && steps.trigger.outputs.trigger
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
 
   start-deploy:
     name: Start deploy

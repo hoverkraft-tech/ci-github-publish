@@ -12,7 +12,7 @@ inputs:
   timeout:
     description: "Timeout in seconds"
     required: false
-    default: "180"
+    default: "240"
   allow-failure:
     description: |
       Defines if the action should fail if the deployment status is not "success".
@@ -23,6 +23,9 @@ outputs:
   status:
     description: "The status of the deployment"
     value: ${{ steps.get-deployment-status.outputs.status }}
+  url:
+    description: "The URL of the deployment"
+    value: ${{ steps.get-deployment-status.outputs.url }}
 
 runs:
   using: "composite"
@@ -31,7 +34,7 @@ runs:
       uses: actions/github-script@v7
       with:
         script: |
-          const deploymentId = parseInt(`${{ inputs.deployment-id }}`, 10);
+          const deploymentId = `${{ inputs.deployment-id }}`;
           const finishedStatuses = ["success", "failure", "error"];
 
           const timeout = parseInt(`${{ inputs.timeout }}`, 10);
@@ -40,43 +43,64 @@ runs:
             return;
           }
 
-          const startTime = Date.now();
-          const endTime = startTime + timeout * 1000;
-          let deploymentStatus;
-
           async function isDeploymentFinished(deploymentId) {
-            const { data: deployment } = await github.rest.repos.getDeployment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              deployment_id: deploymentId,
-            });
+            const deploymentStatuses = await github.paginate(
+              github.rest.repos.listDeploymentStatuses.endpoint.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deploymentId,
+              })
+            );
 
-            return finishedStatuses.includes(deployment.state);
-          }
-
-          // Performs incremental backoff based on timeout and attempt count
-          while (Date.now() < endTime) {
-            deploymentStatus = await isDeploymentFinished(deploymentId);
-            if (deploymentStatus) {
-              break;
+            // Order by updated_at descending
+            deploymentStatuses.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+            if (deploymentStatuses.length === 0) {
+              return null;
             }
 
-            const currentTime = Date.now();
-            const attempt = Math.floor((currentTime - startTime) / 1000);
-            const waitTime = Math.min(2 ** attempt * 1000, timeout * 1000);
+            const deploymentStatus = deploymentStatuses[0];
+            
+            const state = deploymentStatus.state;
+            core.info(`Deployment status state: ${state}`);
 
-            await new Promise(resolve => setTimeout(resolve, waitTime));
+            if (finishedStatuses.includes(state)) {
+              return deploymentStatus;
+            }
+
+            return null;
           }
+
+          async function waitForDeployment(deploymentId, timeout) {
+              const startTime = Date.now();
+              let delay = 1000; // Start with 1 second interval
+
+              while (Date.now() - startTime < timeout * 1000) {
+                  const deploymentStatus = await isDeploymentFinished(deploymentId);
+                  if (deploymentStatus !== null) {
+                      return deploymentStatus;
+                  }
+                  
+                  core.info(`Waiting for deployment... Next check in ${delay / 1000} seconds`);
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                  
+                  delay = Math.min(delay * 2, timeout * 1000); // Exponential backoff up to timeout max
+              }
+              return null;
+          }
+
+          const deploymentStatus = await waitForDeployment(deploymentId, timeout);
 
           if (!deploymentStatus) {
             core.setFailed(`Deployment ${deploymentId} did not finish within ${timeout} seconds.`);
             return;
           }          
 
+          core.setOutput("url", deploymentStatus.environment_url);
+          core.setOutput("status", deploymentStatus.state);
+
           const allowFailure = `${{ inputs.allow-failure }}`.toLowerCase() === "true";
-          if (!allowFailure && deploymentStatus !== "success") {
-            core.setFailed(`Deployment ${deploymentId} failed with status: ${deploymentStatus}`);
+          if (!allowFailure && deploymentStatus.state !== "success") {
+            core.setFailed(`Deployment ${deploymentId} failed with status: ${deploymentStatus.state}`);
           }
 
-          core.info(`Deployment ${deploymentId} finished with status: ${deploymentStatus}`);      
-          core.setOutput("status", deploymentStatus);
+          core.info(`Deployment ${deploymentId} finished with status: ${deploymentStatus.state}`);

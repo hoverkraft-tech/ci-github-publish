@@ -1,6 +1,7 @@
 # Clean deploy
 # ==========================
-# Reusable workflow to clean a deployment of an Helm chart.
+# Reusable workflow to clean a deployment.
+
 name: "Clean deploy"
 
 on:
@@ -26,7 +27,7 @@ on:
             - [`repository-dispatch`](../../actions/clean-deploy/repository-dispatch/README.md).
         type: string
         required: false
-        default: helm-repository-dispatch
+        default: repository-dispatch
       clean-deploy-parameters:
         description: |
           Inputs to pass to the clean action.
@@ -62,9 +63,7 @@ jobs:
     name: Clean deploy
     runs-on: ${{ fromJson(inputs.runs-on) }}
     steps:
-      - id: get-issue-number
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@0.16.1
-
+      # jscpd:ignore-start
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
         uses: ChristopherHX/oidc@v3
@@ -94,7 +93,6 @@ jobs:
               core.setOutput("owner", ownerName);
             }
 
-      # jscpd:ignore-start
       - uses: actions/create-github-app-token@v1
         if: ${{ inputs.github-app-id }}
         id: generate-token
@@ -104,20 +102,23 @@ jobs:
           owner: ${{ steps.prepare-cleaning.outputs.owner }}
       # jscpd:ignore-end
 
-      - if: ${{ inputs.clean-deploy-type == 'repository-dispatch' }}
-        uses: ./self-workflow/actions/clean-deploy/repository-dispatch
-        with:
-          repository: ${{ steps.prepare-cleaning.outputs.repository }}
-          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
-
-      - uses: ./self-workflow/actions/deployment/delete
+      - id: delete-deployment
+        uses: ./self-workflow/actions/deployment/delete
         with:
           token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@0.16.1
+      - uses: ./self-workflow/actions/clean-deploy/repository-dispatch
+        if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' && inputs.clean-deploy-type == 'repository-dispatch' }}
         with:
-          title: "Deployment has been deleted :wastebasket:."
-          body: "The deployment of the current pull request has been deleted if it was existing."
+          repository: ${{ steps.prepare-cleaning.outputs.repository }}
+          environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@0.16.1
+        if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}
+        with:
+          title: "Deployment(s) have been deleted :wastebasket:."
+          body: "The following deployment(s) have been deleted:\n\n- ${{ join(fromJSON(steps.delete-deployment.outputs.environments),'\n- ') }}"
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - uses: actions/checkout@v4

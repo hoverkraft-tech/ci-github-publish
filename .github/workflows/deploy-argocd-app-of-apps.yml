@@ -1,4 +1,6 @@
-# Deploy workflow to deploy a Helm chart in an ArgoCD App Of Apps Pattern context.
+# Deploy - ArgoCD App Of Apps
+# ==========================
+# Reusable workflow to deploy a Helm chart in an ArgoCD App Of Apps Pattern context.
 # See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern>.
 #
 # This workflow is triggered by a repository dispatch event.
@@ -11,7 +13,8 @@
 #     "environment": "where to deploy application (e.g. reviews-app, staging, production)",
 #     "repository": "repository name (e.g. my-repository)",
 #     "chart": "full chart name image tag (e.g. ghcr.io/my-org/my-repository/charts/application:0.1.14-pr-82-xxx)",
-#     "chart-values": "Values to be replaced in the chart (e.g. [{\"path\":\"application.appUri\",\"value\":\"https://my-app-review-app-1234.my-org.com\"}])"
+#     "chart-values": "Values to be replaced in the chart (e.g. [{\"path\":\"application.appUri\",\"value\":\"https://my-app-review-app-1234.my-org.com\"}])",
+#     "url": "The URL which respond to deployed application (e.g. https://my-app-review-app-1234.my-org.com)",
 #   }
 # }
 #
@@ -49,6 +52,16 @@ on:
         description: |
           GitHub App private key to generate GitHub token in place of github-token.
           See <https://github.com/actions/create-github-app-token>.
+    outputs:
+      deployment-id:
+        description: "Deployment ID"
+        value: ${{ jobs.publish-manifest.outputs.deployment-id }}
+      repository:
+        description: "Source repository name"
+        value: ${{ jobs.publish-manifest.outputs.repository }}
+      url:
+        description: "Deployment URL"
+        value: ${{ jobs.publish-manifest.outputs.url }}
 
 permissions:
   contents: read
@@ -57,21 +70,13 @@ permissions:
   id-token: write
 
 jobs:
-  prepare-variables:
+  publish-manifest:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     outputs:
-      chart-repository: ${{ steps.chart-variables.outputs.repository }}
-      chart-name: ${{ steps.chart-variables.outputs.name }}
-      chart-version: ${{ steps.chart-variables.outputs.version }}
-      app-template: ${{ steps.files-variables.outputs.app-template }}
-      application-file: ${{ steps.files-variables.outputs.application-file }}
-      manifest-template: ${{ steps.files-variables.outputs.manifest-template }}
-      manifest-file: ${{ steps.files-variables.outputs.manifest-file }}
-      namespace: ${{ steps.slugify-namespace.outputs.result }}
       deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
+      repository: ${{ steps.check-client-payload.outputs.repository }}
+      url: ${{ steps.check-client-payload.outputs.url }}
     steps:
-      - uses: actions/checkout@v4
-
       - id: check-client-payload
         uses: actions/github-script@v7
         with:
@@ -81,153 +86,44 @@ jobs:
 
             const deploymentId = ${{ toJSON(github.event.client_payload['deployment-id']) }};
             if (!deploymentId) {
-              core.setFailed("Deployment ID is not defined in the client payload");
-              return;
+              return core.setFailed("Deployment ID is not defined in the client payload");
             }
             core.setOutput("deployment-id", deploymentId);
 
-            const environment = ${{ toJSON(github.event.client_payload.environment) }};
+            let environment = ${{ toJSON(github.event.client_payload.environment) }};
             if (!environment) {
-              core.setFailed("Environment is not defined in the client payload");
-              return;
+              return core.setFailed("Environment is not defined in the client payload");
             }
             core.setOutput("environment", environment);
 
-            const globber = await glob.create(`./*/apps/${environment}/`,{ implicitDescendants: false, matchDirectories: true });
-            const paths = await globber.glob();
-            if (paths.length === 0) {
-              core.setFailed(`No environment dir found for ${environment}`);
-              return;
-            }
-
-            if (paths.length > 1) {
-              core.setFailed(`Multiple environment dirs found for ${environment}: ${paths.join(", ")}`);
-              return;
-            }
-
-            const environmentDir = paths[0];
-
             const repository = ${{ toJSON(github.event.client_payload.repository) }};
-
             if (!repository) {
-              core.setFailed("Repository is not defined in the client payload");
-              return;
+              return core.setFailed("Repository is not defined in the client payload");
             }
-
             core.setOutput("repository", repository);
 
-            const applicationDir = `${environmentDir}/${repository}`;
-            if (!fs.existsSync(applicationDir)) {
-              core.setFailed(`No application dir found for "${repository}" in "${environmentDir}"`);
-              return;
-            }
-            core.setOutput("application-dir", applicationDir);
-
-            // Check if the application dir has a manifest dir
-            const rootDir = path.resolve(`${environmentDir}/../..`);
-
-            const manifestDir = `${rootDir}/manifests/${environment}/${repository}`;
-            if (!fs.existsSync(manifestDir)) {
-              core.setFailed(`No manifest dir found in "${manifestDir}"`);
-              return;
+            const url = ${{ toJSON(github.event.client_payload.url) }};
+            if (url) {
+              core.setOutput("url", url);
             }
 
-            core.setOutput("manifest-dir", path.relative(${{ toJSON(github.workspace) }}, manifestDir));
+            const chart = ${{ toJSON(github.event.client_payload.chart) }};
+            if (!chart) {
+              return core.setFailed("Chart is not defined in the client payload");
+            }
+            core.setOutput("chart", chart);
+
+            const chartValues = ${{ toJSON(github.event.client_payload['chart-values']) }};
+            if (chartValues) {
+              core.setOutput("chart-values", chartValues);
+            }
 
       - id: chart-variables
         uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@0.23.1
         with:
-          uri: ${{ github.event.client_payload.chart }}
+          uri: ${{ steps.check-client-payload.outputs.chart }}
 
-      - id: files-variables
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require("node:fs");
-            const path = require("node:path");
-
-            const templateFilename = ${{ toJSON(inputs.template-filename) }};
-            if (!templateFilename) {
-              core.setFailed(`Template filename is not defined`);
-              return;
-            }
-
-            const repository = ${{ toJSON(steps.check-client-payload.outputs.repository) }};
-            const applicationDir = ${{ toJSON(steps.check-client-payload.outputs.application-dir) }};
-            const manifestDir = ${{ toJSON(steps.check-client-payload.outputs.manifest-dir) }};
-            const environment = ${{ toJSON(steps.check-client-payload.outputs.environment) }};
-
-            // Check if the application dir has a template file
-            const applicationTemplateFile = `${applicationDir}/${templateFilename}`;
-            const isTemplateApplication = fs.existsSync(applicationTemplateFile);
-
-            // Template application
-            if (isTemplateApplication) {
-              const manifestTemplateFile = `${manifestDir}/${templateFilename}`;
-              if (!fs.existsSync(manifestTemplateFile)) {
-                core.setFailed(`No template file found in "${templateFile}"`);
-                return;
-              }
-
-              // Get namespace discriminator from chart version
-              // See https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-              const version = ${{ toJSON(steps.chart-variables.outputs.version) }};
-              const regex = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
-              const match = regex.exec(version);
-              if (!match) {
-                core.setFailed(`Invalid version format: ${version}`);
-                return;
-              }
-
-              const prerelease = match[4];
-
-              const templateDiscriminator = prerelease || version;
-
-              const namespace = `${repository}-${templateDiscriminator}`;
-              core.setOutput("namespace", namespace);
-
-              const applicationFile = `${applicationDir}/${templateDiscriminator}.yml`;
-              core.setOutput("application-file", path.relative(${{ toJSON(github.workspace) }}, applicationFile));
-
-              const manifestFile = `${manifestDir}/${templateDiscriminator}.yml`;
-              core.setOutput("manifest-file", path.relative(${{ toJSON(github.workspace) }}, manifestFile));
-
-              return;
-            }
-
-            // Static application
-            const namespace = `${repository}-${environment}`;
-            core.setOutput("namespace", namespace);
-
-            const applicationFile = `${applicationDir}/${repository}.yml`;
-            if (!fs.existsSync(applicationFile)) {
-              core.setFailed(`No application file found in "${applicationFile}"`);
-              return;
-            }
-
-            core.setOutput("application-file", path.relative(${{ toJSON(github.workspace) }}, applicationFile));
-
-            const manifestFile = `${manifestDir}/${repository}.yml`;
-            if(!fs.existsSync(manifestFile)) {
-              core.setFailed(`No manifest file found in "${manifestFile}"`);
-              return;
-            }
-
-            core.setOutput("manifest-file", path.relative(${{ toJSON(github.workspace) }}, manifestFile));
-
-      - id: slugify-namespace
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.16.0
-        with:
-          value: ${{ steps.files-variables.outputs.namespace }}
-
-  publish-manifest:
-    needs: prepare-variables
-    runs-on: ${{ fromJson(inputs.runs-on) }}
-    steps:
       - uses: actions/checkout@v4
-
-      - if: needs.prepare-variables.outputs.app-template != ''
-        run: cp "${{ needs.prepare-variables.outputs.app-template }}" "${{ needs.prepare-variables.outputs.application-file }}"
 
         # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
@@ -241,30 +137,74 @@ jobs:
           sparse-checkout: |
             actions
       - run: |
-          echo "self-workflow" >> .gitignore
-          echo "self-workflow" >> .dockerignore
+          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
+          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
 
-      - uses: ./self-workflow/actions/deploy/argocd-application-manifest
+      - id: get-namespace
+        uses: actions/github-script@v7
         with:
-          manifest-file: ${{ needs.prepare-variables.outputs.application-file }}
-          deployment-id: ${{ needs.prepare-variables.outputs.deployment-id }}
-          namespace: ${{ needs.prepare-variables.outputs.namespace }}
-          chart-name: ${{ needs.prepare-variables.outputs.chart-name }}
-          chart-repository: ${{ needs.prepare-variables.outputs.chart-repository }}
-          chart-version: ${{ needs.prepare-variables.outputs.chart-version }}
-          chart-values: ${{ github.event.client_payload.chart-values }}
+          script: |
+            const namespace = `${{ steps.check-client-payload.outputs.repository }}-${{ steps.check-client-payload.outputs.environment }}`;
+            core.setOutput("namespace", namespace);
 
-      - if: needs.prepare-variables.outputs.manifest-template != '' && needs.prepare-variables.outputs.manifest-file != ''
-        run: cp "${{ needs.prepare-variables.outputs.manifest-template }}" "${{ needs.prepare-variables.outputs.manifest-file }}"
-
-      - if: needs.prepare-variables.outputs.manifest-file != ''
-        uses: mikefarah/yq@v4.45.1
+      - id: slugify-namespace
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.16.0
         with:
-          cmd: |
-            yq -i '
-              .metadata.name = "${{ needs.prepare-variables.outputs.namespace }}" |
-              .metadata.annotations["app.kubernetes.io/instance"] = "${{ needs.prepare-variables.outputs.namespace }}"
-            ' ${{ needs.prepare-variables.outputs.manifest-file }}
+          value: ${{ steps.get-namespace.outputs.namespace }}
+
+      - id: get-manifest-files
+        uses: ./self-workflow/actions/argocd/get-manifest-files
+        with:
+          environment: ${{ steps.check-client-payload.outputs.environment }}
+          repository: ${{ steps.check-client-payload.outputs.repository }}
+
+      - id: get-manifest-templates
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("node:fs");
+            const path = require("node:path");
+
+            const templateFilename = ${{ toJSON(inputs.template-filename) }};
+            if (!templateFilename) {
+              return core.setFailed(`Template filename is not defined`);
+            }
+
+            const applicationFile = ${{ toJSON(steps.get-manifest-files.outputs.application-file) }};
+            if (!applicationFile) {
+              return core.setFailed(`Application file is not defined`);
+            }
+
+            const namespaceFile = ${{ toJSON(steps.get-manifest-files.outputs.namespace-file) }};
+            if (!namespaceFile) {
+              return core.setFailed(`Namespace file is not defined`);
+            }
+
+            const applicationTemplateFile = `${path.dirname(applicationFile)}/${templateFilename}`;
+            const isTemplateApplication = fs.existsSync(applicationTemplateFile);
+            if (!isTemplateApplication) {
+              return;
+            }
+
+            await io.cp(applicationTemplateFile, applicationFile, { force: true });
+
+            const namespaceTemplateFile = `${path.dirname(namespaceFile)}/${templateFilename}`;
+            if (!fs.existsSync(namespaceTemplateFile)) {
+              return core.setFailed(`No template file found in "${namespaceTemplateFile}"`);
+            }
+
+            await io.cp(namespaceTemplateFile, namespaceFile, { force: true });
+
+      - uses: ./self-workflow/actions/deploy/argocd-manifest-files
+        with:
+          deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
+          application-file: ${{ steps.get-manifest-files.outputs.application-file }}
+          namespace-file: ${{ steps.get-manifest-files.outputs.namespace-file }}
+          namespace: ${{ steps.slugify-namespace.outputs.result }}
+          chart-name: ${{ steps.chart-variables.outputs.name }}
+          chart-repository: ${{ steps.chart-variables.outputs.repository }}
+          chart-version: ${{ steps.chart-variables.outputs.version }}
+          chart-values: ${{ steps.check-client-payload.outputs.chart-values }}
 
       - uses: actions/create-github-app-token@v1
         if: inputs.github-app-id
@@ -276,10 +216,10 @@ jobs:
       - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.16.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
-          branch: feat/deploy-${{  needs.prepare-variables.outputs.namespace }}
-          title: "feat(${{ github.event.client_payload.repository }}): deploy ${{ needs.prepare-variables.outputs.chart-version }} to ${{ github.event.client_payload.environment }}"
-          body: Deploy ${{ needs.prepare-variables.outputs.chart-version }} to ${{ github.event.client_payload.environment }}
+          branch: feat/deploy-${{ steps.slugify-namespace.outputs.result }}
+          title: "feat(${{ steps.check-client-payload.outputs.repository }}): deploy ${{ steps.chart-variables.outputs.version }} to ${{ steps.check-client-payload.outputs.environment }}"
+          body: Deploy ${{ steps.check-client-payload.outputs.repository }} ${{ steps.chart-variables.outputs.version }} to ${{ steps.check-client-payload.outputs.environment }}
           commit-message: |
-            feat(${{ github.event.client_payload.repository }}): deploy ${{ needs.prepare-variables.outputs.chart-version }} to ${{ github.event.client_payload.environment }}"
+            feat(${{ steps.check-client-payload.outputs.repository }}): deploy ${{ steps.chart-variables.outputs.version }} to ${{ steps.check-client-payload.outputs.environment }}"
 
             [skip ci]

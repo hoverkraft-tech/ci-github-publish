@@ -37,7 +37,7 @@ It supports vendor-specific updates for the chart version and other properties:
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.3.0
+- uses: hoverkraft-tech/ci-github-publish@0.3.1
   with:
     # Description: Deployment ID to be used in the ArgoCD application manifest
     #

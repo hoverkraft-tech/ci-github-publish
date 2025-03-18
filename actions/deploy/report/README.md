@@ -41,7 +41,7 @@ permissions:
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.3.0
+- uses: hoverkraft-tech/ci-github-publish@0.3.1
   with:
     # Description: Environment where the deployment was made.
     #

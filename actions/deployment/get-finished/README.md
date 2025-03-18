@@ -50,7 +50,7 @@ permissions:
 
     # Description: Timeout in seconds
     #
-    # Default: 180
+    # Default: 240
     timeout: ""
 
     # Description: Defines if the action should fail if the deployment status is not

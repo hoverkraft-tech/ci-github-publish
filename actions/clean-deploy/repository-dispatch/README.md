@@ -30,6 +30,10 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
     # Description: Target repository where the deployment should be cleaned.
     #
     repository: ""
+
+    # Description: Environment where to clean the deployment.
+    #
+    environment: ""
 ```
 
 <!-- end usage -->
@@ -42,6 +46,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------ |
 | <code>github-token</code> | GitHub Token for dispatch an event to a remote repository.<br />Permissions: <br /> - contents: write<br />See <https://github.com/peter-evans/repository-dispatch#usage>. | <code>${{ github.token }}</code> | **false**    |
 | <code>repository</code>   | Target repository where the deployment should be cleaned.                                                                                                                  |                                  | **true**     |
+| <code>environment</code>  | Environment where to clean the deployment.                                                                                                                                 |                                  | **true**     |
 
 <!-- end inputs -->
 <!--

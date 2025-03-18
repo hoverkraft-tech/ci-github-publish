@@ -54,7 +54,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
     #
     repository: ""
 
-    # Description: Destination where to deploy given chart.
+    # Description: Environment where to deploy given chart.
     #
     environment: ""
 

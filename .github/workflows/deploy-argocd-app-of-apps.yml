@@ -119,7 +119,7 @@ jobs:
             }
 
       - id: chart-variables
-        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@0.23.1
+        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@0.24.0
         with:
           uri: ${{ steps.check-client-payload.outputs.chart }}
 
@@ -148,7 +148,7 @@ jobs:
             core.setOutput("namespace", namespace);
 
       - id: slugify-namespace
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.16.0
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.18.0
         with:
           value: ${{ steps.get-namespace.outputs.namespace }}
 
@@ -213,7 +213,7 @@ jobs:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.16.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.18.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: feat/deploy-${{ steps.slugify-namespace.outputs.result }}

@@ -25,7 +25,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: hoverkraft-tech/ci-github-common/actions/checkout@0.17.0
+    - uses: hoverkraft-tech/ci-github-common/actions/checkout@0.18.0
       with:
         fetch-depth: "0"
 

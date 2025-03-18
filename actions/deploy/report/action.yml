@@ -145,7 +145,7 @@ runs:
         state: ${{ steps.get-deployment-result.outputs.state }}
         description: ${{ steps.get-deployment-result.outputs.message }}
 
-    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@0.16.1
+    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@0.18.0
       if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       with:
         title: "## ${{ steps.get-deployment-result.outputs.title }}"

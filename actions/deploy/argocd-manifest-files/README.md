@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:activity color:blue>" /> GitHub Action: Deploy - ArgoCD Application manifest
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:file-text color:gray-dark>" /> GitHub Action: Deploy - ArgoCD Manifest Files
 
 <!-- end title -->
 <!--
@@ -8,7 +8,7 @@
 -->
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:activity color:blue>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:file-text color:gray-dark>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->
@@ -23,7 +23,8 @@
 -->
 <!-- start description -->
 
-Prepares the ArgoCD application manifest for deployment. Fills in the required fields and updates the Helm chart values.
+Prepares the ArgoCD manifest files for deployment.
+Fills in the required fields and updates the Helm chart values.
 This action is used to deploy an application using ArgoCD.
 It updates the application manifest with the provided values and deploys it to the specified namespace.
 It supports vendor-specific updates for the chart version and other properties:
@@ -65,7 +66,11 @@ It supports vendor-specific updates for the chart version and other properties:
 
     # Description: Path to the application manifest file
     #
-    manifest-file: ""
+    application-file: ""
+
+    # Description: Path to the namespace manifest file
+    #
+    namespace-file: ""
 ```
 
 <!-- end usage -->

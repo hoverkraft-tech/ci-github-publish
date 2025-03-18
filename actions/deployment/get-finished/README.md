@@ -42,7 +42,7 @@ permissions:
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.2.0
+- uses: hoverkraft-tech/ci-github-publish@0.3.0
   with:
     # Description: The id of the deployment to update
     #

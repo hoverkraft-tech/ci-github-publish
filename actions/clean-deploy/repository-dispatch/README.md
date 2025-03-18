@@ -16,7 +16,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.3.0
+- uses: hoverkraft-tech/ci-github-publish@0.3.1
   with:
     # Description: GitHub Token for dispatch an event to a remote repository.
     # Permissions:

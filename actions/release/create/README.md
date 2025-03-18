@@ -31,7 +31,7 @@ Action to create a release
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.3.0
+- uses: hoverkraft-tech/ci-github-publish@0.3.1
   with:
     # Description: Whether the release is a prerelease
     #

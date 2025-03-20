@@ -34,7 +34,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.3.1
+- uses: hoverkraft-tech/ci-github-publish@0.3.2
   with:
     # Description: Deployment ID to be used in the ArgoCD application manifest
     #

@@ -19,7 +19,7 @@ runs:
       shell: bash
       run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
 
-    - uses: actions/cache@v4.2.2
+    - uses: actions/cache@v4.2.3
       id: npm-cache
       with:
         path: ${{ steps.npm-cache-dir.outputs.dir }}
@@ -27,7 +27,7 @@ runs:
         restore-keys: |
           ${{ runner.os }}-node-
 
-    - uses: actions/cache@v4.2.2
+    - uses: actions/cache@v4.2.3
       with:
         path: "/tmp/.jampack"
         key: ${{ runner.os }}-jampack-${{ github.run_id }}

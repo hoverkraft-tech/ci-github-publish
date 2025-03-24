@@ -1,4 +1,4 @@
-name: "Check - Url - Uptime"
+name: "Check - URL - Uptime"
 description: "Action to run uptime check on given URL."
 author: Hoverkraft
 branding:
@@ -17,7 +17,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: srt32/uptime@v0.2.1
+    - uses: srt32/uptime@958231f4d95c117f08eb0fc70907e80d0dfedf2b # v0.2.1
       with:
         url-to-hit: ${{ inputs.url }}
         expected-statuses: ${{ inputs.expected-statuses }}

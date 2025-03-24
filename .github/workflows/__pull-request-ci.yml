@@ -8,11 +8,12 @@ on:
 
 permissions:
   contents: read
+  deployments: write
   issues: read
   packages: write
   pull-requests: read
+  security-events: write
   statuses: write
-  deployments: write
   # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
   id-token: write
 

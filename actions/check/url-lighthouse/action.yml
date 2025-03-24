@@ -1,4 +1,4 @@
-name: "Check - Url - Lighthouse"
+name: "Check - URL - Lighthouse"
 description: "Action to run Lighthouse audits on given URL."
 author: Hoverkraft
 branding:
@@ -17,7 +17,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: treosh/lighthouse-ci-action@v12
+    - uses: treosh/lighthouse-ci-action@2f8dda6cf4de7d73b29853c3f29e73a01e297bd8 # 12.1.0
       with:
         urls: ${{ inputs.url }}
         budgetPath: ${{ inputs.budget-path }}

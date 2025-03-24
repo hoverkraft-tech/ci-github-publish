@@ -6,12 +6,13 @@ on: # yamllint disable-line rule:truthy
 
 permissions:
   contents: read
-  statuses: write
   deployments: write
+  security-events: write
+  statuses: write
 
 jobs:
   linter:
-    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@0.18.0
+    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter-actions.yml@6b5b43e6613bd69904a43d702e60961f494cd92d # 0.19.0
 
   test-action-deployment:
     needs: linter

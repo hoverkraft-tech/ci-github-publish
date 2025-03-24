@@ -202,9 +202,12 @@ jobs:
             const path = require('path');
 
             const workflowFile = ${{ toJSON(matrix.workflow) }};
-            const readmeFile = path.join(process.env.GITHUB_WORKSPACE, workflowFile.substr(0, file.lastIndexOf(".")) + ".md");
+            const readmeFile = path.join(
+              process.env.GITHUB_WORKSPACE, 
+              path.join(path.dirname(workflowFile), path.basename(workflowFile, path.extname(workflowFile)) + '.md')
+            );
 
-            const readmeContent = fs.readFileSync(path.join(process.env.GITHUB_WORKSPACE, '${{ matrix.workflow }}.md'), 'utf8');
+            const readmeContent = fs.readFileSync(readmeFile, 'utf8');
 
             // Update version in README
             const version = ${{ toJSON(needs.prepare-release.outputs.latest-tag) }};
@@ -221,14 +224,25 @@ jobs:
             fs.writeFileSync(readmeFile, readmeContent);
 
             // FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the path
-            cost readmeFileArtifact = readmeFile.replace(/\/([^/]+)/, '/*$1'););
+            const readmeFileArtifact = readmeFile.replace(/\/([^/]+)/, '/*$1');
+
+            // Ensure glob pattern is correct
+            const globber = await glob.create(readmeFileArtifact);
+            const matchingFiles = await globber.glob();
+            console.log(`Found matching files`, matchingFiles);
+            if (matchingFiles.length === 0) {
+              return core.setFailed(`No files found for pattern: ${readmeFileArtifact}`);
+            }
+
             core.setOutput('readme-file', readmeFileArtifact);
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: steps.generate-readme.outputs.readme-file
         with:
           name: changed-files-${{ steps.workflow-slug.outputs.result }}
-          path: ${{ steps.generate-readme.outputs.readme-file }}
+          path: "${{ steps.generate-readme.outputs.readme-file }}"
+          if-no-files-found: error
+          include-hidden-files: true
 
   publish-documentation:
     name: Publish Documentation

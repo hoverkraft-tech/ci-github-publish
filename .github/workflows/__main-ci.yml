@@ -5,12 +5,17 @@ on: # yamllint disable-line rule:truthy
   push:
     branches: [main]
     tags: ["*"]
+
   workflow_dispatch:
+
+  schedule:
+    - cron: "25 8 * * 1"
 
 permissions:
   contents: read
-  statuses: write
   deployments: write
+  security-events: write
+  statuses: write
   # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
   id-token: write
 
@@ -25,6 +30,7 @@ jobs:
 
   release:
     needs: ci
+    if: github.event_name != 'schedule'
     uses: ./.github/workflows/release-actions.yml
     with:
       update-all: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || github.event_name == 'workflow_dispatch' }}

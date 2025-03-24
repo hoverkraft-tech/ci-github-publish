@@ -41,7 +41,7 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     if: ${{ github.event_name == 'pull_request' }}
     steps:
-      - uses: release-drafter/release-drafter@v6.1.0
+      - uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5 # v6.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
         with:
@@ -54,7 +54,7 @@ jobs:
       CONFIG_PATH: .github/release-drafter.yml
     steps:
       - id: get-config
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const configPath = process.env.CONFIG_PATH;
@@ -109,13 +109,13 @@ jobs:
 
             core.setOutput('config', config.trim());
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: steps.get-config.outputs.config
         with:
           ref: refs/heads/${{ github.event.repository.default_branch }}
           sparse-checkout: ${{ env.CONFIG_PATH }}
 
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         if: steps.get-config.outputs.config
         with:
           script: |
@@ -124,14 +124,14 @@ jobs:
             const configPath = process.env.CONFIG_PATH;
             fs.writeFileSync(configPath, configContent, 'utf8');
 
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@af35edadc00be37caa72ed9f3e6d5f7801bfdf09 # v1.11.7
         if: ${{ steps.get-config.outputs.config && inputs.github-app-id }}
         id: generate-token
         with:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.18.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@6b5b43e6613bd69904a43d702e60961f494cd92d # 0.19.0
         if: steps.get-config.outputs.config
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}

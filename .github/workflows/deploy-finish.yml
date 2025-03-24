@@ -69,9 +69,9 @@ jobs:
       # jscpd:ignore-start
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
-        uses: ChristopherHX/oidc@v3
+        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
@@ -93,7 +93,7 @@ jobs:
           deployment-id: ${{ inputs.deployment-id }}
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
         with:
           path: ./self-workflow
@@ -111,9 +111,9 @@ jobs:
       # jscpd:ignore-start
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
-        uses: ChristopherHX/oidc@v3
+        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
@@ -131,7 +131,7 @@ jobs:
           budget-path: ${{ inputs.budget-path }}
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
         with:
           path: ./self-workflow
@@ -149,9 +149,9 @@ jobs:
       # jscpd:ignore-start
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
-        uses: ChristopherHX/oidc@v3
+        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
@@ -167,7 +167,7 @@ jobs:
           extra: ${{ inputs.extra }}
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
         with:
           path: ./self-workflow

@@ -78,7 +78,7 @@ jobs:
       url: ${{ steps.check-client-payload.outputs.url }}
     steps:
       - id: check-client-payload
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const fs = require("node:fs");
@@ -119,17 +119,17 @@ jobs:
             }
 
       - id: chart-variables
-        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@0.24.1
+        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@ce450ab2df7353da7d38ed842ac3bb3a14747dee # 0.24.1
         with:
           uri: ${{ steps.check-client-payload.outputs.chart }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
         # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
-        uses: ChristopherHX/oidc@v3
+        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
@@ -141,14 +141,14 @@ jobs:
           if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
 
       - id: get-namespace
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const namespace = `${{ steps.check-client-payload.outputs.repository }}-${{ steps.check-client-payload.outputs.environment }}`;
             core.setOutput("namespace", namespace);
 
       - id: slugify-namespace
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@0.18.0
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@6b5b43e6613bd69904a43d702e60961f494cd92d # 0.19.0
         with:
           value: ${{ steps.get-namespace.outputs.namespace }}
 
@@ -159,7 +159,7 @@ jobs:
           repository: ${{ steps.check-client-payload.outputs.repository }}
 
       - id: get-manifest-templates
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const fs = require("node:fs");
@@ -206,14 +206,16 @@ jobs:
           chart-version: ${{ steps.chart-variables.outputs.version }}
           chart-values: ${{ steps.check-client-payload.outputs.chart-values }}
 
-      - uses: actions/create-github-app-token@v1
+      # jscpd:ignore-start
+      - uses: actions/create-github-app-token@af35edadc00be37caa72ed9f3e6d5f7801bfdf09 # v1.11.7
         if: inputs.github-app-id
         id: generate-token
         with:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
+      # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@0.18.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@6b5b43e6613bd69904a43d702e60961f494cd92d # 0.19.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: feat/deploy-${{ steps.slugify-namespace.outputs.result }}

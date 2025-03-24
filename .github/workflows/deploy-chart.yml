@@ -145,20 +145,20 @@ jobs:
       tag: ${{ steps.get-tag.outputs.tag }}
       images: ${{ steps.set-images-tag.outputs.images }}
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@0.18.0
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@6b5b43e6613bd69904a43d702e60961f494cd92d # 0.19.0
         if: ${{ inputs.tag == '' }}
         with:
           fetch-depth: 0
 
       - id: get-previous-tag
         if: ${{ inputs.tag == '' }}
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        uses: WyriHaximus/github-action-get-previous-tag@04e8485ecb6487243907e330d522ff60f02283ce # v1.4.0
         with:
           fallback: 0.0.0
 
       - id: get-issue-number
         if: ${{ inputs.tag == '' && github.event_name == 'issue_comment' }}
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@0.18.0
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@6b5b43e6613bd69904a43d702e60961f494cd92d # 0.19.0
 
       - id: get-tag
         run: |
@@ -183,7 +183,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - id: set-images-tag
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const tag = ${{ toJSON(steps.get-tag.outputs.tag) }};
@@ -210,7 +210,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@0.24.1
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@ce450ab2df7353da7d38ed842ac3bb3a14747dee # 0.24.1
     with:
       runs-on: ${{ inputs.runs-on }}
       oci-registry: ${{ inputs.oci-registry }}
@@ -227,7 +227,7 @@ jobs:
       deploy-values: ${{ steps.set-chart-values.outputs.deploy-values }}
     steps:
       - id: set-chart-values
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const tag = ${{ toJSON(needs.prepare-deploy.outputs.tag) }};
@@ -308,7 +308,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@0.24.1
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@ce450ab2df7353da7d38ed842ac3bb3a14747dee # 0.24.1
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}
@@ -323,10 +323,11 @@ jobs:
     needs: [deploy-start, prepare-deploy, release-chart]
     steps:
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      # jscpd:ignore-start
       - id: oidc
-        uses: ChristopherHX/oidc@v3
+        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
@@ -336,9 +337,9 @@ jobs:
       - run: |
           echo "self-workflow" >> .gitignore
           echo "self-workflow" >> .dockerignore
-
+      # jscpd:ignore-end
       - id: prepare-deployment
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             // Repository
@@ -413,7 +414,7 @@ jobs:
             }
             core.setOutput("deploy-values", JSON.stringify(deployValues));
 
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@af35edadc00be37caa72ed9f3e6d5f7801bfdf09 # v1.11.7
         if: ${{ inputs.github-app-id }}
         id: generate-token
         with:
@@ -433,7 +434,7 @@ jobs:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
         with:
           path: ./self-workflow

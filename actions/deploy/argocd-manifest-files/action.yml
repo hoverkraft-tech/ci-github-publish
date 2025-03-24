@@ -4,7 +4,7 @@ branding:
   icon: file-text
   color: gray-dark
 description: |
-  Prepares the ArgoCD manifest files for deployment. 
+  Prepares the ArgoCD manifest files for deployment.
   Fills in the required fields and updates the Helm chart values.
   This action is used to deploy an application using ArgoCD.
   It updates the application manifest with the provided values and deploys it to the specified namespace.
@@ -45,7 +45,7 @@ runs:
   using: "composite"
   steps:
     - id: common-chart-yq-updates
-      uses: actions/github-script@v7.0.1
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         script: |
           const chartValuesInput = ${{ toJSON(inputs.chart-values) }};
@@ -78,7 +78,7 @@ runs:
           core.setOutput('cmd', yqUpdates);
 
     - id: vendor-specific-chart-yq-updates
-      uses: actions/github-script@v7.0.1
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         script: |
           // Datadog
@@ -87,7 +87,7 @@ runs:
           core.setOutput('cmd', yqUpdates);
 
     - id: update-application-file
-      uses: mikefarah/yq@v4.45.1
+      uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd # v4.45.1
       with:
         cmd: |
           yq -i '
@@ -106,7 +106,7 @@ runs:
           ' ${{ inputs.application-file }}
 
     - id: update-namespace-file
-      uses: mikefarah/yq@v4.45.1
+      uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd # v4.45.1
       with:
         cmd: |
           yq -i '

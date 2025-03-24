@@ -193,18 +193,37 @@ jobs:
 
       - name: 📖 Generate README
         id: generate-readme
-        run: |
-          # Readme file is same name but without yml by .md extension
-          WORKFLOW_FILE="${{ matrix.workflow }}"
-          README_FILE="${WORKFLOW_FILE%.*}.md"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
 
-          WORKSPACE_PATH=$(echo "${{ github.workspace }}" | sed 's/\/\([^/]\+\)/\/*\1/')
-          echo "readme-file=${WORKSPACE_PATH}/${README_FILE}" >> "$GITHUB_OUTPUT"
+            const workflowFile = ${{ toJSON(matrix.workflow) }};
+            const readmeFile = path.join(process.env.GITHUB_WORKSPACE, workflowFile.substr(0, file.lastIndexOf(".")) + ".md");
 
-          WORKFLOW_FULL_PATH="${{ github.repository }}/${WORKFLOW_FILE}"
-          sed -i "s|${WORKFLOW_FULL_PATH}@.*|${WORKFLOW_FULL_PATH}@${{ needs.prepare-release.outputs.latest-tag }}|g" "${README_FILE}"
+            const readmeContent = fs.readFileSync(path.join(process.env.GITHUB_WORKSPACE, '${{ matrix.workflow }}.md'), 'utf8');
+
+            // Update version in README
+            const version = ${{ toJSON(needs.prepare-release.outputs.latest-tag) }};
+            const workflowFull = `${{ github.repository }}/${workflowFile}`;
+
+            const versionedWorkflow = `${workflowFull}@${version}`;
+            const updatedReadmeContent = readmeContent.replace(new RegExp(`${workflowFull}@.*`, 'g'), versionedWorkflow);
+
+            if (updatedReadmeContent === readmeContent) {
+              core.debug(`No update needed for ${readmeFile}`);
+              return;
+            }
+
+            fs.writeFileSync(readmeFile, readmeContent);
+
+            // FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the path
+            cost readmeFileArtifact = readmeFile.replace(/\/([^/]+)/, '/*$1'););
+            core.setOutput('readme-file', readmeFileArtifact);
 
       - uses: actions/upload-artifact@v4
+        if: steps.generate-readme.outputs.readme-file
         with:
           name: changed-files-${{ steps.workflow-slug.outputs.result }}
           path: ${{ steps.generate-readme.outputs.readme-file }}

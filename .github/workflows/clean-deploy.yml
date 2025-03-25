@@ -22,7 +22,7 @@ on:
         type: string
       clean-deploy-type:
         description: |
-          Type of
+          Type of clean-deploy action.
           Supported values:
             - [`repository-dispatch`](../../actions/clean-deploy/repository-dispatch/README.md).
         type: string

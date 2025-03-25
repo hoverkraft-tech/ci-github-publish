@@ -5,7 +5,7 @@
 # - Builds OCI images.
 # - Releases the chart.
 # - Supports multiple deployment types.
-
+---
 name: Deploy chart
 
 on:
@@ -35,7 +35,7 @@ on:
         description: |
           The URL which respond to deployed application.
           If not provided, will be set to the environment URL.
-          Url can contains placeholders:
+          URL can contains placeholders:
             - `{{ identifier }}`: will be replaced by the environment identifier.
           Example: `https://{{ identifier }}.my-application.com`.
         type: string
@@ -88,7 +88,7 @@ on:
           See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.
           Accept placeholders:
             - `{{ tag }}`: will be replaced by the tag.
-            - `{{ url }}`: will be replaced by the url.
+            - `{{ url }}`: will be replaced by the URL.
           If "path" starts with "deploy", the chart value wil be passed to the deploy action.
           Example:
             [
@@ -97,7 +97,8 @@ on:
               { "path": "deploy.ingress.hosts[0].host", "value": "{{ url }}" }
             ]
         type: string
-        required: true
+        required: false
+        default: "[]"
       github-app-id:
         description: |
           GitHub App ID to generate GitHub token in place of github-token.
@@ -119,12 +120,12 @@ on:
           See <https://github.com/actions/create-github-app-token>.
 
 permissions:
+  actions: read
   contents: write
+  deployments: write
   issues: write
   packages: write
   pull-requests: write
-  deployments: write
-  actions: read
   # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
   id-token: write
 
@@ -253,6 +254,7 @@ jobs:
             } catch (error) {
               throw new Error(`"chart-values" input is not a valid JSON: ${error}`);
             }
+
             if (!Array.isArray(chartValues)) {
               throw new Error(`"chart-values" input is not an array`);
             }

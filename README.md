@@ -11,6 +11,12 @@ Opinionated GitHub Actions and workflows for streamlined release, deployment, an
 
 ## Actions
 
+### ArgoCD
+
+_Actions dedicated to ArgoCD workflows._
+
+#### - [Get manifest files](actions/argocd/get-manifest-files/README.md)
+
 ### Checks
 
 _Actions for validating the result of a deploy._
@@ -19,13 +25,27 @@ _Actions for validating the result of a deploy._
 
 #### - [URL - Uptime](actions/check/url-uptime/README.md)
 
+### Clean deploy
+
+_Actions for cleaning deployments on various platforms._
+
+#### - [Repository dispatch](actions/clean-deploy/repository-dispatch/README.md)
+
 ### Deploy
 
 _Actions for deploying to various platforms._
 
-#### - [Helm repository dispatch](actions/deploy/helm-repository-dispatch/README.md)
+#### - [Argocd manifest files](actions/deploy/argocd-manifest-files/README.md)
+
+#### - [Get environment](actions/deploy/get-environment/README.md)
 
 #### - [GitHub Pages](actions/deploy/github-pages/README.md)
+
+#### - [Helm repository dispatch](actions/deploy/helm-repository-dispatch/README.md)
+
+#### - [Jampack](actions/deploy/jampack/README.md)
+
+#### - [Report](actions/deploy/report/README.md)
 
 ### Deployment
 
@@ -35,6 +55,8 @@ _Actions for managing deployments._
 
 #### - [Delete](actions/deployment/delete/README.md)
 
+#### - [Get finished](actions/deployment/get-finished/README.md)
+
 #### - [Update](actions/deployment/update/README.md)
 
 ### Release
@@ -43,17 +65,39 @@ _Actions for managing releases._
 
 #### - [Create](actions/release/create/README.md)
 
+### Workflow
+
+_Actions for managing workflows._
+
+#### - [Get workflow failure](actions/workflow/get-workflow-failure/README.md)
+
 ## Reusable Workflows
+
+## Cleaning deploy
+
+### - [Clean deploy argocd app of apps](.github/workflows/clean-deploy-argocd-app-of-apps.yml)
+
+### - [Clean deploy](.github/workflows/clean-deploy.yml)
+
+### Performs deploy
+
+### - [Deploy argocd app of apps](.github/workflows/deploy-argocd-app-of-apps.yml)
+
+### - [Deploy chart](.github/workflows/deploy-chart.yml)
+
+### - [Deploy finish](.github/workflows/deploy-finish.yml)
+
+### - [Deploy start](.github/workflows/deploy-start.yml)
+
+### - [Finish deploy argocd app of apps](.github/workflows/finish-deploy-argocd-app-of-apps.yml)
 
 ### Releases
 
 _Reusable workflows for managing release process._
 
-#### - [Prepare release](.github/workflows/prepare-release.md)
+### - [Prepare release](.github/workflows/prepare-release.yml)
 
-#### - [Release & Deploy chart](.github/workflows/release-deploy-chart.yml)
-
-#### - [Release actions](.github/workflows/release-actions.md)
+### - [Release actions](.github/workflows/release-actions.yml)
 
 ## Contributing
 

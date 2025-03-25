@@ -2,8 +2,8 @@
 # ==========================
 # Reusable workflow that clean a deployment in an ArgoCD App Of Apps Pattern context.
 # See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern>.
-# This workflow is triggered by a repository dispatch event
-# https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch
+# This workflow is triggered by a repository dispatch event.
+# See <https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch>.
 # Payload:
 # {
 #   "event_type": "clean-deploy",
@@ -13,8 +13,8 @@
 #   }
 # }
 #
-
-name: Clean deploy for ArgoCD App of Apps
+---
+name: Clean Deploy - ArgoCD App Of Apps
 
 on:
   workflow_call:

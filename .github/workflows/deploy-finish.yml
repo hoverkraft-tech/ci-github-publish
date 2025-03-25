@@ -2,15 +2,13 @@
 # ==========================
 # Reusable workflow that performs the end of a deployment.
 #
-# - Can be triggered by a comment.
-# - Supports multiple deployment types.
-# - Deployment url can be provided as input or can be extracted from the variables (or environment variables).
-#   See <https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables>
-#   Supported variables:
-#   - `{ENVIRONMENT}_URL`, example: `STAGING_URL`
-#   - `URL`
-
-name: Deploy
+# - Perform checks on the deployment if a URL is provided:
+#   - [Uptime check](../../actions/check/url-uptime/README.md).
+#   - [Lighthouse check](../../actions/check/url-lighthouse/README.md).
+# - Update the deployment status to success or failure.
+# - Report the deployment summary and status. See [report](../../actions/deploy/report/README.md).
+---
+name: Deploy - Finish
 
 on:
   workflow_call:
@@ -23,10 +21,7 @@ on:
         default: '["ubuntu-latest"]'
         required: false
       environment:
-        description: |
-          Environment where to deploy.
-          If trigger is from an issue event (or pull-request), environment will be set to `environment:issue_number`.
-          See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>.
+        description: Environment where to deployment has been made.
         type: string
         required: true
       deployment-id:
@@ -38,7 +33,7 @@ on:
       budget-path:
         description: |
           Path to the budget file to use for the Lighthouse check.
-          See [`url-lighthouse`](../../actions/check/url-lighthouse/action.yml/README.md).
+          See [`url-lighthouse`](../../actions/check/url-lighthouse/README.md).
         type: string
         required: false
         default: "./budget.json"
@@ -84,7 +79,7 @@ jobs:
       # jscpd:ignore-end
       - id: get-workflow-failure
         if: ${{ inputs.deployment-id }}
-        uses: ./self-workflow/actions/get-workflow-failure
+        uses: ./self-workflow/actions/workflow/get-workflow-failure
 
       - id: get-finished-deployment
         if: ${{ inputs.deployment-id && steps.get-workflow-failure.outputs.has-failed != 'true' }}

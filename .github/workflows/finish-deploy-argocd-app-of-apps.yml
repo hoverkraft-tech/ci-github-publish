@@ -6,6 +6,7 @@
 # This workflow is triggered by a repository dispatch event.
 # See <https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch>.
 # Payload:
+# ```json
 # {
 #   "event_type": "finish-deploy",
 #   "client_payload": {
@@ -16,7 +17,8 @@
 #     "description": "description of the deployment (e.g. deployment successful)",
 #   }
 # }
-
+# ```
+---
 name: Finish deploy - ArgoCD App of Apps
 # jscpd:ignore-start
 on:

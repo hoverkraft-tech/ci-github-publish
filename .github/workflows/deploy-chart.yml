@@ -453,5 +453,4 @@ jobs:
     with:
       runs-on: ${{ inputs.runs-on }}
       deployment-id: ${{ needs.deploy-start.outputs.deployment-id }}
-      environment: ${{ needs.deploy-start.outputs.environment }}
       extra: ${{ toJSON(needs.deploy-chart.outputs) }}

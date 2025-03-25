@@ -26,6 +26,9 @@ outputs:
   url:
     description: "The URL of the deployment"
     value: ${{ steps.get-deployment-status.outputs.url }}
+  environment:
+    description: "The environment of the deployment"
+    value: ${{ steps.get-deployment-status.outputs.environment }}
 
 runs:
   using: "composite"
@@ -97,6 +100,7 @@ runs:
 
           core.setOutput("url", deploymentStatus.environment_url);
           core.setOutput("status", deploymentStatus.state);
+          core.setOutput("environment", deploymentStatus.environment);
 
           const allowFailure = `${{ inputs.allow-failure }}`.toLowerCase() === "true";
           if (!allowFailure && deploymentStatus.state !== "success") {

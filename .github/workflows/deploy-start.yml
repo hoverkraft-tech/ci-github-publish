@@ -3,17 +3,11 @@
 # Reusable workflow that performs the beginning of a deployment.
 #
 # Trigger:
-# - Can be triggered by a comment.
+# - Can be triggered by a specific comment.
+# - Any event that triggers the workflow that's not an "issue_comment".
 #
 # Environment:
 # - Support dynamic env when comming from issue or pull-request event
-#
-# URL:
-# - Deployment url can be provided as input or can be extracted from the variables (or environment variables).
-#   See <https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables>
-#   Supported variables:
-#   - `{ENVIRONMENT}_URL`, example: `STAGING_URL`
-#   - `URL`
 
 name: Deploy - Start
 
@@ -53,8 +47,8 @@ on:
         value: ${{ jobs.start-deploy.outputs.deployment-id }}
 
 permissions:
-  deployments: write
   actions: read
+  deployments: write
   issues: write
   pull-requests: write
   # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659

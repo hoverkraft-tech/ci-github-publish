@@ -149,19 +149,35 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+
             const actionFile = path.join(${{ toJSON(matrix.action) }}, 'action.yml');
             const readmeFile = path.join(path.dirname(actionFile), 'README.md');
             core.debug(`Action README file: ${readmeFile}`);
 
-            // Update ghadocs config
-            const ghadocsConfigFile = '.ghadocs.json'
-            const ghadocs = JSON.parse(fs.readFileSync(ghadocsConfigFile, 'utf8'));
-            ghadocs.paths.action = actionFile;
-            ghadocs.paths.readme = readmeFile;
+            // Generate ghadocs config on the fly
+            const ghadocs = {
+              "paths": {
+                "action": actionFile,
+                "readme": readmeFile
+              },
+              "show_logo": true,
+              "versioning": {
+                "enabled": true,
+                "override": "",
+                "prefix": "",
+                "branch": "main"
+              },
+              "owner": ${{ toJSON(github.repository_owner) }},
+              "repo": ${{ toJSON(github.event.repository.name) }},
+              "title_prefix": "GitHub Action: ",
+              "prettier": true
+            }; 
 
             const ghdocsConfigContent = JSON.stringify(ghadocs, null, 2);
-            core.debug(`Updating ghadocs config: ${ghdocsConfigContent}`);
-            fs.writeFileSync(ghadocsConfigFile, ghdocsConfigContent);
+            core.debug(`Ghadocs config: ${ghdocsConfigContent}`);
+            fs.writeFileSync('.ghadocs.json', ghdocsConfigContent);
 
             // FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the absolute path
             const readmeFileArtifact = path.join(process.env.GITHUB_WORKSPACE, readmeFile).replace(/\/([^/]+)/, '/*$1');

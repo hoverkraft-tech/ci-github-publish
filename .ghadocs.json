@@ -7,7 +7,7 @@
   "versioning": {
     "enabled": true,
     "override": "",
-    "prefix": "v",
+    "prefix": "",
     "branch": "main"
   },
   "owner": "hoverkraft-tech",

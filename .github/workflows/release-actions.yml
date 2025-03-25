@@ -146,15 +146,26 @@ jobs:
           value: ${{ matrix.action }}
 
       - id: prepare-readme-generator
-        run: |
-          jq '.paths.action = "${{ matrix.action }}/action.yml"' .ghadocs.json > .ghadocs.json.tmp
-          mv .ghadocs.json.tmp .ghadocs.json
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const actionFile = path.join(${{ toJSON(matrix.action) }}, 'action.yml');
+            const readmeFile = path.join(path.dirname(actionFile), 'README.md');
+            core.debug(`Action README file: ${readmeFile}`);
 
-          jq '.paths.readme = "${{ matrix.action }}/README.md"' .ghadocs.json > .ghadocs.json.tmp
-          mv .ghadocs.json.tmp .ghadocs.json
+            // Update ghadocs config
+            const ghadocsConfigFile = '.ghadocs.json'
+            const ghadocs = JSON.parse(fs.readFileSync(ghadocsConfigFile, 'utf8'));
+            ghadocs.paths.action = actionFile;
+            ghadocs.paths.readme = readmeFile;
 
-          WORKSPACE_PATH=$(echo "${{ github.workspace }}" | sed 's/\/\([^/]\+\)/\/*\1/')
-          echo "readme-file=${WORKSPACE_PATH}/${{ matrix.action }}/README.md" >> "$GITHUB_OUTPUT"
+            const ghdocsConfigContent = JSON.stringify(ghadocs, null, 2);
+            core.debug(`Updating ghadocs config: ${ghdocsConfigContent}`);
+            fs.writeFileSync(ghadocsConfigFile, ghdocsConfigContent);
+
+            // FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the absolute path
+            const readmeFileArtifact = path.join(process.env.GITHUB_WORKSPACE, readmeFile).replace(/\/([^/]+)/, '/*$1');
+            core.setOutput('readme-file', readmeFileArtifact);
 
       - name: 📖 Generate README
         uses: bitflight-devops/github-action-readme-generator@f750ff0ac8a4b68a3c2d622cc50a5ad20bcebaa1 # v1.8.0
@@ -175,6 +186,7 @@ jobs:
         with:
           name: changed-files-${{ steps.action-slug.outputs.result }}
           path: ${{ steps.prepare-readme-generator.outputs.readme-file }}
+          if-no-files-found: error
 
   generate-workflows-readme:
     name: Generate Workflows README
@@ -203,9 +215,11 @@ jobs:
 
             const workflowFile = ${{ toJSON(matrix.workflow) }};
             const readmeFile = path.join(
-              process.env.GITHUB_WORKSPACE, 
-              path.join(path.dirname(workflowFile), path.basename(workflowFile, path.extname(workflowFile)) + '.md')
+              process.env.GITHUB_WORKSPACE,
+              path.dirname(workflowFile),
+              path.basename(workflowFile, path.extname(workflowFile)) + '.md'
             );
+            core.debug(`Workflow README file: ${readmeFile}`);
 
             const readmeContent = fs.readFileSync(readmeFile, 'utf8');
 
@@ -221,19 +235,12 @@ jobs:
               return;
             }
 
-            fs.writeFileSync(readmeFile, readmeContent);
+            core.debug(`Updating README file content: ${updatedReadmeContent}`);
 
-            // FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the path
+            fs.writeFileSync(readmeFile, updatedReadmeContent);
+
+            // FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the absolute path
             const readmeFileArtifact = readmeFile.replace(/\/([^/]+)/, '/*$1');
-
-            // Ensure glob pattern is correct
-            const globber = await glob.create(readmeFileArtifact);
-            const matchingFiles = await globber.glob();
-            console.log(`Found matching files`, matchingFiles);
-            if (matchingFiles.length === 0) {
-              return core.setFailed(`No files found for pattern: ${readmeFileArtifact}`);
-            }
-
             core.setOutput('readme-file', readmeFileArtifact);
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

@@ -32,11 +32,10 @@ on:
   workflow_call:
 
 permissions:
-  contents: write
-  issues: read
-  pull-requests: write
   actions: read
   deployments: write
+  issues: read
+  pull-requests: write
   # FIXME: This is a workaround for having workflow ref. See https://github.com/orgs/community/discussions/38659
   id-token: write
 
@@ -73,7 +72,6 @@ jobs:
 This workflow requires the following permissions:
 
 - `actions: read`: to update deployment status
-- `contents: write`: ??
 - `deployments: write`: to update deployment status
 - `issues: write`: to write the comment on the PR
 - `pull-requests: write`: to write the comment on the PR

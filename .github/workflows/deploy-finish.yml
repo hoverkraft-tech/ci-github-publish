@@ -20,10 +20,6 @@ on:
         type: string
         default: '["ubuntu-latest"]'
         required: false
-      environment:
-        description: Environment where to deployment has been made.
-        type: string
-        required: true
       deployment-id:
         description: |
           Deployment ID to use for the deployment.
@@ -45,7 +41,6 @@ on:
         required: false
 
 permissions:
-  contents: read
   issues: read
   pull-requests: write
   actions: read
@@ -57,9 +52,9 @@ jobs:
   get-finished-deployment:
     name: Get finished deployment
     runs-on: ${{ fromJson(inputs.runs-on) }}
-    environment: ${{ inputs.environment }}
     outputs:
       url: ${{ steps.get-finished-deployment.outputs.url }}
+      environment: ${{ steps.get-finished-deployment.outputs.environment }}
     steps:
       # jscpd:ignore-start
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
@@ -157,7 +152,7 @@ jobs:
       - uses: ./self-workflow/actions/deploy/report
         with:
           deployment-id: ${{ inputs.deployment-id }}
-          environment: ${{ inputs.environment }}
+          environment: ${{ needs.get-finished-deployment.outputs.environment }}
           url: ${{ needs.get-finished-deployment.outputs.url }}
           extra: ${{ inputs.extra }}
 

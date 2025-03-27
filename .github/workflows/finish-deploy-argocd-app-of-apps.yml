@@ -119,7 +119,7 @@ jobs:
           echo "self-workflow" >> .gitignore
           echo "self-workflow" >> .dockerignore
 
-      - uses: actions/create-github-app-token@af35edadc00be37caa72ed9f3e6d5f7801bfdf09 # v1.11.7
+      - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1.12.0
         if: inputs.github-app-id
         id: generate-token
         with:

@@ -86,6 +86,7 @@ jobs:
                 title:
                   - "/^feat:/"
                   - "/^feat\\\\(.+\\\\):/"
+
             `;
 
             // Get the config file from the repository

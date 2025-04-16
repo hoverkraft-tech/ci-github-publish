@@ -146,7 +146,7 @@ jobs:
       tag: ${{ steps.get-tag.outputs.tag }}
       images: ${{ steps.set-images-tag.outputs.images }}
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@198d391bd7046a3c8ca503d3387ad9c5ba8f9f29 # 0.22.0
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@f80f6471c4a3be99c8997cfab00f21925151dbe9 # 0.22.1
         if: ${{ inputs.tag == '' }}
         with:
           fetch-depth: 0
@@ -159,7 +159,7 @@ jobs:
 
       - id: get-issue-number
         if: ${{ inputs.tag == '' && github.event_name == 'issue_comment' }}
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@198d391bd7046a3c8ca503d3387ad9c5ba8f9f29 # 0.22.0
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@f80f6471c4a3be99c8997cfab00f21925151dbe9 # 0.22.1
 
       - id: get-tag
         run: |

@@ -87,7 +87,7 @@ runs:
           for (const environment of reviewAppsEnvironments) {
             // Environment may be unavailable if it was already deleted or if the token does not have access to it
             try {
-              await github.rest.repos.deleteDeployment({
+              await github.rest.repos.deleteAnEnvironment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 environment_name: environment,

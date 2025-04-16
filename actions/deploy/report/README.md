@@ -67,7 +67,7 @@ permissions:
 | -------------------------- | -------------------------------------------- | ----------- | ------------ |
 | <code>environment</code>   | Environment where the deployment was made.   |             | **true**     |
 | <code>deployment-id</code> | Deployment ID to report.                     |             | **false**    |
-| <code>URL</code>           | URL where the deployment is available.       |             | **false**    |
+| <code>url</code>           | URL where the deployment is available.       |             | **false**    |
 | <code>extra</code>         | Extra outputs to be included in the summary. |             | **false**    |
 
 <!-- end inputs -->
@@ -75,7 +75,7 @@ permissions:
 
 | **Output**       | **Description**                 |
 | ---------------- | ------------------------------- |
-| <code>URL</code> | URL of the deployed application |
+| <code>url</code> | URL of the deployed application |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

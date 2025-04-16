@@ -146,7 +146,7 @@ jobs:
       tag: ${{ steps.get-tag.outputs.tag }}
       images: ${{ steps.set-images-tag.outputs.images }}
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@f80f6471c4a3be99c8997cfab00f21925151dbe9 # 0.22.1
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@abd5469ef96aaa3fa1508e2cbaa3e76734533e8a # 0.22.2
         if: ${{ inputs.tag == '' }}
         with:
           fetch-depth: 0
@@ -159,7 +159,7 @@ jobs:
 
       - id: get-issue-number
         if: ${{ inputs.tag == '' && github.event_name == 'issue_comment' }}
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@f80f6471c4a3be99c8997cfab00f21925151dbe9 # 0.22.1
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@abd5469ef96aaa3fa1508e2cbaa3e76734533e8a # 0.22.2
 
       - id: get-tag
         run: |
@@ -211,7 +211,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@00be6bf5e8054d319e621cd8523cc05ca5102462 # 0.25.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@d9615e8f03feb5d9a3d96bbdd3b5617277395899 # 0.26.0
     with:
       runs-on: ${{ inputs.runs-on }}
       oci-registry: ${{ inputs.oci-registry }}
@@ -310,7 +310,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@00be6bf5e8054d319e621cd8523cc05ca5102462 # 0.25.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@d9615e8f03feb5d9a3d96bbdd3b5617277395899 # 0.26.0
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}

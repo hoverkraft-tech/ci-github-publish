@@ -12,6 +12,7 @@ on: # yamllint disable-line rule:truthy
     - cron: "25 8 * * 1"
 
 permissions:
+  actions: read
   contents: read
   deployments: write
   security-events: write

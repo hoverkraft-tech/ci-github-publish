@@ -114,7 +114,7 @@ jobs:
           environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@abd5469ef96aaa3fa1508e2cbaa3e76734533e8a # 0.22.2
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@95664be4ec235bfc221c4356c7153cbab3fb8f93 # 0.22.3
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}
         with:
           title: "Deployment(s) have been deleted :wastebasket:."

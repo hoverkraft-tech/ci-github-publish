@@ -31,7 +31,7 @@ Action to run uptime check on given URL.
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.3.2
+- uses: hoverkraft-tech/ci-github-publish@0.5.1
   with:
     # Description: The URL to check.
     #

@@ -32,6 +32,7 @@ jobs:
         with:
           deployment-id: 999
           application-file: $TEST_APPLICATION_FILE
+          application-repository: test-app
           namespace-file: $TEST_NAMESPACE_FILE
           namespace: test-app-pr-100
           chart-name: test-app

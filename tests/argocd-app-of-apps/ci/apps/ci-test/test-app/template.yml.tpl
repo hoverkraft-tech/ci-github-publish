@@ -5,6 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/deployment-id: # Will be updated by deploy worklfow
+    argocd.argoproj.io/application-repository: # Will be updated by deploy worklfow
     argocd.argoproj.io/sync-wave: "4"
   labels:
     team: application
@@ -30,6 +31,7 @@ spec:
       targetRevision: # Will be updated by deploy worklfow
       helm:
         values: |
+          deploymentId: # Will be updated by deploy worklfow
           application:
             appUri: # Will be updated by deploy worklfow
             dbMigrate: true

@@ -34,6 +34,9 @@ inputs:
           { "path": "application.appUri", "value": "https://my-app-review-app-1234.my-org.com" }
         ]
     required: false
+  application-repository:
+    description: "Repository of the application"
+    required: true
   application-file:
     description: "Path to the application manifest file"
     required: true
@@ -73,6 +76,12 @@ runs:
             }
           }
 
+          // Add deployment ID to each chart value
+          chartValues.push({
+            path: ".deploymentId",
+            value: "${{ inputs.deployment-id }}"
+          });
+
           const yqUpdates = chartValues.map(chartValue => `${chartValue.path} = "${chartValue.value}" |`).join("\n");
 
           core.setOutput('cmd', yqUpdates);
@@ -92,6 +101,7 @@ runs:
         cmd: |
           yq -i '
             .metadata.name = "${{ inputs.namespace }}" |
+            .metadata.annotations["argocd.argoproj.io/application-repository"] = "${{ inputs.application-repository }}" |
             .metadata.annotations["argocd.argoproj.io/deployment-id"] = "${{ inputs.deployment-id }}" |
             .spec.destination.namespace = "${{ inputs.namespace }}" |
             .spec.sources[0].chart = "${{ inputs.chart-name }}" |

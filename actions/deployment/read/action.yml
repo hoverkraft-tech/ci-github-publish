@@ -1,0 +1,46 @@
+name: "Read deployment"
+description: "Action to retrieve some deployment information."
+author: hoverkraft
+branding:
+  icon: list
+  color: blue
+
+inputs:
+  deployment-id:
+    description: "The id of the deployment to update"
+    required: true
+  repository:
+    description: "The repository where the deployment was made"
+    required: false
+    default: "${{ github.event.repository.name }}"
+
+outputs:
+  environment:
+    description: "The environment of the deployment"
+    value: ${{ steps.get-deployment.outputs.environment }}
+  url:
+    description: "The url of the deployment"
+    value: ${{ steps.get-deployment.outputs.url }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: get-deployment
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        script: |
+          const repository = `${{ inputs.repository }}`.trim();           
+
+          const { data: deployment } = await github.rest.repos.getDeployment({
+            owner: context.repo.owner,
+            repo: repository,
+            deployment_id: `${{ inputs.deployment-id }}`
+          });
+
+          if (!deployment) {
+            core.setFailed(`Deployment with id "${{ inputs.deployment-id }}" not found in repository "${repository}"`);
+            return;
+          }
+
+          core.setOutput("environment", deployment.environment);
+          core.setOutput("url", deployment.url);

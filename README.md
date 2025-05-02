@@ -59,6 +59,8 @@ _Actions for managing deployments._
 
 #### - [Get finished](actions/deployment/get-finished/README.md)
 
+#### - [Read](actions/deployment/read/README.md)
+
 #### - [Update](actions/deployment/update/README.md)
 
 ### Release

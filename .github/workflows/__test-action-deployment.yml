@@ -26,6 +26,29 @@ jobs:
             exit 1
           fi
 
+      - id: get-deployment
+        uses: ./actions/deployment/read
+        with:
+          deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
+          repository: ${{ github.event.repository.name }}
+
+      - name: Check get outputs
+        run: |
+          if [ -z "${{ steps.get-deployment.outputs.environment }}" ]; then
+            echo "Get deployment environment output is not set"
+            exit 1
+          fi
+
+          if [ "${{ steps.get-deployment.outputs.environment }}" != "review-apps" ]; then
+            echo "Get deployment environment output is not 'review-apps': '${{ steps.get-deployment.outputs.environment }}'"
+            exit 1
+          fi
+
+          if [ -z "${{ steps.get-deployment.outputs.url }}" ]; then
+            echo "Get deployment url output is not set"
+            exit 1
+          fi
+
       - id: update-deployment
         uses: ./actions/deployment/update
         with:

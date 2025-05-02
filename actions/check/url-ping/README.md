@@ -63,7 +63,7 @@ Action to run ping check on given URL.
 
 | **Input**                      | **Description**                                   | **Default**        | **Required** |
 | ------------------------------ | ------------------------------------------------- | ------------------ | ------------ |
-| <code>url</code>               | The URL to check.                                 |                    | **true**     |
+| <code>URL</code>               | The URL to check.                                 |                    | **true**     |
 | <code>follow-redirect</code>   | Whether to follow redirects.                      | <code>false</code> | **false**    |
 | <code>timeout</code>           | Timeout in seconds for the URL check.             | <code>10</code>    | **false**    |
 | <code>retries</code>           | Number of retries if the URL check fails.         | <code>3</code>     | **false**    |

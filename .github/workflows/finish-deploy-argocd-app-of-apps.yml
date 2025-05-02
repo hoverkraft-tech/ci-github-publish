@@ -11,10 +11,10 @@
 #   "event_type": "finish-deploy",
 #   "client_payload": {
 #     "deployment-id": "unique deployment id (e.g. 1234)",
-#     "repository": "repository name (e.g. my-repository)",
-#     "url": "url of the deployed application (e.g. https://my-application.com)",
-#     "state": "status of the deployment (e.g. success, failure)",
-#     "description": "description of the deployment (e.g. deployment successful)",
+#     "application-repository": "repository name (e.g. my-repository)",
+#     "urls": "URL(s) of the deployed application. (e.g. ['https://my-application.com'])",
+#     "status": "status of the deployment (e.g. "Synced", "failure")",
+#     "description": "description of the deployment (e.g. "deployment successful")",
 #   }
 # }
 # ```
@@ -40,8 +40,10 @@ on:
     secrets:
       github-token:
         description: |
-          GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
-          See <https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md>.
+          GitHub token for :
+            - creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
+              See <https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md>.
+            - updating deployment status (permissions deployments: write).
       github-app-key:
         description: |
           GitHub App private key to generate GitHub token in place of github-token.
@@ -58,6 +60,8 @@ jobs:
     outputs:
       repository: ${{ steps.check-client-payload.outputs.repository }}
       deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
+      url: ${{ steps.check-client-payload.outputs.url }}
+      state: ${{ steps.get-state-from-status.outputs.state }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -65,44 +69,81 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
+            core.debug(`Client payload: ${JSON.stringify(${{ toJSON(github.event.client_payload) }})}`);
+
             const deploymentId = ${{ toJSON(github.event.client_payload['deployment-id']) }};
             if (!deploymentId) {
-              core.setFailed("Deployment ID is not defined in the client payload");
-              return;
+              return core.setFailed('"deployment-id" is not defined in the client payload');
             }
             core.setOutput("deployment-id", deploymentId);
 
-            const repository = ${{ toJSON(github.event.client_payload['repository']) }};
+            const repository = ${{ toJSON(github.event.client_payload['application-repository']) }};
             if (!repository) {
-              core.setFailed("Repository is not defined in the client payload");
-              return;
+              return core.setFailed('"application-repository" is not defined in the client payload');
             }
             core.setOutput("repository", repository);
 
-            let url = ${{ toJSON(github.event.client_payload['url']) }};
-            if (url) {
-              try {
-                new URL(url);
-              } catch (error) {
-                core.setFailed(`Invalid URL "${url}": ${error.message}`);
+            let urls = ${{ toJSON(github.event.client_payload['urls']) }};
+            if (urls) {
+              if( !Array.isArray(urls)) {
+                core.setFailed("URLs is not an array");
                 return;
               }
-              core.setOutput("url", url);
+              if (urls.length > 0) {
+                const url = urls[0];
+
+                try {
+                  new URL(url);
+                } catch (error) {
+                  return core.setFailed(`Invalid URL "${url}": ${error.message}`);
+                }
+                core.setOutput("url", url);
+              }
             }
 
-            const state = ${{ toJSON(github.event.client_payload['state']) }};
-            if (!state) {
-              core.setFailed("State is not defined in the client payload");
-              return;
+            const status = ${{ toJSON(github.event.client_payload['status']) }};
+            if (!status) {
+              return core.setFailed('"status" is not defined in the client payload');
             }
-            core.setOutput("state", state);
+            core.setOutput("status", status);
 
             const description = ${{ toJSON(github.event.client_payload['description']) }};
             if (!description) {
-              core.setFailed("Description is not defined in the client payload");
-              return;
+              return core.setFailed('"description" is not defined in the client payload');
             }
             core.setOutput("description", description);
+
+      - id: get-state-from-status
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const status = ${{ toJSON(steps.check-client-payload.outputs.status) }};
+            const expectedStatus = "success";
+
+            const statesStatuses = {
+              "error": [],
+              "failure": [],
+              "inactive": [],
+              "in_progress": [],
+              "queued": [],
+              "pending": [],
+              [expectedStatus]: ["Synced"],
+            };
+
+            for(const state in statesStatuses) {
+              const statuses = statesStatuses[state];
+              if (!statuses.includes(status)) {
+                continue;
+              }
+
+              if (state !== expectedStatus) {
+                return;
+              }
+
+              return core.setFailed(`Unexpected deployment status "${status}".`);
+            }
+
+            core.setFailed(`Status "${status}" is not valid. Valid statuses are: ${JSON.stringify(statesStatuses)}`);
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
@@ -127,12 +168,14 @@ jobs:
           private-key: ${{ secrets.github-app-key }}
           owner: ${{ github.repository_owner }}
 
-      - uses: ./self-workflow/actions/deployment/update
+      - uses: ./self-workflow/actions/deploy/report
+        if: always()
         with:
-          deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
-          repository: ${{ steps.check-client-payload.outputs.repository }}
-          url: ${{ steps.check-client-payload.outputs.url }}
-          state: ${{ steps.check-client-payload.outputs.state }}
-          description: ${{ steps.check-client-payload.outputs.description }}
+          deployment-id: ${{ github.event.client_payload['deployment-id'] }}
+          repository: ${{ github.event.client_payload['application-repository'] }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
-          update-log-url: "false"
+          extra: |
+            {
+              "status": "${{ steps.check-client-payload.outputs.status }}",
+              "description": "${{ steps.check-client-payload.outputs.description }}"
+            }

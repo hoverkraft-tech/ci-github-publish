@@ -125,7 +125,7 @@ jobs:
             const configPath = process.env.CONFIG_PATH;
             fs.writeFileSync(configPath, configContent, 'utf8');
 
-      - uses: actions/create-github-app-token@3ff1caaa28b64c9cc276ce0a02e2ff584f3900c5 # v2.0.2
+      - uses: actions/create-github-app-token@30bf6253fa41bdc8d1501d202ad15287582246b4 # v2.0.3
         if: ${{ steps.get-config.outputs.config && inputs.github-app-id }}
         id: generate-token
         with:

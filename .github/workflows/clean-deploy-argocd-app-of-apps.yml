@@ -125,7 +125,7 @@ jobs:
           private-key: ${{ secrets.github-app-key }}
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@95664be4ec235bfc221c4356c7153cbab3fb8f93 # 0.22.3
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@9a3d71ca9f68bc1061db8ea1442084ac31a0f8bf # 0.23.0
         if: steps.remove-files.outputs.has-changes == 'true'
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}

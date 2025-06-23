@@ -141,7 +141,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - id: action-slug
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@95664be4ec235bfc221c4356c7153cbab3fb8f93 # 0.22.3
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@9a3d71ca9f68bc1061db8ea1442084ac31a0f8bf # 0.23.0
         with:
           value: ${{ matrix.action }}
 
@@ -217,7 +217,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - id: workflow-slug
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@95664be4ec235bfc221c4356c7153cbab3fb8f93 # 0.22.3
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@9a3d71ca9f68bc1061db8ea1442084ac31a0f8bf # 0.23.0
         with:
           value: ${{ matrix.workflow }}
 
@@ -292,7 +292,7 @@ jobs:
 
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@95664be4ec235bfc221c4356c7153cbab3fb8f93 # 0.22.3
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@9a3d71ca9f68bc1061db8ea1442084ac31a0f8bf # 0.23.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: docs/actions-workflows-documentation-update

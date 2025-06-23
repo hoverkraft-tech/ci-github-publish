@@ -198,6 +198,7 @@ jobs:
       - uses: ./self-workflow/actions/deploy/argocd-manifest-files
         with:
           deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
+          application-repository: ${{ steps.check-client-payload.outputs.repository }}
           application-file: ${{ steps.get-manifest-files.outputs.application-file }}
           namespace-file: ${{ steps.get-manifest-files.outputs.namespace-file }}
           namespace: ${{ steps.slugify-namespace.outputs.result }}

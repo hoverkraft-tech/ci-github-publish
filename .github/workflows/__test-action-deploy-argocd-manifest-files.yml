@@ -1,4 +1,4 @@
-name: Internal - Tests for argocd-application-manifest action
+name: Internal - Tests for "deploy/argocd-manifest-files" action
 
 on:
   workflow_call:

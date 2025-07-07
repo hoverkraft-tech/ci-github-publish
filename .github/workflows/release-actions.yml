@@ -267,8 +267,8 @@ jobs:
           if-no-files-found: error
           include-hidden-files: true
 
-  publish-documentation:
-    name: Publish Documentation
+  update-documentation:
+    name: Update Documentation
     needs: [prepare-release, generate-actions-readme, generate-workflows-readme]
     if: always() && (needs.prepare-release.outputs.changed-actions != '[]' || needs.prepare-release.outputs.changed-workflows != '[]')
     runs-on: ${{ fromJson(inputs.runs-on) }}
@@ -302,3 +302,44 @@ jobs:
             docs: update actions and workflows documentation
 
             [skip ci]
+
+  publish-documentation:
+    name: Publish Documentation
+    needs: [prepare-release, generate-actions-readme, generate-workflows-readme]
+    if: always() && (needs.prepare-release.outputs.changed-actions != '[]' || needs.prepare-release.outputs.changed-workflows != '[]')
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.url }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: changed-files-*
+          merge-multiple: true
+          path: /
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+
+      - id: build-jekyll
+        uses: ./self-workflow/actions/deploy/jekyll
+
+      - id: deployment
+        uses: ./self-workflow/actions/deploy/github-pages
+        with:
+          build-artifact-name: ${{ steps.build-jekyll.outputs.build-artifact-name }}
+          build-artifact-path: ${{ steps.build-jekyll.outputs.build-artifact-path }}

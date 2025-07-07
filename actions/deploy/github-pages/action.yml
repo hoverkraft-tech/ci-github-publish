@@ -17,6 +17,19 @@ inputs:
     description: "The path to the performance budget file. See <../lighthouse/README.md>."
     required: false
     default: "./budget.json"
+  static-site-generator:
+    description: |
+      The static site generator used to build the site. See <https://github.com/actions/configure-pages>.
+    required: false
+  github-token:
+    description: |
+      GitHub Token for deploying to GitHub Pages.
+      Permissions:
+        - pages: write
+        - id-token: write
+      See <https://github.com/actions/configure-pages>.
+    required: false
+    default: ${{ github.token }}
 
 outputs:
   url:
@@ -52,6 +65,13 @@ runs:
 
         echo "build-assets-path=$BUILD_ASSETS_PATH" >> "$GITHUB_OUTPUT"
 
+    - name: ⚙️ Setup Pages
+      uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+      with:
+        static-site-generator: ${{ inputs.static-site-generator }}
+        token: ${{ inputs.github-token }}
+        enablement: true
+
     - shell: bash
       # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
       run: mkdir -p ./self-github-pages-action/ && cp -r $GITHUB_ACTION_PATH/../../* ./self-github-pages-action/
@@ -64,9 +84,6 @@ runs:
       uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
       with:
         path: ${{ steps.prepare-variables.outputs.build-assets-path }}
-
-    - name: ⚙️ Setup Pages
-      uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
     - name: 🚀 Deploy to GitHub Pages
       id: deployment

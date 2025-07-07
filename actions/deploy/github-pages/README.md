@@ -49,10 +49,10 @@ permissions:
     # Default: build
     build-artifact-name: ""
 
-    # Description: The path to the build assets to deploy. Can be absolute or relative
+    # Description: The path to the downloaded "build" artifact to deploy. Can be absolute or relative
     # $GITHUB_WORKSPACE.
     #
-    build-assets-path: ""
+    build-artifact-path: ""
 
     # Description: The path to the performance budget file. See
     # <../lighthouse/README.md>.

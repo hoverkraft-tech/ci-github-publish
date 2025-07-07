@@ -97,6 +97,5 @@ runs:
         source: ${{ steps.prepare-site.outputs.jekyll-source }}
         destination: ${{ steps.prepare-site.outputs.jekyll-destination }}
 
-    - if: ${{ inputs.build_platform == 'linux' }}
-      shell: bash
+    - shell: bash
       run: sudo chown -R $(whoami) "${{ steps.prepare-site.outputs.jekyll-destination }}"

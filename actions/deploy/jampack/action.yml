@@ -38,6 +38,8 @@ runs:
       env:
         DEBUG: "*"
       run: |
+        ls -al "${{ inputs.path }}/"
+
         npx @divriots/jampack --cache_folder "/tmp/.jampack" "${{ inputs.path }}"
 
         rm -rf "${{ inputs.path }}/_jampack"

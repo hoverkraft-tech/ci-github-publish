@@ -71,7 +71,7 @@ runs:
     - name: ⚙️ Setup Pages
       uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       with:
-        static-site-generator: ${{ inputs.static-site-generator }}
+        static_site_generator: ${{ inputs.static-site-generator }}
         token: ${{ inputs.github-token }}
         enablement: true
 

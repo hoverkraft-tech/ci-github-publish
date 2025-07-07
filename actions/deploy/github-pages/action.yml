@@ -68,12 +68,7 @@ runs:
 
         echo "build-path=$BUILD_PATH" >> "$GITHUB_OUTPUT"
 
-    - name: ⚙️ Setup Pages
-      uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
-      with:
-        static_site_generator: ${{ inputs.static-site-generator }}
-        token: ${{ inputs.github-token }}
-        enablement: true
+        ls -al "$BUILD_PATH/";
 
     - shell: bash
       # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
@@ -82,6 +77,13 @@ runs:
     - uses: ./self-github-pages-action/deploy/jampack
       with:
         path: ${{ steps.prepare-variables.outputs.build-path }}
+
+    - name: ⚙️ Setup Pages
+      uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+      with:
+        static_site_generator: ${{ inputs.static-site-generator }}
+        token: ${{ inputs.github-token }}
+        enablement: true
 
     - name: 📦 Upload website build artifact
       uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1

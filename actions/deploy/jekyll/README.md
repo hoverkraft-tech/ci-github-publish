@@ -41,11 +41,6 @@ This action builds a Jekyll site from the source files.
     # Description: The Jekyll pages path to build.
     #
     pages: ""
-
-    # Description: The name of the artifact containing the built site.
-    #
-    # Default: jekyll-build
-    artifact-name: ""
 ```
 
 <!-- end usage -->

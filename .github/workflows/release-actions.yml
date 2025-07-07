@@ -335,4 +335,4 @@ jobs:
       - id: deployment
         uses: ./self-workflow/actions/deploy/github-pages
         with:
-          build-assets-path: ${{ steps.build-jekyll.outputs.build-path }}
+          build-path: ${{ steps.build-jekyll.outputs.build-path }}

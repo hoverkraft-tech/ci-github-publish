@@ -36,8 +36,6 @@ runs:
 
     - shell: bash
       run: |
-        npx update-browserslist-db@latest
-
         npx @divriots/jampack --cache_folder "/tmp/.jampack" "${{ inputs.path }}"
 
         rm -rf "${{ inputs.path }}/_jampack"

@@ -35,9 +35,9 @@ runs:
           ${{ runner.os }}-jampack-
 
     - shell: bash
+      env:
+        DEBUG: "*"
       run: |
-        rm -rf "${{ inputs.path }}/_jampack"
-
-        DEBUG=* npx @divriots/jampack --cache_folder "/tmp/.jampack" "${{ inputs.path }}"
+        npx @divriots/jampack --cache_folder "/tmp/.jampack" "${{ inputs.path }}"
 
         rm -rf "${{ inputs.path }}/_jampack"

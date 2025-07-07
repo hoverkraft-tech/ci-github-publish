@@ -44,15 +44,15 @@ permissions:
 ```yaml
 - uses: hoverkraft-tech/ci-github-publish@0.5.1
   with:
-    # Description: The name of the "build" artifact to download.
-    #
-    # Default: build
-    build-artifact-name: ""
-
-    # Description: The path to the build assets to deploy. Can be absolute or relative
+    # Description: The path to the assets to deploy. Can be absolute or relative
     # $GITHUB_WORKSPACE.
     #
-    build-assets-path: ""
+    build-path: ""
+
+    # Description: The name of the "build" artifact to download.
+    #
+    # Default:
+    build-artifact-name: ""
 
     # Description: The path to the performance budget file. See
     # <../lighthouse/README.md>.

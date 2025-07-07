@@ -1,0 +1,117 @@
+name: Build a Jekyll site
+description: |
+  This action builds a Jekyll site from the source files.
+inputs:
+  theme:
+    description: "The Jekyll theme to use for the site."
+    required: false
+    default: "jekyll-theme-cayman"
+  pages:
+    description: "The Jekyll pages path to build."
+    required: false
+  artifact-name:
+    description: "The name of the artifact containing the built site."
+    required: false
+    default: "jekyll-build"
+
+outputs:
+  build-artifact-name:
+    description: "The name of the artifact containing the built site."
+    value: "${{ steps.prepare-site.outputs.build-artifact-name }}"
+  build-artifact-path:
+    description: "The path to the built site assets."
+    value: "${{ steps.prepare-site.outputs.jekyll-destination }}"
+
+runs:
+  using: "composite"
+  steps:
+    - id: prepare-site
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        script: |
+          const { randomUUID } = require('crypto');
+          const { join, relative, basename, extname, dirname } = require('path');
+          const { existsSync, readFileSync, writeFileSync } = require('fs');
+
+          // Generate unique artifact name
+          const uniquid = randomUUID();
+          const timestamp = Date.now();
+          const artifactName = `${{ github.run_id }}-${{ github.run_number }}-${{ inputs.artifact-name }}-${timestamp}-${uniquid}`;
+          core.setOutput("build-artifact-name", artifactName);
+
+          // Prepare paths
+          const workspacePath = "${{ github.workspace }}";
+          const sitePath = join(workspacePath, "_site");
+          const buildArtifactPath = join(sitePath, "build");
+          core.setOutput("build-artifact-path", buildArtifactPath);
+
+          core.setOutput("jekyll-source", relative(workspacePath, sitePath));
+          core.setOutput("jekyll-destination", relative(workspacePath, buildArtifactPath));
+
+          // Prepare site pages
+          await io.mkdirP(sitePath);
+
+          // Set config
+          const configPath = join(sitePath, "_config.yml");
+          if (!existsSync(configPath)) {
+            const theme = "${{ inputs.theme }}";
+            if (!theme) {
+              throw new Error("Theme input is required.");
+            }
+            const isGitHubSupportedTheme = theme.startsWith("jekyll-theme-");
+
+            const configContent = isGitHubSupportedTheme
+              ? `theme: ${theme}`
+              : `remote_theme: ${theme}\nplugins:\n  - jekyll-remote-theme`;
+
+            writeFileSync(configPath, configContent);
+          }
+
+          function getPageSection(pageFile) {
+            const sectionDir = basename(pageFile, extname(pageFile))
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-|-$/g, '');
+
+            return join(sitePath, sectionDir, "index.md");
+          }
+
+          function getPageTitle(pageFile) {
+            return getPageSection(pageFile)
+              .split('-')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+          }
+
+          async function createSitePage(pageFile, pageTitle = null, pagePath = null) {
+            pageTitle = pageTitle || getPageTitle(pageFile);
+            pagePath = pagePath || getPageSection(pageFile);
+            await io.mkdirP(dirname(pagePath));
+
+            const pageContent = `---\nlayout: default\ntitle: ${pageTitle}\n---\n\n${readFileSync(pageFile, 'utf8')}`;
+            return writeFileSync(pagePath, pageContent);
+          }
+
+          const indexPath = join(sitePath, "index.md");
+          if (!existsSync(indexPath)) {
+            await createSitePage("./README.md", "Home", indexPath);
+          }
+
+          const pages = "${{ inputs.pages }}";
+          const pageFilePatterns = pages.split([" ", "\n"]).map(p => p.trim()).filter(Boolean);
+          const globber = await glob.create(pageFilePatterns.join('\n'));
+          for await (const pageFile of globber.globGenerator()) {
+            await createSitePage(pageFile);
+          }
+
+    - name: Build Jekyll site
+      uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1.0.13
+      with:
+        source: ${{ steps.prepare-site.outputs.jekyll-source }}
+        destination: ${{ steps.prepare-site.outputs.jekyll-destination }}
+
+    - name: Upload Jekyll build artifacts
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: ${{ steps.prepare-site.outputs.build-artifact-name }}
+        path: ${{ steps.prepare-site.outputs.jekyll-destination }}

@@ -15,11 +15,16 @@ jobs:
   linter:
     uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@9a3d71ca9f68bc1061db8ea1442084ac31a0f8bf # 0.23.0
 
+  test-action-deploy-argocd-manifest-files:
+    needs: linter
+    uses: ./.github/workflows/__test-action-deploy-argocd-manifest-files.yml
+
+  test-action-deploy-jekyll:
+    needs: linter
+    uses: ./.github/workflows/__test-action-deploy-jekyll.yml
+    secrets: inherit
+
   test-action-deployment:
     needs: linter
     uses: ./.github/workflows/__test-action-deployment.yml
     secrets: inherit
-
-  test-action-deploy-argocd-manifest-files:
-    needs: linter
-    uses: ./.github/workflows/__test-action-deploy-argocd-manifest-files.yml

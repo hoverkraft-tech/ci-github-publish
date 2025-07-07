@@ -68,8 +68,6 @@ runs:
 
         echo "build-path=$BUILD_PATH" >> "$GITHUB_OUTPUT"
 
-        ls -al "$BUILD_PATH/";
-
     - shell: bash
       # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
       run: mkdir -p ./self-github-pages-action/ && cp -r $GITHUB_ACTION_PATH/../../* ./self-github-pages-action/

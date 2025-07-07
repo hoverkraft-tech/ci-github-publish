@@ -49,16 +49,29 @@ permissions:
     # Default: build
     build-artifact-name: ""
 
-    # Description: The path to the downloaded "build" artifact to deploy. Can be absolute or relative
+    # Description: The path to the build assets to deploy. Can be absolute or relative
     # $GITHUB_WORKSPACE.
     #
-    build-artifact-path: ""
+    build-assets-path: ""
 
     # Description: The path to the performance budget file. See
     # <../lighthouse/README.md>.
     #
     # Default: ./budget.json
     budget-path: ""
+
+    # Description: The static site generator used to build the site. See
+    # <https://github.com/actions/configure-pages>.
+    #
+    static-site-generator: ""
+
+    # Description: GitHub Token for deploying to GitHub Pages. Permissions:
+    #
+    # - pages: write
+    # - id-token: write See <https://github.com/actions/configure-pages>.
+    #
+    # Default: ${{ github.token }}
+    github-token: ""
 ```
 
 <!-- end usage -->

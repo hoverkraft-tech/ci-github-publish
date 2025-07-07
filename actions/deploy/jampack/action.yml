@@ -38,6 +38,5 @@ runs:
       run: |
         ls -al "${{ inputs.path }}/";
 
-        if [ ! -d "${{ inputs.path }}/_jampack" ]; then
         npx @divriots/jampack --cache_folder "/tmp/.jampack" ${{ inputs.path }}
         rm -rf ${{ inputs.path }}/_jampack

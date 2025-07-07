@@ -9,16 +9,9 @@ inputs:
   pages:
     description: "The Jekyll pages path to build."
     required: false
-  artifact-name:
-    description: "The name of the artifact containing the built site."
-    required: false
-    default: "jekyll-build"
 
 outputs:
-  build-artifact-name:
-    description: "The name of the artifact containing the built site."
-    value: "${{ steps.prepare-site.outputs.build-artifact-name }}"
-  build-artifact-path:
+  build-path:
     description: "The path to the built site assets."
     value: "${{ steps.prepare-site.outputs.jekyll-destination }}"
 
@@ -33,20 +26,14 @@ runs:
           const { join, relative, basename, extname, dirname } = require('path');
           const { existsSync, readFileSync, writeFileSync } = require('fs');
 
-          // Generate unique artifact name
-          const uniquid = randomUUID();
-          const timestamp = Date.now();
-          const artifactName = `${{ github.run_id }}-${{ github.run_number }}-${{ inputs.artifact-name }}-${timestamp}-${uniquid}`;
-          core.setOutput("build-artifact-name", artifactName);
-
           // Prepare paths
           const workspacePath = "${{ github.workspace }}";
           const sitePath = join(workspacePath, "_site");
-          const buildArtifactPath = join(sitePath, "build");
-          core.setOutput("build-artifact-path", buildArtifactPath);
+          const buildPath = join(sitePath, "build");
+          core.setOutput("build-path", buildPath);
 
           core.setOutput("jekyll-source", relative(workspacePath, sitePath));
-          core.setOutput("jekyll-destination", relative(workspacePath, buildArtifactPath));
+          core.setOutput("jekyll-destination", relative(workspacePath, buildPath));
 
           // Prepare site pages
           await io.mkdirP(sitePath);
@@ -109,9 +96,3 @@ runs:
       with:
         source: ${{ steps.prepare-site.outputs.jekyll-source }}
         destination: ${{ steps.prepare-site.outputs.jekyll-destination }}
-
-    - name: Upload Jekyll build artifacts
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-      with:
-        name: ${{ steps.prepare-site.outputs.build-artifact-name }}
-        path: ${{ steps.prepare-site.outputs.jekyll-destination }}

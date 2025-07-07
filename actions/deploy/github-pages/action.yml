@@ -6,15 +6,15 @@ branding:
   color: gray-dark
 
 inputs:
+  build-path:
+    description: |
+      The path to the assets to deploy.
+      Can be absolute or relative $GITHUB_WORKSPACE.
+    required: false
   build-artifact-name:
     description: 'The name of the "build" artifact to download.'
     required: false
-    default: "build"
-  build-artifact-path:
-    description: |
-      The path to the downloaded "build" artifact assets to deploy.
-      Can be absolute or relative $GITHUB_WORKSPACE.
-    required: false
+    default: ""
   budget-path:
     description: "The path to the performance budget file. See <../lighthouse/README.md>."
     required: false
@@ -42,6 +42,7 @@ runs:
   using: "composite"
   steps:
     - id: download-artifact
+      if: ${{ inputs.build-artifact-name != '' }}
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: ${{ inputs.build-artifact-name }}
@@ -51,21 +52,21 @@ runs:
       shell: bash
       run: |
         DOWNLOAD_PATH="${{ steps.download-artifact.outputs.download-path }}"
-        if [ "$DOWNLOAD_PATH" = "/" ]; then
+        if [ -z "$DOWNLOAD_PATH" ] || [ "$DOWNLOAD_PATH" = "/" ]; then
           DOWNLOAD_PATH="$GITHUB_WORKSPACE"
         fi
 
-        BUILD_ARTIFACT_PATH="${{ inputs.build-artifact-path }}"
-        if [[ ! "$BUILD_ARTIFACT_PATH" =~ ^/ ]]; then
-          BUILD_ARTIFACT_PATH="$DOWNLOAD_PATH/$BUILD_ARTIFACT_PATH"
+        BUILD_PATH="${{ inputs.build-path }}"
+        if [[ ! "$BUILD_PATH" =~ ^/ ]]; then
+          BUILD_PATH="$DOWNLOAD_PATH/$BUILD_PATH"
         fi
 
-        if [ ! -d "$BUILD_ARTIFACT_PATH" ]; then
-          echo "::error::Build artifact does not exist in downloaded artifact: $BUILD_ARTIFACT_PATH"
+        if [ ! -d "$BUILD_PATH" ]; then
+          echo "::error::Build path does not exist: $BUILD_PATH"
           exit 1
         fi
 
-        echo "build-artifact-path=$BUILD_ARTIFACT_PATH" >> "$GITHUB_OUTPUT"
+        echo "build-path=$BUILD_PATH" >> "$GITHUB_OUTPUT"
 
     - name: ⚙️ Setup Pages
       uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
@@ -80,12 +81,12 @@ runs:
 
     - uses: ./self-github-pages-action/deploy/jampack
       with:
-        path: ${{ steps.prepare-variables.outputs.build-artifact-path }}
+        path: ${{ steps.prepare-variables.outputs.build-path }}
 
     - name: 📦 Upload website build artifact
       uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
       with:
-        path: ${{ steps.prepare-variables.outputs.build-artifact-path }}
+        path: ${{ steps.prepare-variables.outputs.build-path }}
 
     - name: 🚀 Deploy to GitHub Pages
       id: deployment

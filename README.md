@@ -45,6 +45,8 @@ _Actions for deploying to various platforms._
 
 #### - [Jampack](actions/deploy/jampack/README.md)
 
+#### - [Jekyll](actions/deploy/jekyll/README.md)
+
 #### - [Report](actions/deploy/report/README.md)
 
 ### Deployment

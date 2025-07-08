@@ -17,8 +17,20 @@ inputs:
 runs:
   using: composite
   steps:
+    - id: prepare-variables
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        script: |
+          const { randomUUID } = require('crypto');
+          // Define a unique artifact name
+          const uniquid = randomUUID();
+          const timestamp = Date.now();
+          const artifactName = `${{ github.run_id }}-${{ github.run_number }}-lighthouse-results-${timestamp}-${uniquid}`;
+          core.setOutput("artifact-name", artifactName);
+
     - uses: treosh/lighthouse-ci-action@fcd65974f7c4c2bf0ee9d09b84d2489183c29726 # 12.6.1
       with:
         urls: ${{ inputs.url }}
         budgetPath: ${{ inputs.budget-path }}
         uploadArtifacts: true
+        artifactName: ${{ steps.prepare-variables.outputs.artifact-name }}

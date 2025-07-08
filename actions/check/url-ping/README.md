@@ -37,6 +37,21 @@ Action to run ping check on given URL.
     #
     url: ""
 
+    # Description: Whether to follow redirects.
+    #
+    # Default: false
+    follow-redirect: ""
+
+    # Description: Timeout in seconds for the URL check.
+    #
+    # Default: 10
+    timeout: ""
+
+    # Description: Number of retries if the URL check fails.
+    #
+    # Default: 3
+    retries: ""
+
     # Description: Expected HTTP status codes. Comma separated list.
     #
     # Default: 200
@@ -45,8 +60,22 @@ Action to run ping check on given URL.
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**                      | **Description**                                   | **Default**        | **Required** |
+| ------------------------------ | ------------------------------------------------- | ------------------ | ------------ |
+| <code>url</code>               | The URL to check.                                 |                    | **true**     |
+| <code>follow-redirect</code>   | Whether to follow redirects.                      | <code>false</code> | **false**    |
+| <code>timeout</code>           | Timeout in seconds for the URL check.             | <code>10</code>    | **false**    |
+| <code>retries</code>           | Number of retries if the URL check fails.         | <code>3</code>     | **false**    |
+| <code>expected-statuses</code> | Expected HTTP status codes. Comma separated list. | <code>200</code>   | **false**    |
+
 <!-- end inputs -->
 <!-- start outputs -->
+
+| **Output**               | **Description**                                 |
+| ------------------------ | ----------------------------------------------- |
+| <code>status-code</code> | The HTTP status code returned by the URL check. |
+
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

@@ -76,8 +76,22 @@ permissions:
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**                          | **Description**                                                                                                                                                   | **Default**                      | **Required** |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------ |
+| <code>build-path</code>            | The path to the assets to deploy.<br />Can be absolute or relative $GITHUB_WORKSPACE.                                                                             |                                  | **false**    |
+| <code>build-artifact-name</code>   | The name of the "build" artifact to download.                                                                                                                     |                                  | **false**    |
+| <code>budget-path</code>           | The path to the performance budget file. See <../lighthouse/README.md>.                                                                                           | <code>./budget.json</code>       | **false**    |
+| <code>static-site-generator</code> | The static site generator used to build the site. See <https://github.com/actions/configure-pages>.                                                               |                                  | **false**    |
+| <code>github-token</code>          | GitHub Token for deploying to GitHub Pages.<br />Permissions:<br /> - pages: write<br /> - id-token: write<br />See <https://github.com/actions/configure-pages>. | <code>${{ github.token }}</code> | **false**    |
+
 <!-- end inputs -->
 <!-- start outputs -->
+
+| **Output**       | **Description**               |
+| ---------------- | ----------------------------- |
+| <code>url</code> | The URL of the deployed site. |
+
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

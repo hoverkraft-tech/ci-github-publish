@@ -1,0 +1,32 @@
+name: Internal - Tests for "check/url-uptime" action
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests for "check/url-uptime" action
+    runs-on: ubuntu-latest
+    steps:
+      - name: Arrange - Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Act - Check URL uptime
+        id: check-url-uptime
+        uses: ./actions/check/url-uptime
+        with:
+          url: "https://github.com/hoverkraft-tech/ci-github-publish"
+          expected-statuses: "200"
+
+      - name: Assert - Check outputs
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const assert = require("assert");
+            const { existsSync } = require("fs");
+
+            const statusCodeOutput = ${{ toJSON(steps.check-url-uptime.outputs.status-code) }};
+            assert.equal(statusCodeOutput, 200, `"status-code" output is not 200, got: ${statusCodeOutput}`);

@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:arrow-right-circle color:gray-dark>" /> GitHub Action: Update deployment
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:refresh-cw color:blue>" /> GitHub Action: Update deployment
 
 <!-- end title -->
 <!--
@@ -8,7 +8,7 @@
 -->
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:arrow-right-circle color:gray-dark>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:refresh-cw color:blue>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->

@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:package color:gray-dark>" /> GitHub Action: Jampack
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:package color:blue>" /> GitHub Action: Jampack
 
 <!-- end title -->
 <!--
@@ -9,7 +9,7 @@
 
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:package color:gray-dark>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:package color:blue>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->

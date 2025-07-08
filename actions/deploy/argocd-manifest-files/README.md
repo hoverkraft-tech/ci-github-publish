@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:file-text color:gray-dark>" /> GitHub Action: Deploy - ArgoCD Manifest Files
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:file-text color:blue>" /> GitHub Action: Deploy - ArgoCD Manifest Files
 
 <!-- end title -->
 <!--
@@ -8,7 +8,7 @@
 -->
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:file-text color:gray-dark>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:file-text color:blue>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->

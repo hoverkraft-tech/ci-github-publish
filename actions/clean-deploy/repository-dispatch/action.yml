@@ -1,4 +1,8 @@
 name: Clean deploy via a repository dispatch
+author: hoverkraft
+branding:
+  icon: trash-2
+  color: blue
 description: |
   Action to clean a deployment via GitHub repository dispatch event.
   See <https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event>.
@@ -22,6 +26,7 @@ inputs:
   environment:
     description: "Environment where to clean the deployment."
     required: true
+
 runs:
   using: "composite"
   steps:

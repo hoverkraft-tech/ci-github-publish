@@ -1,8 +1,8 @@
 name: Deploy - Report
-author: Hoverkraft
+author: hoverkraft
 branding:
   icon: list
-  color: gray-dark
+  color: blue
 description: Action to report deploy result
 
 inputs:

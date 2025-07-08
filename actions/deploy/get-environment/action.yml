@@ -1,8 +1,8 @@
 name: Deploy - Get Environment
-author: Hoverkraft
+author: hoverkraft
 branding:
   icon: flag
-  color: gray-dark
+  color: blue
 description: |
   Action to get the environment to deploy regarding the workflow context.
   - If the workflow is triggered by an issue event (or pull-request):

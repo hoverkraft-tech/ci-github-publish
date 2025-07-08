@@ -1,9 +1,9 @@
 name: "Check - URL - Lighthouse"
 description: "Action to run Lighthouse audits on given URL."
-author: Hoverkraft
+author: hoverkraft
 branding:
   icon: sun
-  color: gray-dark
+  color: blue
 
 inputs:
   url:

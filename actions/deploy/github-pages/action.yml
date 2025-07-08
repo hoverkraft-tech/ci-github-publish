@@ -1,9 +1,9 @@
 name: "Deploy - GitHub Pages"
 description: "Action to deploy a static site to GitHub Pages."
-author: Hoverkraft
+author: hoverkraft
 branding:
-  icon: send
-  color: gray-dark
+  icon: upload-cloud
+  color: blue
 
 inputs:
   build-path:

@@ -2,7 +2,7 @@ name: "Deploy - ArgoCD Manifest Files"
 author: Hoverkraft
 branding:
   icon: file-text
-  color: gray-dark
+  color: blue
 description: |
   Prepares the ArgoCD manifest files for deployment.
   Fills in the required fields and updates the Helm chart values.

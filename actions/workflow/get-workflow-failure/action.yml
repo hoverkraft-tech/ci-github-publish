@@ -1,9 +1,9 @@
 name: "Get workflow failure"
 description: "Action to get workflow failed jobs, if any."
-author: Hoverkraft
+author: hoverkraft
 branding:
   icon: zap-off
-  color: gray-dark
+  color: blue
 
 outputs:
   failed-jobs:

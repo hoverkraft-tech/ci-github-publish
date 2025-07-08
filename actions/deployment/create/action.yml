@@ -1,9 +1,9 @@
 name: "Create deployment"
 description: "Action to create a new deployment"
-author: Hoverkraft
+author: hoverkraft
 branding:
   icon: arrow-right-circle
-  color: gray-dark
+  color: blue
 
 outputs:
   deployment-id:

@@ -3,7 +3,7 @@ description: "Action to run Jampack post-processing tool on given static assets.
 author: Hoverkraft
 branding:
   icon: package
-  color: gray-dark
+  color: blue
 
 inputs:
   path:

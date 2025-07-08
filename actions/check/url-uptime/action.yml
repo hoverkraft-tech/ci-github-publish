@@ -1,9 +1,9 @@
 name: "Check - URL - Uptime"
 description: "Action to run uptime check on given URL."
-author: Hoverkraft
+author: hoverkraft
 branding:
-  icon: sun
-  color: gray-dark
+  icon: activity
+  color: blue
 
 inputs:
   url:

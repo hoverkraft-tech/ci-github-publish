@@ -1,9 +1,9 @@
 name: "Update deployment"
 description: "Action to update a deployment. Create a new status."
-author: Hoverkraft
+author: hoverkraft
 branding:
-  icon: arrow-right-circle
-  color: gray-dark
+  icon: refresh-cw
+  color: blue
 
 inputs:
   deployment-id:

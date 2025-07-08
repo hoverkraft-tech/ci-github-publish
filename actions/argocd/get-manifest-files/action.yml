@@ -1,8 +1,8 @@
 name: "ArgoCD - Get Manifest Files"
-author: Hoverkraft
+author: hoverkraft
 branding:
   icon: grid
-  color: gray-dark
+  color: blue
 description: Determine all the manifest files needed to deploy the application using ArgoCD for the given context.
 
 inputs:

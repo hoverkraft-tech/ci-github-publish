@@ -1,9 +1,9 @@
 name: "Get finished deployment"
 description: "Action to wait for a deployment to finish"
-author: Hoverkraft
+author: hoverkraft
 branding:
-  icon: arrow-right-circle
-  color: gray-dark
+  icon: clock
+  color: blue
 
 inputs:
   deployment-id:

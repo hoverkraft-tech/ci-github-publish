@@ -1,9 +1,9 @@
 name: "Create Release"
-description: "Action to create a release"
-author: Hoverkraft
+description: "Action to create a new release"
+author: hoverkraft
 branding:
   icon: bookmark
-  color: gray-dark
+  color: blue
 
 inputs:
   prerelease:

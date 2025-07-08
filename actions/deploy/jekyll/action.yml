@@ -1,6 +1,11 @@
 name: Build a Jekyll site
 description: |
   This action builds a Jekyll site from the source files.
+author: hoverkraft
+branding:
+  icon: layers
+  color: blue
+
 inputs:
   theme:
     description: "The Jekyll theme to use for the site."

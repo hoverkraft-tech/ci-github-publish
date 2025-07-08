@@ -1,9 +1,9 @@
 name: "Delete deployment(s)"
 description: "Action to delete some deployment(s) for the current ref. It also deletes the associated review apps environment(s) if any."
-author: Hoverkraft
+author: hoverkraft
 branding:
   icon: trash-2
-  color: gray-dark
+  color: blue
 
 inputs:
   token:

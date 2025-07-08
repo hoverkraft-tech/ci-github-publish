@@ -305,8 +305,7 @@ jobs:
 
   publish-documentation:
     name: Publish Documentation
-    needs: [prepare-release, generate-actions-readme, generate-workflows-readme]
-    if: always() && (needs.prepare-release.outputs.changed-actions != '[]' || needs.prepare-release.outputs.changed-workflows != '[]')
+    needs: [prepare-release]
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
       pages: write

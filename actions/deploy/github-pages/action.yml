@@ -49,24 +49,35 @@ runs:
         path: "/"
 
     - id: prepare-variables
-      shell: bash
-      run: |
-        DOWNLOAD_PATH="${{ steps.download-artifact.outputs.download-path }}"
-        if [ -z "$DOWNLOAD_PATH" ] || [ "$DOWNLOAD_PATH" = "/" ]; then
-          DOWNLOAD_PATH="$GITHUB_WORKSPACE"
-        fi
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        script: |
+          const { isAbsolute, join } = require("path");
+          const { lstatSync } = require("fs");
+          const { randomUUID } = require('crypto');
 
-        BUILD_PATH="${{ inputs.build-path }}"
-        if [[ ! "$BUILD_PATH" =~ ^/ ]]; then
-          BUILD_PATH="$DOWNLOAD_PATH/$BUILD_PATH"
-        fi
+          let downloadPath = ${{ steps.download-artifact.outputs.download-path | toJSON() }}.trim();
+          if (!downloadPath.length || downloadPath === "/") {
+            downloadPath = ${{ github.workspace | toJSON() }}.trim();
+          }
 
-        if [ ! -d "$BUILD_PATH" ]; then
-          echo "::error::Build path does not exist: $BUILD_PATH"
-          exit 1
-        fi
+          let buildPath = ${{ inputs.build-path | toJSON() }}.trim();
+          if (!isAbsolute(buildPath)) {
+            buildPath = join(downloadPath, buildPath);
+          }
 
-        echo "build-path=$BUILD_PATH" >> "$GITHUB_OUTPUT"
+          // Check if the build path exists and is a directory
+          if (!lstatSync(buildPath).isDirectory()) {
+            return core.setFailed(`Build path does not exist or is not a directory: ${buildPath}`);
+          }
+
+          core.setOutput("build-path", buildPath);
+
+          // Define a unique artifact name
+          const uniquid = randomUUID();
+          const timestamp = Date.now();
+          const artifactName = `${{ github.run_id }}-${{ github.run_number }}-github-pages-${timestamp}-${uniquid}`;
+          core.setOutput("artifact-name", artifactName);
 
     - shell: bash
       # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
@@ -87,10 +98,13 @@ runs:
       uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
       with:
         path: ${{ steps.prepare-variables.outputs.build-path }}
+        name: ${{ steps.prepare-variables.outputs.artifact-name }}
 
     - name: 🚀 Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+      with:
+        artifact_name: ${{ steps.prepare-variables.outputs.artifact-name }}
 
     # jscpd:ignore-start
 

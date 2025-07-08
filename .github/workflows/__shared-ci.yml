@@ -21,7 +21,7 @@ jobs:
 
   test-action-deploy-jekyll:
     needs: linter
-    uses: ./.github/workflows/__test-action-deploy-jekyll.yml
+    uses: ./.github/workflows/__test-action-deploy-jekyll-jampack.yml
     secrets: inherit
 
   test-action-deployment:

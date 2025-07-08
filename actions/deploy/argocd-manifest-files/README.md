@@ -64,6 +64,10 @@ It supports vendor-specific updates for the chart version and other properties:
     #
     chart-values: ""
 
+    # Description: Repository of the application
+    #
+    application-repository: ""
+
     # Description: Path to the application manifest file
     #
     application-file: ""
@@ -75,6 +79,19 @@ It supports vendor-specific updates for the chart version and other properties:
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**                           | **Description**                                                                                                                                           | **Default** | **Required** |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------ |
+| <code>deployment-id</code>          | Deployment ID to be used in the ArgoCD application manifest                                                                                               |             | **true**     |
+| <code>namespace</code>              | Namespace to deploy the application                                                                                                                       |             | **true**     |
+| <code>chart-name</code>             | Name of the Helm chart                                                                                                                                    |             | **true**     |
+| <code>chart-repository</code>       | Repository URL of the Helm chart                                                                                                                          |             | **true**     |
+| <code>chart-version</code>          | Version of the Helm chart                                                                                                                                 |             | **true**     |
+| <code>chart-values</code>           | Values to be replaced in the chart. Example:<br /> [<br /> { "path": "application.appUri", "value": "https://my-app-review-app-1234.my-org.com" }<br /> ] |             | **false**    |
+| <code>application-repository</code> | Repository of the application                                                                                                                             |             | **true**     |
+| <code>application-file</code>       | Path to the application manifest file                                                                                                                     |             | **true**     |
+| <code>namespace-file</code>         | Path to the namespace manifest file                                                                                                                       |             | **true**     |
+
 <!-- end inputs -->
 <!-- start outputs -->
 <!-- end outputs -->

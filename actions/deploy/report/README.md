@@ -43,39 +43,55 @@ permissions:
 ```yaml
 - uses: hoverkraft-tech/ci-github-publish@0.5.1
   with:
-    # Description: Environment where the deployment was made.
+    # Description: The repository where the deployment was made
     #
-    environment: ""
+    # Default: ${{ github.event.repository.name }}
+    repository: ""
 
     # Description: Deployment ID to report.
     #
     deployment-id: ""
 
+    # Description: Environment where the deployment was made.
+    #
+    environment: ""
+
     # Description: URL where the deployment is available.
     #
     url: ""
 
-    # Description: Extra outputs to be included in the summary.
+    # Description: Extra outputs to be included in the summary. JSON object with
+    # key-value pairs.
     #
     extra: ""
+
+    # Description: GitHub Token to update the deployment. Permissions:
+    #
+    # - deployments: write See
+    #   <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>.
+    #
+    # Default: ${{ github.token }}
+    github-token: ""
 ```
 
 <!-- end usage -->
 <!-- start inputs -->
 
-| **Input**                  | **Description**                              | **Default** | **Required** |
-| -------------------------- | -------------------------------------------- | ----------- | ------------ |
-| <code>environment</code>   | Environment where the deployment was made.   |             | **true**     |
-| <code>deployment-id</code> | Deployment ID to report.                     |             | **false**    |
-| <code>`url`</code>         | URL where the deployment is available.       |             | **false**    |
-| <code>extra</code>         | Extra outputs to be included in the summary. |             | **false**    |
+| **Input**                  | **Description**                                                                                                                                                                                       | **Default**                                      | **Required** |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------ |
+| <code>repository</code>    | The repository where the deployment was made                                                                                                                                                          | <code>${{ github.event.repository.name }}</code> | **false**    |
+| <code>deployment-id</code> | Deployment ID to report.                                                                                                                                                                              |                                                  | **false**    |
+| <code>environment</code>   | Environment where the deployment was made.                                                                                                                                                            |                                                  | **false**    |
+| <code>url</code>           | URL where the deployment is available.                                                                                                                                                                |                                                  | **false**    |
+| <code>extra</code>         | Extra outputs to be included in the summary. JSON object with key-value pairs.                                                                                                                        |                                                  | **false**    |
+| <code>github-token</code>  | GitHub Token to update the deployment.<br />Permissions:<br /> - deployments: write<br />See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. | <code>${{ github.token }}</code>                 | **false**    |
 
 <!-- end inputs -->
 <!-- start outputs -->
 
-| **Output**         | **Description**                 |
-| ------------------ | ------------------------------- |
-| <code>`url`</code> | URL of the deployed application |
+| **Output**       | **Description**                 |
+| ---------------- | ------------------------------- |
+| <code>url</code> | URL of the deployed application |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

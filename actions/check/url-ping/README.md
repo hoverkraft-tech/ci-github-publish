@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:activity color:blue>" /> GitHub Action: Check - URL - Uptime
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:activity color:blue>" /> GitHub Action: Check - URL - Ping
 
 <!-- end title -->
 <!--
@@ -23,7 +23,7 @@
 -->
 <!-- start description -->
 
-Action to run uptime check on given URL.
+Action to run ping check on given URL.
 
 <!-- end description -->
 <!-- start contents -->
@@ -45,6 +45,8 @@ Action to run uptime check on given URL.
 
 <!-- end usage -->
 <!-- start inputs -->
+<!-- end inputs -->
+<!-- start outputs -->
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

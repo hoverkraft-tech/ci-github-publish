@@ -42,6 +42,8 @@ Action to run Jampack post-processing tool on given static assets.
 
 <!-- end usage -->
 <!-- start inputs -->
+<!-- end inputs -->
+<!-- start outputs -->
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

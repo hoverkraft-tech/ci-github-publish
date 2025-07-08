@@ -18,4 +18,4 @@ jobs:
         id: check-url-lighthouse
         uses: ./actions/check/url-lighthouse
         with:
-          url: "https://github.com/hoverkraft-tech/ci-github-publish"
+          url: "https://hoverkraft-tech.github.io/ci-github-publish/"

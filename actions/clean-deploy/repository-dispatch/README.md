@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:activity color:blue>" /> GitHub Action: Clean deploy via a repository dispatch
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:trash-2 color:blue>" /> GitHub Action: Clean deploy via a repository dispatch
 
 <!-- end title -->
 <!-- start description -->

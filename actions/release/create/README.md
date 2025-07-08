@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:bookmark color:gray-dark>" /> GitHub Action: Create Release
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:bookmark color:blue>" /> GitHub Action: Create Release
 
 <!-- end title -->
 <!--
@@ -8,7 +8,7 @@
 -->
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:bookmark color:gray-dark>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:bookmark color:blue>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->
@@ -23,7 +23,7 @@
 -->
 <!-- start description -->
 
-Action to create a release
+Action to create a new release
 
 <!-- end description -->
 <!-- start contents -->

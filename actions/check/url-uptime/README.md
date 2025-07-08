@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:sun color:gray-dark>" /> GitHub Action: Check - URL - Uptime
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:activity color:blue>" /> GitHub Action: Check - URL - Uptime
 
 <!-- end title -->
 <!--
@@ -8,7 +8,7 @@
 -->
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:sun color:gray-dark>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:activity color:blue>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->

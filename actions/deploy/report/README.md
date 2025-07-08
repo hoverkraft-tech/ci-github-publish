@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:list color:gray-dark>" /> GitHub Action: Deploy - Report
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:list color:blue>" /> GitHub Action: Deploy - Report
 
 <!-- end title -->
 <!--
@@ -8,7 +8,7 @@
 -->
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:list color:gray-dark>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:list color:blue>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->
@@ -67,15 +67,15 @@ permissions:
 | -------------------------- | -------------------------------------------- | ----------- | ------------ |
 | <code>environment</code>   | Environment where the deployment was made.   |             | **true**     |
 | <code>deployment-id</code> | Deployment ID to report.                     |             | **false**    |
-| <code>`url`</code>         | URL where the deployment is available.       |             | **false**    |
+| <code>url</code>           | URL where the deployment is available.       |             | **false**    |
 | <code>extra</code>         | Extra outputs to be included in the summary. |             | **false**    |
 
 <!-- end inputs -->
 <!-- start outputs -->
 
-| **Output**         | **Description**                 |
-| ------------------ | ------------------------------- |
-| <code>`url`</code> | URL of the deployed application |
+| **Output**       | **Description**                 |
+| ---------------- | ------------------------------- |
+| <code>url</code> | URL of the deployed application |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

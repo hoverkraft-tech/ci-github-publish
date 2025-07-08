@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:activity color:blue>" /> GitHub Action: Build a Jekyll site
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:layers color:blue>" /> GitHub Action: Build a Jekyll site
 
 <!-- end title -->
 <!--
@@ -8,7 +8,7 @@
 -->
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:activity color:blue>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:layers color:blue>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->

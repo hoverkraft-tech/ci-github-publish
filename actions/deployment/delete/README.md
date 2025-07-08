@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:trash-2 color:gray-dark>" /> GitHub Action: Delete deployment(s)
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:trash-2 color:blue>" /> GitHub Action: Delete deployment(s)
 
 <!-- end title -->
 <!--
@@ -8,7 +8,7 @@
 -->
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:trash-2 color:gray-dark>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:trash-2 color:blue>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->

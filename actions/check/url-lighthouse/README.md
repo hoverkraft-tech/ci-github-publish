@@ -1,6 +1,6 @@
 <!-- start title -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:sun color:gray-dark>" /> GitHub Action: Check - URL - Lighthouse
+# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:sun color:blue>" /> GitHub Action: Check - URL - Lighthouse
 
 <!-- end title -->
 <!--
@@ -8,7 +8,7 @@
 -->
 <!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:sun color:gray-dark>" />
+<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:sun color:blue>" />
 
 <!-- end branding -->
 <!-- markdownlint-disable MD013 -->

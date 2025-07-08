@@ -45,6 +45,8 @@ This action builds a Jekyll site from the source files.
 
 <!-- end usage -->
 <!-- start inputs -->
+<!-- end inputs -->
+<!-- start outputs -->
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

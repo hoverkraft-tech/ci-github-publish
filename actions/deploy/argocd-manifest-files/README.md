@@ -75,6 +75,8 @@ It supports vendor-specific updates for the chart version and other properties:
 
 <!-- end usage -->
 <!-- start inputs -->
+<!-- end inputs -->
+<!-- start outputs -->
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

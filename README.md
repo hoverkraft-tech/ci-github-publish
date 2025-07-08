@@ -23,7 +23,7 @@ _Actions for validating the result of a deploy._
 
 #### - [URL - Lighthouse](actions/check/url-lighthouse/README.md)
 
-#### - [URL - Uptime](actions/check/url-uptime/README.md)
+#### - [URL - Ping](actions/check/url-ping/README.md)
 
 ### Clean deploy
 

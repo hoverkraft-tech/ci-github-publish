@@ -3,7 +3,7 @@
 # Reusable workflow that performs the end of a deployment.
 #
 # - Perform checks on the deployment if a URL is provided:
-#   - [Uptime check](../../actions/check/url-uptime/README.md).
+#   - [Ping check](../../actions/check/url-ping/README.md).
 #   - [Lighthouse check](../../actions/check/url-lighthouse/README.md).
 # - Update the deployment status to success or failure.
 # - Report the deployment summary and status. See [report](../../actions/deploy/report/README.md).
@@ -111,7 +111,7 @@ jobs:
           sparse-checkout: |
             actions
       # jscpd:ignore-start
-      - uses: ./self-workflow/actions/check/url-uptime
+      - uses: ./self-workflow/actions/check/url-ping
         with:
           url: ${{ needs.get-finished-deployment.outputs.url }}
 

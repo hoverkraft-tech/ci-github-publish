@@ -74,6 +74,8 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 
 <!-- end usage -->
 <!-- start inputs -->
+<!-- end inputs -->
+<!-- start outputs -->
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

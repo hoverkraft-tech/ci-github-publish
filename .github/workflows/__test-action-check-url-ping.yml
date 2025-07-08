@@ -1,4 +1,4 @@
-name: Internal - Tests for "check/url-uptime" action
+name: Internal - Tests for "check/url-ping" action
 
 on:
   workflow_call:
@@ -8,17 +8,17 @@ permissions:
 
 jobs:
   tests:
-    name: Tests for "check/url-uptime" action
+    name: Tests for "check/url-ping" action
     runs-on: ubuntu-latest
     steps:
       - name: Arrange - Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Act - Check URL uptime
-        id: check-url-uptime
-        uses: ./actions/check/url-uptime
+      - name: Act - Check URL ping
+        id: check-url-ping
+        uses: ./actions/check/url-ping
         with:
-          url: "https://github.com/hoverkraft-tech/ci-github-publish"
+          url: "https://hoverkraft-tech.github.io/ci-github-publish/"
           expected-statuses: "200"
 
       - name: Assert - Check outputs
@@ -28,5 +28,5 @@ jobs:
             const assert = require("assert");
             const { existsSync } = require("fs");
 
-            const statusCodeOutput = ${{ toJSON(steps.check-url-uptime.outputs.status-code) }};
+            const statusCodeOutput = ${{ toJSON(steps.check-url-ping.outputs.status-code) }};
             assert.equal(statusCodeOutput, 200, `"status-code" output is not 200, got: ${statusCodeOutput}`);

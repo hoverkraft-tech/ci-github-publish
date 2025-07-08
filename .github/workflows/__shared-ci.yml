@@ -18,9 +18,9 @@ jobs:
   test-action-check-url-lighthouse:
     needs: linter
     uses: ./.github/workflows/__test-action-check-url-lighthouse.yml
-  test-action-check-url-uptime:
+  test-action-check-url-ping:
     needs: linter
-    uses: ./.github/workflows/__test-action-check-url-uptime.yml
+    uses: ./.github/workflows/__test-action-check-url-ping.yml
 
   test-action-deploy-argocd-manifest-files:
     needs: linter

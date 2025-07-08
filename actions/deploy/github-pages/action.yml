@@ -109,7 +109,7 @@ runs:
     # jscpd:ignore-start
 
     # Url checks
-    - uses: ./self-github-pages-action/check/url-uptime
+    - uses: ./self-github-pages-action/check/url-ping
       with:
         url: ${{ steps.deployment.outputs.page_url }}
 

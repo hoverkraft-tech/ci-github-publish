@@ -1,0 +1,117 @@
+name: "Check - URL - Ping"
+description: "Action to run ping check on given URL."
+author: hoverkraft
+branding:
+  icon: activity
+  color: blue
+
+inputs:
+  url:
+    description: "The URL to check."
+    required: true
+  follow-redirect:
+    description: "Whether to follow redirects."
+    required: false
+    default: "false"
+  timeout:
+    description: "Timeout in seconds for the URL check."
+    required: false
+    default: "10"
+  retries:
+    description: "Number of retries if the URL check fails."
+    required: false
+    default: "3"
+  expected-statuses:
+    description: "Expected HTTP status codes. Comma separated list."
+    required: false
+    default: "200"
+
+outputs:
+  status-code:
+    description: "The HTTP status code returned by the URL check."
+    value: ${{ steps.check-url.outputs.status-code }}
+
+runs:
+  using: composite
+  steps:
+    - id: check-url
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        script: |
+          const urlInput = ${{ toJson(inputs.url ) }};
+          if (!urlInput) {
+            return core.setFailed("URL input is required.");
+          }
+
+          const url = new URL(urlInput.trim());
+          if (!url.protocol || !url.host) {
+            return core.setFailed("Invalid URL input. Please provide a valid URL.");
+          }
+
+          const followRedirectInput = ${{ toJson(inputs['follow-redirect']) }};
+          const followRedirect = followRedirectInput ? followRedirectInput.toLowerCase() === 'true' : false;
+
+          const timeoutInput = ${{ toJson(inputs.timeout) }};
+          const timeout = parseInt(timeoutInput, 10);
+          if (isNaN(timeout) || timeout <= 0) {
+            return core.setFailed("Invalid timeout input. Please provide a positive integer.");
+          }
+          const timeoutMs = timeout * 1000;
+
+          const retriesInput = ${{ toJson(inputs.retries) }};
+          const retries = parseInt(retriesInput, 10);
+          if (isNaN(retries) || retries < 0) {
+            return core.setFailed("Invalid retries input. Please provide a non-negative integer.");
+          }
+
+          const expectedStatusesInput = ${{ toJson(inputs.expected-statuses) }};
+          if (!expectedStatusesInput) {
+            return core.setFailed("Expected statuses input is required.");
+          }
+          const expectedStatuses = expectedStatusesInput.split(",").map(s => s.trim());
+          if(!expectedStatuses.length) {
+            return core.setFailed("Expected statuses input cannot be empty.");
+          }
+
+          const getStatusCode = async () => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+              const res = await fetch(url, {
+                method: 'HEAD',
+                redirect: followRedirect ? 'follow' : 'manual',
+                signal: controller.signal, // abort on timeout
+              });
+              return res.status;
+            } catch (err) {
+              if (err.name === 'AbortError') {
+                throw new Error(`Request to ${url} timed out after ${timeout} seconds`);
+              }
+              throw err;
+            } finally {
+              clearTimeout(timer);
+            }
+          };
+
+          // Start the URL check
+          let attempts = 0;
+          let lastError = null;
+          while (attempts < retries) {
+            try {
+              attempts++;
+              const statusCode = await getStatusCode();
+              core.setOutput("status-code", statusCode);
+
+              if (!expectedStatuses.includes(statusCode.toString())) {
+                throw new Error(`Unexpected status code: ${statusCode}. Expected one of: ${expectedStatuses.join(", ")}`);
+              }
+
+              return core.info(`URL check succeeded with status code: ${statusCode} after ${attempts} attempt(s).`);
+            } catch (error) {
+              core.warning(`Attempt ${attempts}/${retries} failed: ${error.message}`);
+              lastError = error;
+            }
+          }
+
+          return core.setFailed(lastError || `URL check failed after ${retries} attempts for unknown reasons.`);

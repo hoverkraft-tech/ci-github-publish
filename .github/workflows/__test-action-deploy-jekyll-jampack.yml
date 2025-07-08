@@ -1,0 +1,74 @@
+name: Internal - Tests for "deploy/jekyll" and "deploy/jampack" actions
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests for "deploy/jekyll" and "deploy/jampack" actions
+    runs-on: ubuntu-latest
+    outputs:
+      build-path: ${{ steps.deploy-jekyll.outputs.build-path }}
+    steps:
+      - name: Arrange - Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Act - Deploy Jekyll
+        id: deploy-jekyll
+        uses: ./actions/deploy/jekyll
+
+      - name: Assert - Check outputs
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const assert = require("assert");
+            const { existsSync } = require("fs");
+
+            const buildPathOutput = ${{ toJSON(steps.deploy-jekyll.outputs.build-path) }};
+            assert(buildPathOutput, `"build-path" output is empty`);
+
+            // Check if the build path exists
+            assert(existsSync(buildPathOutput), `Build path does not exist: ${buildPathOutput}`);
+
+            // Check if the index.html file exists in the build path
+            const indexFilePath = `${buildPathOutput}/index.html`;
+            assert(existsSync(indexFilePath), `Jekyll site index.html does not exist in the build path: ${indexFilePath}`);
+
+            // Check if the CSS file exists in the build path
+            const cssFilePath = `${buildPathOutput}/assets/css/style.css`;
+            assert(existsSync(cssFilePath), `Jekyll site CSS file does not exist in the build path: ${cssFilePath}`);
+
+      - name: Act - Run Jampack
+        uses: ./actions/deploy/jampack
+        with:
+          path: ${{ steps.deploy-jekyll.outputs.build-path }}
+
+      - name: Assert - Check packed assets
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          # jscpd:ignore-start
+          script: |
+            const assert = require("assert");
+            const { existsSync } = require("fs");
+
+            const buildPathOutput = ${{ toJSON(steps.deploy-jekyll.outputs.build-path) }};
+            assert(buildPathOutput, `"build-path" output is empty`);
+
+            // Check if the build assets path exists
+            assert(existsSync(buildPathOutput), `Build assets path does not exist: ${buildPathOutput}`);
+
+            // Check if the index.html file exists in the build assets path
+            const indexFilePath = `${buildPathOutput}/index.html`;
+            assert(existsSync(indexFilePath), `Jekyll site index.html does not exist in the build path: ${indexFilePath}`);
+
+            // Check if the CSS file exists in the build path
+            const cssFilePath = `${buildPathOutput}/assets/css/style.css`;
+            assert(existsSync(cssFilePath), `Jekyll site CSS file does not exist in the build path: ${cssFilePath}`);
+
+            // Assert that there is no "_jampack" directory in the build path
+            const jampackDir = `${buildPathOutput}/_jampack`;
+            assert(!existsSync(jampackDir), `Jampack cache directory should not exist in the build path: ${jampackDir}`);
+          # jscpd:ignore-end

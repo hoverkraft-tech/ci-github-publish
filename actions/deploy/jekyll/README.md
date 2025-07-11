@@ -31,7 +31,7 @@ This action builds a Jekyll site from the source files.
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.5.1
+- uses: hoverkraft-tech/ci-github-publish@0.6.1
   with:
     # Description: The Jekyll theme to use for the site.
     #
@@ -45,8 +45,19 @@ This action builds a Jekyll site from the source files.
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**          | **Description**                       | **Default**                      | **Required** |
+| ------------------ | ------------------------------------- | -------------------------------- | ------------ |
+| <code>theme</code> | The Jekyll theme to use for the site. | <code>jekyll-theme-cayman</code> | **false**    |
+| <code>pages</code> | The Jekyll pages path to build.       |                                  | **false**    |
+
 <!-- end inputs -->
 <!-- start outputs -->
+
+| **Output**              | **Description**                    |
+| ----------------------- | ---------------------------------- |
+| <code>build-path</code> | The path to the built site assets. |
+
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

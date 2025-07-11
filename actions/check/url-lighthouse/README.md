@@ -31,7 +31,7 @@ Action to run Lighthouse audits on given URL.
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.5.1
+- uses: hoverkraft-tech/ci-github-publish@0.6.1
   with:
     # Description: The URL to audit using Lighthouse.
     #
@@ -46,6 +46,12 @@ Action to run Lighthouse audits on given URL.
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**                | **Description**                                                                                                 | **Default**                | **Required** |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------ |
+| <code>url</code>         | The URL to audit using Lighthouse.                                                                              |                            | **true**     |
+| <code>budget-path</code> | The path to the performance budget file. See <https://web.dev/articles/use-lighthouse-for-performance-budgets>. | <code>./budget.json</code> | **false**    |
+
 <!-- end inputs -->
 <!-- start outputs -->
 <!-- end outputs -->

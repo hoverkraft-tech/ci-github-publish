@@ -41,7 +41,7 @@ concurrency:
 
 jobs:
   release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@0.6.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@0.6.1
     with:
       # Json array of runner(s) to use.
       # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.

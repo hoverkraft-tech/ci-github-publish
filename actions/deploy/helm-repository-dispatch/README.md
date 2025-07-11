@@ -34,7 +34,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.5.1
+- uses: hoverkraft-tech/ci-github-publish@0.6.1
   with:
     # Description: Deployment ID to be used in the ArgoCD application manifest
     #
@@ -74,8 +74,24 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**                  | **Description**                                                                                                                                                           | **Default**                      | **Required** |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------ |
+| <code>deployment-id</code> | Deployment ID to be used in the ArgoCD application manifest                                                                                                               |                                  | **true**     |
+| <code>chart</code>         | Chart to deploy. Example: "ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0".                                                                                 |                                  | **true**     |
+| <code>chart-values</code>  | Chart values to be sent to deployment. JSON array.<br />Example: '[{"path":".application.test","value":"ok"}]'.                                                           |                                  | **false**    |
+| <code>repository</code>    | Target repository where to deploy given chart.                                                                                                                            |                                  | **true**     |
+| <code>environment</code>   | Environment where to deploy given chart.                                                                                                                                  |                                  | **true**     |
+| <code>url</code>           | The URL which respond to deployed application.                                                                                                                            |                                  | **true**     |
+| <code>github-token</code>  | GitHub Token for dispatch an event to a remote repository.<br />Permissions:<br /> - contents: write<br />See <https://github.com/peter-evans/repository-dispatch#usage>. | <code>${{ github.token }}</code> | **false**    |
+
 <!-- end inputs -->
 <!-- start outputs -->
+
+| **Output**       | **Description**                 |
+| ---------------- | ------------------------------- |
+| <code>url</code> | URL of the deployed application |
+
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

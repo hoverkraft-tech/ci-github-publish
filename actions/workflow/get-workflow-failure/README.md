@@ -31,7 +31,7 @@ Action to get workflow failed jobs, if any.
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.5.1
+- uses: hoverkraft-tech/ci-github-publish@0.6.1
   with:
 ```
 
@@ -39,6 +39,12 @@ Action to get workflow failed jobs, if any.
 <!-- start inputs -->
 <!-- end inputs -->
 <!-- start outputs -->
+
+| **Output**               | **Description**                |
+| ------------------------ | ------------------------------ |
+| <code>failed-jobs</code> | List of failed jobs.           |
+| <code>has-failed</code>  | True if there are failed jobs. |
+
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

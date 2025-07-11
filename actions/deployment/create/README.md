@@ -41,7 +41,7 @@ permissions:
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.5.1
+- uses: hoverkraft-tech/ci-github-publish@0.6.1
   with:
     # Description: The environment to deploy to
     #
@@ -50,8 +50,18 @@ permissions:
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**                | **Description**              | **Default** | **Required** |
+| ------------------------ | ---------------------------- | ----------- | ------------ |
+| <code>environment</code> | The environment to deploy to |             | **true**     |
+
 <!-- end inputs -->
 <!-- start outputs -->
+
+| **Output**                 | **Description**                  |
+| -------------------------- | -------------------------------- |
+| <code>deployment-id</code> | The id of the created deployment |
+
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

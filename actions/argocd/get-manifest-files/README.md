@@ -31,7 +31,7 @@ Determine all the manifest files needed to deploy the application using ArgoCD f
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.5.1
+- uses: hoverkraft-tech/ci-github-publish@0.6.1
   with:
     # Description: Environment name (e.g. production, review-apps:pr-1234). This is
     # used to determine the application directory and manifest directory. The
@@ -47,8 +47,20 @@ Determine all the manifest files needed to deploy the application using ArgoCD f
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**                | **Description**                                                                                                                                                                                                                           | **Default** | **Required** |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------ |
+| <code>environment</code> | Environment name (e.g. production, review-apps:pr-1234).<br />This is used to determine the application directory and manifest directory.<br />The environment name can be suffixed with a colon and a suffix (e.g. review-apps:pr-1234). |             | **true**     |
+| <code>repository</code>  | repository name (e.g. my-repository)                                                                                                                                                                                                      |             | **true**     |
+
 <!-- end inputs -->
 <!-- start outputs -->
+
+| **Output**                    | **Description**                    |
+| ----------------------------- | ---------------------------------- |
+| <code>application-file</code> | The file to be used for deployment |
+| <code>namespace-file</code>   | The file to be used for namespace  |
+
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

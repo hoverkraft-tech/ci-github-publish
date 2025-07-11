@@ -42,7 +42,7 @@ permissions:
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.5.1
+- uses: hoverkraft-tech/ci-github-publish@0.6.1
   with:
     # Description: The token to use to delete the review apps environment(s). It needs
     # the `repo` scope.
@@ -52,8 +52,19 @@ permissions:
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**          | **Description**                                                                                  | **Default** | **Required** |
+| ------------------ | ------------------------------------------------------------------------------------------------ | ----------- | ------------ |
+| <code>token</code> | The token to use to delete the review apps environment(s). It needs the <code>repo</code> scope. |             | **false**    |
+
 <!-- end inputs -->
 <!-- start outputs -->
+
+| **Output**                  | **Description**                                                                        |
+| --------------------------- | -------------------------------------------------------------------------------------- |
+| <code>deployment-ids</code> | The id(s) of the deleted deployment(s). Json array format.                             |
+| <code>environments</code>   | The name(s) of the environment(s) related to deleted deployment(s). Json array format. |
+
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

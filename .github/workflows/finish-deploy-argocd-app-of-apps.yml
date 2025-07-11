@@ -40,10 +40,10 @@ on:
     secrets:
       github-token:
         description: |
-          GitHub token for :
-            - creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
-              See <https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md>.
-            - updating deployment status (permissions deployments: write).
+          GitHub Token to update the deployment.
+          Permissions:
+            - deployments: write
+          See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>.
       github-app-key:
         description: |
           GitHub App private key to generate GitHub token in place of github-token.

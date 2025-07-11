@@ -47,7 +47,7 @@ Action to retrieve some deployment information.
 
 | **Input**                  | **Description**                              | **Default**                                      | **Required** |
 | -------------------------- | -------------------------------------------- | ------------------------------------------------ | ------------ |
-| <code>deployment-id</code> | The id of the deployment to update           |                                                  | **true**     |
+| <code>deployment-id</code> | The ID of the deployment to update           |                                                  | **true**     |
 | <code>repository</code>    | The repository where the deployment was made | <code>${{ github.event.repository.name }}</code> | **false**    |
 
 <!-- end inputs -->
@@ -56,7 +56,7 @@ Action to retrieve some deployment information.
 | **Output**               | **Description**                   |
 | ------------------------ | --------------------------------- |
 | <code>environment</code> | The environment of the deployment |
-| <code>url</code>         | The url of the deployment         |
+| <code>URL</code>         | The URL of the deployment         |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

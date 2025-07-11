@@ -211,7 +211,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@d9615e8f03feb5d9a3d96bbdd3b5617277395899 # 0.26.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@a1042a10721dfeb8b3a312bea47531872f7bc748 # 0.27.0
     with:
       runs-on: ${{ inputs.runs-on }}
       oci-registry: ${{ inputs.oci-registry }}
@@ -280,6 +280,7 @@ jobs:
                   { ...chartValue, path: `${chartValue.path}.registry`, value: builtImage.registry },
                   { ...chartValue, path: `${chartValue.path}.repository`, value: builtImage.repository },
                   { ...chartValue, path: `${chartValue.path}.tag`, value: builtImage.tags[0] },
+                  { ...chartValue, path: `${chartValue.path}.digest`, value: builtImage.digest },
                 ];
               }
               else if (chartValue.value !== undefined) {
@@ -310,7 +311,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@d9615e8f03feb5d9a3d96bbdd3b5617277395899 # 0.26.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@a1042a10721dfeb8b3a312bea47531872f7bc748 # 0.27.0
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}

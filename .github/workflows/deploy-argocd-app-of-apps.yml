@@ -119,7 +119,7 @@ jobs:
             }
 
       - id: chart-variables
-        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@d9615e8f03feb5d9a3d96bbdd3b5617277395899 # 0.26.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@a1042a10721dfeb8b3a312bea47531872f7bc748 # 0.27.0
         with:
           uri: ${{ steps.check-client-payload.outputs.chart }}
 

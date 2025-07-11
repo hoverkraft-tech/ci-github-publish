@@ -7,7 +7,7 @@ branding:
 
 inputs:
   deployment-id:
-    description: "The id of the deployment to update"
+    description: "The ID of the deployment to update"
     required: true
   repository:
     description: "The repository where the deployment was made"
@@ -19,7 +19,7 @@ outputs:
     description: "The environment of the deployment"
     value: ${{ steps.get-deployment.outputs.environment }}
   url:
-    description: "The url of the deployment"
+    description: "The URL of the deployment"
     value: ${{ steps.get-deployment.outputs.url }}
 
 runs:

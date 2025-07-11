@@ -90,7 +90,7 @@ permissions:
 
 | **Output**       | **Description**               |
 | ---------------- | ----------------------------- |
-| <code>url</code> | The URL of the deployed site. |
+| <code>URL</code> | The URL of the deployed site. |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

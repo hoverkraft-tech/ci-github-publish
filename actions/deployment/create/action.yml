@@ -7,7 +7,7 @@ branding:
 
 outputs:
   deployment-id:
-    description: "The id of the created deployment"
+    description: "The ID of the created deployment"
     value: ${{ steps.create-deployment.outputs.deployment-id }}
 
 inputs:

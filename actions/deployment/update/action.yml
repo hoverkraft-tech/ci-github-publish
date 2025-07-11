@@ -7,7 +7,7 @@ branding:
 
 inputs:
   deployment-id:
-    description: "The id of the deployment to update"
+    description: "The ID of the deployment to update"
     required: true
   repository:
     description: "The repository where the deployment was made"
@@ -20,7 +20,7 @@ inputs:
     description: "The description of the deployment"
     required: false
   url:
-    description: "The url of the deployment"
+    description: "The URL of the deployment"
     required: false
   update-log-url:
     description: "Update the log URL of the deployment"

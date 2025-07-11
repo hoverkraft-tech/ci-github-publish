@@ -31,7 +31,7 @@ Action to create a new release
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.5.1
+- uses: hoverkraft-tech/ci-github-publish@0.6.0
   with:
     # Description: Whether the release is a prerelease
     #
@@ -48,8 +48,19 @@ Action to create a new release
 
 <!-- end usage -->
 <!-- start inputs -->
+
+| **Input**                 | **Description**                                                                  | **Default**                      | **Required** |
+| ------------------------- | -------------------------------------------------------------------------------- | -------------------------------- | ------------ |
+| <code>prerelease</code>   | Whether the release is a prerelease                                              | <code>false</code>               | **false**    |
+| <code>github-token</code> | GitHub Token for creating the release.<br />Permissions:<br /> - contents: write | <code>${{ github.token }}</code> | **false**    |
+
 <!-- end inputs -->
 <!-- start outputs -->
+
+| **Output**       | **Description**        |
+| ---------------- | ---------------------- |
+| <code>tag</code> | The tag of the release |
+
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->
 <!-- end [.github/ghadocs/examples/] -->

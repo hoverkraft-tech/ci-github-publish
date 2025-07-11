@@ -50,7 +50,7 @@ permissions:
 
 jobs:
   deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@0.5.1
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@0.6.0
     with:
       # Json array of runner(s) to use.
       # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.

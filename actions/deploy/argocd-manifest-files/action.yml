@@ -96,7 +96,7 @@ runs:
           core.setOutput('cmd', yqUpdates);
 
     - id: update-application-file
-      uses: mikefarah/yq@b534aa9ee5d38001fba3cd8fe254a037e4847b37 # v4.45.4
+      uses: mikefarah/yq@1187c954ec44c3a0e62c13ca7dc9dadc1ca80ae7 # v4.46.1
       with:
         cmd: |
           yq -i '
@@ -116,7 +116,7 @@ runs:
           ' ${{ inputs.application-file }}
 
     - id: update-namespace-file
-      uses: mikefarah/yq@b534aa9ee5d38001fba3cd8fe254a037e4847b37 # v4.45.4
+      uses: mikefarah/yq@1187c954ec44c3a0e62c13ca7dc9dadc1ca80ae7 # v4.46.1
       with:
         cmd: |
           yq -i '

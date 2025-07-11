@@ -44,7 +44,7 @@ permissions:
 ```yaml
 - uses: hoverkraft-tech/ci-github-publish@0.6.1
   with:
-    # Description: The id of the deployment to update
+    # Description: The ID of the deployment to update
     #
     deployment-id: ""
 
@@ -61,7 +61,7 @@ permissions:
     #
     description: ""
 
-    # Description: The url of the deployment
+    # Description: The URL of the deployment
     #
     url: ""
 
@@ -88,7 +88,7 @@ permissions:
 | <code>repository</code>     | The repository where the deployment was made                                                                                                                                                          | <code>${{ github.event.repository.name }}</code> | **false**    |
 | <code>state</code>          | The state of the deployment                                                                                                                                                                           |                                                  | **true**     |
 | <code>description</code>    | The description of the deployment                                                                                                                                                                     |                                                  | **false**    |
-| <code>URL</code>            | The URL of the deployment                                                                                                                                                                             |                                                  | **false**    |
+| <code>url</code>            | The URL of the deployment                                                                                                                                                                             |                                                  | **false**    |
 | <code>update-log-url</code> | Update the log URL of the deployment                                                                                                                                                                  | <code>true</code>                                | **false**    |
 | <code>github-token</code>   | GitHub Token to update the deployment.<br />Permissions:<br /> - deployments: write<br />See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. | <code>${{ github.token }}</code>                 | **false**    |
 

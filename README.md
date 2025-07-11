@@ -1,9 +1,14 @@
-# Continuous Integration - GitHub - Publish
+<!-- markdownlint-disable-next-line first-line-heading -->
+<div align="center" width="100%">
+
+# <img src=".github/logo.svg" width="60px" align="center" alt="logo" /> Continuous Integration - GitHub - Publish
 
 [![Continuous Integration](https://github.com/hoverkraft-tech/ci-github-publish/actions/workflows/__main-ci.yml/badge.svg)](https://github.com/hoverkraft-tech/ci-github-publish/actions/workflows/__main-ci.yml)
 [![GitHub tag](https://img.shields.io/github/tag/hoverkraft-tech/ci-github-publish?include_prereleases=&sort=semver&color=blue)](https://github.com/hoverkraft-tech/ci-github-publish/releases/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](#license)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+</div>
 
 Opinionated GitHub Actions and workflows for streamlined release, deployment, and publishing.
 

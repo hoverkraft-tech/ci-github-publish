@@ -60,7 +60,7 @@ permissions:
 
 | **Output**                 | **Description**                  |
 | -------------------------- | -------------------------------- |
-| <code>deployment-id</code> | The id of the created deployment |
+| <code>deployment-id</code> | The ID of the created deployment |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

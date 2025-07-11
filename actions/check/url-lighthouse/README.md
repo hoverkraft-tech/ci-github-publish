@@ -49,7 +49,7 @@ Action to run Lighthouse audits on given URL.
 
 | **Input**                | **Description**                                                                                                 | **Default**                | **Required** |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------ |
-| <code>url</code>         | The URL to audit using Lighthouse.                                                                              |                            | **true**     |
+| <code>URL</code>         | The URL to audit using Lighthouse.                                                                              |                            | **true**     |
 | <code>budget-path</code> | The path to the performance budget file. See <https://web.dev/articles/use-lighthouse-for-performance-budgets>. | <code>./budget.json</code> | **false**    |
 
 <!-- end inputs -->

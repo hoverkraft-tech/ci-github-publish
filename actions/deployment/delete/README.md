@@ -53,9 +53,9 @@ permissions:
 <!-- end usage -->
 <!-- start inputs -->
 
-| **Input**          | **Description**                                                                                  | **Default** | **Required** |
-| ------------------ | ------------------------------------------------------------------------------------------------ | ----------- | ------------ |
-| <code>token</code> | The token to use to delete the review apps environment(s). It needs the <code>repo</code> scope. |             | **false**    |
+| **Input**          | **Description**                                                                                        | **Default** | **Required** |
+| ------------------ | ------------------------------------------------------------------------------------------------------ | ----------- | ------------ |
+| <code>token</code> | The token to use to delete the review apps environment(s). It needs the <code>repository</code> scope. |             | **false**    |
 
 <!-- end inputs -->
 <!-- start outputs -->

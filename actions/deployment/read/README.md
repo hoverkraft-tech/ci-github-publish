@@ -56,7 +56,7 @@ Action to retrieve some deployment information.
 | **Output**               | **Description**                   |
 | ------------------------ | --------------------------------- |
 | <code>environment</code> | The environment of the deployment |
-| <code>url</code>         | The URL of the deployment         |
+| <code>URL</code>         | The URL of the deployment         |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

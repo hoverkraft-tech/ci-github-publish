@@ -59,8 +59,7 @@ jobs:
           script: |
             const configPath = process.env.CONFIG_PATH;
 
-            const config = `
-            ---
+            const config = `---
             template: |
               # What's Changed
               \$CHANGES
@@ -87,7 +86,6 @@ jobs:
                 title:
                   - "/^feat:/"
                   - "/^feat\\\\(.+\\\\):/"
-
             `;
 
             // Get the config file from the repository

@@ -1,4 +1,3 @@
-
 ---
 template: |
   # What's Changed
@@ -26,4 +25,3 @@ autolabeler:
     title:
       - "/^feat:/"
       - "/^feat\\(.+\\):/"
-

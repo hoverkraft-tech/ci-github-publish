@@ -15,7 +15,7 @@ Reusable workflow to clean a deployment.
 <!-- start contents -->
 <!-- end contents -->
 
-# Usage
+## Usage
 
 <!-- start usage -->
 
@@ -44,7 +44,7 @@ jobs:
   deploy:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@0.7.1
     with:
-      # Json array of runner(s) to use.
+      # JSON array of runner(s) to use.
       # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
       runs-on: '["ubuntu-latest"]'
 
@@ -116,7 +116,7 @@ This workflow requires the following permissions:
 
 | **Input**                                | **Description**                                                                                                                                                 | **Default**                      | **Type** | **Required** |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------- | ------------ |
-| **<code>runs-on</code>**                 | Json array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                              | <code>["ubuntu-latest"]</code>   | `string` | **false**    |
+| **<code>runs-on</code>**                 | JSON array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                              | <code>["ubuntu-latest"]</code>   | `string` | **false**    |
 | **<code>clean-deploy-type</code>**       | Type of clean-deploy action. Supported values: - [`repository-dispatch`](../../actions/clean-deploy/repository-dispatch/README.md).                             | <code>repository-dispatch</code> | `string` | **false**    |
 | **<code>clean-deploy-parameters</code>** | Inputs to pass to the clean action. JSON object, depending on the clean-deploy-type. For example, for `repository-dispatch`: { "repository": "my-org/my-repo" } | <code></code>                    | `string` | **false**    |
 | **<code>github-app-id</code>**           | GitHub App ID to generate GitHub token in place of github-token. See <https://github.com/actions/create-github-app-token>.                                      | <code></code>                    | `string` | **false**    |

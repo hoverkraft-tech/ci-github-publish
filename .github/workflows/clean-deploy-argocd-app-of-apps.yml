@@ -21,7 +21,7 @@ on:
     inputs:
       runs-on:
         description: |
-          Json array of runner(s) to use.
+          JSON array of runner(s) to use.
           See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
         type: string
         default: '["ubuntu-latest"]'
@@ -125,7 +125,7 @@ jobs:
           private-key: ${{ secrets.github-app-key }}
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@6857ef6d10f704e0998aa4955282f27d1b9be778 # 0.23.1
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@b4883995e100e291a1fed68678d47a560328ed08 # 0.24.0
         if: steps.remove-files.outputs.has-changes == 'true'
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}

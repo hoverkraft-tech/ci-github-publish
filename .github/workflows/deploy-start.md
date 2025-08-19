@@ -23,7 +23,7 @@ Environment:
 <!-- start contents -->
 <!-- end contents -->
 
-# Usage
+## Usage
 
 <!-- start usage -->
 
@@ -46,7 +46,7 @@ jobs:
   deploy:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@0.14.0
     with:
-      # Json array of runner(s) to use.
+      # JSON array of runner(s) to use.
       # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
       runs-on: '["ubuntu-latest"]'
 
@@ -96,7 +96,7 @@ This workflow requires the following permissions:
 
 | **Input**                           | **Description**                                                                                                                                                                                                                                                  | **Default**                    | **Type** | **Required** |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------- | ------------ |
-| **<code>runs-on</code>**            | Json array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                                                                                                                               | <code>["ubuntu-latest"]</code> | `string` | **false**    |
+| **<code>runs-on</code>**            | JSON array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                                                                                                                               | <code>["ubuntu-latest"]</code> | `string` | **false**    |
 | **<code>environment</code>**        | Environment where to deploy. If trigger is from an issue event (or pull-request), environment will be set to `environment:issue_number`. See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>. | <code></code>                  | `string` | **false**    |
 | **<code>trigger-on-comment</code>** | Comment trigger to start the workflow. See <https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment>.                                                                                                                     | <code>/deploy</code>           | `string` | **false**    |
 

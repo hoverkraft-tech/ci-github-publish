@@ -29,7 +29,7 @@ Payload:
 <!-- start contents -->
 <!-- end contents -->
 
-# Usage
+## Usage
 
 <!--
 // jscpd:ignore-start
@@ -57,7 +57,7 @@ jobs:
   deploy:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@0.7.1
     with:
-      # Json array of runner(s) to use.
+      # JSON array of runner(s) to use.
       # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
       runs-on: '["ubuntu-latest"]'
 
@@ -104,7 +104,7 @@ This workflow requires the following permissions:
 
 | **Input**                      | **Description**                                                                                                            | **Default**                    | **Required** |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------ |
-| **<code>runs-on</code>**       | Json array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.         | <code>["ubuntu-latest"]</code> | **false**    |
+| **<code>runs-on</code>**       | JSON array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.         | <code>["ubuntu-latest"]</code> | **false**    |
 | **<code>github-app-id</code>** | GitHub App ID to generate GitHub token in place of github-token. See <https://github.com/actions/create-github-app-token>. | <code></code>                  | **false**    |
 
 <!-- end inputs -->

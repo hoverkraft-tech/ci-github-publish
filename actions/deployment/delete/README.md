@@ -62,8 +62,8 @@ permissions:
 
 | **Output**                  | **Description**                                                                        |
 | --------------------------- | -------------------------------------------------------------------------------------- |
-| <code>deployment-ids</code> | The id(s) of the deleted deployment(s). Json array format.                             |
-| <code>environments</code>   | The name(s) of the environment(s) related to deleted deployment(s). Json array format. |
+| <code>deployment-ids</code> | The id(s) of the deleted deployment(s). JSON array format.                             |
+| <code>environments</code>   | The name(s) of the environment(s) related to deleted deployment(s). JSON array format. |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

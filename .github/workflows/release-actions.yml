@@ -11,7 +11,7 @@ on:
     inputs:
       runs-on:
         description: |
-          Json array of runner(s) to use.
+          JSON array of runner(s) to use.
           See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
         type: string
         default: '["ubuntu-latest"]'
@@ -141,7 +141,7 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - id: action-slug
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@6857ef6d10f704e0998aa4955282f27d1b9be778 # 0.23.1
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@b4883995e100e291a1fed68678d47a560328ed08 # 0.24.0
         with:
           value: ${{ matrix.action }}
 
@@ -217,7 +217,7 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - id: workflow-slug
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@6857ef6d10f704e0998aa4955282f27d1b9be778 # 0.23.1
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@b4883995e100e291a1fed68678d47a560328ed08 # 0.24.0
         with:
           value: ${{ matrix.workflow }}
 
@@ -292,7 +292,7 @@ jobs:
 
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@6857ef6d10f704e0998aa4955282f27d1b9be778 # 0.23.1
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@b4883995e100e291a1fed68678d47a560328ed08 # 0.24.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: docs/actions-workflows-documentation-update

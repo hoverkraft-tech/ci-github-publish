@@ -12,10 +12,10 @@ inputs:
 
 outputs:
   deployment-ids:
-    description: "The id(s) of the deleted deployment(s). Json array format."
+    description: "The id(s) of the deleted deployment(s). JSON array format."
     value: ${{ steps.delete-deployments.outputs.deployment-ids }}
   environments:
-    description: "The name(s) of the environment(s) related to  deleted deployment(s). Json array format."
+    description: "The name(s) of the environment(s) related to  deleted deployment(s). JSON array format."
     value: ${{ steps.delete-deployments.outputs.environments }}
 
 runs:

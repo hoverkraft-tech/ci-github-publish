@@ -19,7 +19,7 @@ Reusable workflow that performs a deployment of an Helm chart.
 <!-- start contents -->
 <!-- end contents -->
 
-# Usage
+## Usage
 
 <!-- start usage -->
 
@@ -52,7 +52,7 @@ jobs:
   deploy:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@0.7.1
     with:
-      # Json array of runner(s) to use.
+      # JSON array of runner(s) to use.
       # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
       runs-on: '["ubuntu-latest"]'
 
@@ -177,7 +177,7 @@ This workflow requires the following permissions:
 
 | **Input**                          | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | **Default**                           | **Type** | **Required** |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | -------- | ------------ |
-| **<code>runs-on</code>**           | Json array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                                                                                                                                                                                                                                                                                                                                                                                                                   | <code>["ubuntu-latest"]</code>        | `string` | **false**    |
+| **<code>runs-on</code>**           | JSON array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                                                                                                                                                                                                                                                                                                                                                                                                                   | <code>["ubuntu-latest"]</code>        | `string` | **false**    |
 | **<code>environment</code>**       | Destination where to deploy given chart. Can be an environment name or an environment name with a dynamic identifier. Example: `review-apps:pr-1234`.                                                                                                                                                                                                                                                                                                                                                                                                | <code></code>                         | `string` | **true**     |
 | **<code>tag</code>**               | Tag to use for the deployment. If not provided, will be set to the current commit SHA.                                                                                                                                                                                                                                                                                                                                                                                                                                                               | <code></code>                         | `string` | **false**    |
 | **<code>`url`</code>**             | The URL which respond to deployed application. If not provided, will be set to the environment URL. URL can contains placeholders: - `{{ identifier }}`: will be replaced by the environment identifier. Example: `https://{{ identifier }}.my-application.com`.                                                                                                                                                                                                                                                                                     | <code></code>                         | `string` | **false**    |

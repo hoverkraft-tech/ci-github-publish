@@ -81,7 +81,7 @@ runs:
 
             const failedJobsOutput = ${{ toJSON(steps.get-workflow-failure.outputs.failed-jobs) }};
             if (failedJobsOutput) {
-              // Check if is valid Json
+              // Check if is valid JSON
               let failedJobs = null;
               try {
                 failedJobs = JSON.parse(failedJobsOutput);
@@ -132,7 +132,7 @@ runs:
 
           const extraInput = ${{ toJSON(inputs.extra) }};
           if (extraInput) {
-            // Check if is valid Json
+            // Check if is valid JSON
             let extra = null;
             try {
               extra = JSON.parse(extraInput);
@@ -170,7 +170,7 @@ runs:
         update-log-url: ${{ inputs.repository == github.event.repository.name && "true" || "false" }}
         github-token: ${{ inputs.github-token }}
 
-    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@6857ef6d10f704e0998aa4955282f27d1b9be778 # 0.23.1
+    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@b4883995e100e291a1fed68678d47a560328ed08 # 0.24.0
       if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       with:
         title: "## ${{ steps.get-deployment-result.outputs.title }}"

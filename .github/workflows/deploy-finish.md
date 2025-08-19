@@ -21,7 +21,7 @@ Reusable workflow that performs the end of a deployment.
 <!-- start contents -->
 <!-- end contents -->
 
-# Usage
+## Usage
 
 <!-- start usage -->
 
@@ -43,7 +43,7 @@ jobs:
   deploy:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@0.7.1
     with:
-      # Json array of runner(s) to use.
+      # JSON array of runner(s) to use.
       # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
       runs-on: '["ubuntu-latest"]'
 
@@ -99,7 +99,7 @@ This workflow requires the following permissions:
 
 | **Input**                      | **Description**                                                                                                                                | **Default**                    | **Type** | **Required** |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------- | ------------ |
-| **<code>runs-on</code>**       | Json array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                             | <code>["ubuntu-latest"]</code> | `string` | **false**    |
+| **<code>runs-on</code>**       | JSON array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                             | <code>["ubuntu-latest"]</code> | `string` | **false**    |
 | **<code>environment</code>**   | Environment where to deployment has been made.                                                                                                 | <code></code>                  | `string` | **true**     |
 | **<code>deployment-id</code>** | Deployment ID to use for the deployment. See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments>. | <code></code>                  | `string` | **true**     |
 | **<code>budget-path</code>**   | Path to the budget file to use for the Lighthouse check. See [`url-lighthouse`](../../actions/check/url-lighthouse/action.yml/README.md).      | <code>./budget.json</code>     | `string` | **false**    |

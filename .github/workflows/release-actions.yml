@@ -328,6 +328,9 @@ jobs:
           ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
           sparse-checkout: |
             actions
+      - run: |
+          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
+          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
 
       - id: build-jekyll
         uses: ./self-workflow/actions/deploy/jekyll

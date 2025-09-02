@@ -85,7 +85,7 @@ permissions:
 | <code>repository</code>    | The repository where the deployment was made                                                                                                                                                          | <code>${{ github.event.repository.name }}</code> | **false**    |
 | <code>deployment-id</code> | Deployment ID to report.                                                                                                                                                                              |                                                  | **false**    |
 | <code>environment</code>   | Environment where the deployment was made.                                                                                                                                                            |                                                  | **false**    |
-| <code>url</code>           | URL where the deployment is available.                                                                                                                                                                |                                                  | **false**    |
+| <code>`url`</code>         | URL where the deployment is available.                                                                                                                                                                |                                                  | **false**    |
 | <code>extra</code>         | Extra outputs to be included in the summary. JSON object with key-value pairs.                                                                                                                        |                                                  | **false**    |
 | <code>github-token</code>  | GitHub Token to update the deployment.<br />Permissions:<br /> - deployments: write<br />See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. | <code>${{ github.token }}</code>                 | **false**    |
 
@@ -95,9 +95,9 @@ permissions:
 -->
 <!-- start outputs -->
 
-| **Output**       | **Description**                 |
-| ---------------- | ------------------------------- |
-| <code>url</code> | URL of the deployed application |
+| **Output**         | **Description**                 |
+| ------------------ | ------------------------------- |
+| <code>`url`</code> | URL of the deployed application |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

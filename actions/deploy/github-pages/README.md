@@ -88,9 +88,9 @@ permissions:
 <!-- end inputs -->
 <!-- start outputs -->
 
-| **Output**       | **Description**               |
-| ---------------- | ----------------------------- |
-| <code>url</code> | The URL of the deployed site. |
+| **Output**         | **Description**               |
+| ------------------ | ----------------------------- |
+| <code>`url`</code> | The URL of the deployed site. |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

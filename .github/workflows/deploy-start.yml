@@ -103,8 +103,8 @@ jobs:
           sparse-checkout: |
             actions
       - run: |
-          echo "self-workflow" >> .gitignore
-          echo "self-workflow" >> .dockerignore
+          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
+          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
 
       - id: get-environment
         if: ${{ steps.trigger.outputs.trigger }}
@@ -143,8 +143,8 @@ jobs:
           sparse-checkout: |
             actions
       - run: |
-          echo "self-workflow" >> .gitignore
-          echo "self-workflow" >> .dockerignore
+          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
+          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
 
       - id: create-deployment
         uses: ./self-workflow/actions/deployment/create

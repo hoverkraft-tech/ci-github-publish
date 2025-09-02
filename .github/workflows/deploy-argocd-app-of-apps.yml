@@ -1,25 +1,38 @@
+###################################################################################################
 # Deploy - ArgoCD App Of Apps
-# ==========================
-# Reusable workflow to deploy a Helm chart in an ArgoCD App Of Apps Pattern context.
-# See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern>.
+# -------------------------------------------------------------------------------------------------
+# Purpose:
+#   This reusable workflow automates the deployment of a Helm chart using the ArgoCD App Of Apps pattern.
+#   It is designed for environments where applications are managed via ArgoCD and Helm, supporting templated manifests.
 #
-# This workflow is triggered by a repository dispatch event.
-# See <https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch>.
-# Payload:
-# {
-#   "event_type": "deploy",
-#   "client_payload": {
-#     "deployment-id": "unique deployment id (e.g. 1234)",
-#     "environment": "where to deploy application (e.g. reviews-app, staging, production)",
-#     "repository": "repository name (e.g. my-repository)",
-#     "chart": "full chart name image tag (e.g. ghcr.io/my-org/my-repository/charts/application:0.1.14-pr-82-xxx)",
-#     "chart-values": "Values to be replaced in the chart (e.g. [{\"path\":\"application.appUri\",\"value\":\"https://my-app-review-app-1234.my-org.com\"}])",
-#     "url": "The URL which respond to deployed application (e.g. https://my-app-review-app-1234.my-org.com)",
+# Usage:
+#   - Triggered by a `repository_dispatch` event (see: https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch).
+#   - Intended for CI/CD pipelines that need to deploy or update applications in Kubernetes via ArgoCD.
+#   - Supports templated Application manifests for flexible deployment scenarios.
+#
+# References:
+#   - ArgoCD App Of Apps Pattern: https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern
+#
+# Dispatch Payload Example:
+#   {
+#     "event_type": "deploy",
+#     "client_payload": {
+#       "deployment-id": "unique deployment id (e.g. 1234)",
+#       "environment": "target environment (e.g. reviews-app, staging, production)",
+#       "repository": "source repository name (e.g. my-repository)",
+#       "chart": "Helm chart URI with tag (e.g. ghcr.io/my-org/my-repository/charts/application:0.1.14-pr-82-xxx)",
+#       "chart-values": "Array of values to inject in the chart (e.g. [{\"path\":\"application.appUri\",\"value\":\"https://my-app-review-app-1234.my-org.com\"}])",
+#       "url": "URL of the deployed application (e.g. https://my-app-review-app-1234.my-org.com)"
+#     }
 #   }
-# }
 #
-# It supports templated Application.
-
+# Key Features:
+#   - Validates and extracts deployment parameters from the dispatch payload.
+#   - Parses Helm chart URI for chart name, repository, and version.
+#   - Supports templated manifest files for both Application and Namespace resources.
+#   - Updates manifest files with deployment-specific values and chart configuration.
+#   - Creates and merges a pull request for the deployment manifest changes.
+---
 name: Deploy ArgoCD App of Apps
 
 on:
@@ -125,7 +138,8 @@ jobs:
 
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-        # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      # jscpd:ignore-start
       - id: oidc
         uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
@@ -139,7 +153,7 @@ jobs:
       - run: |
           if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
           if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
-
+      # jscpd:ignore-end
       - id: get-namespace
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:

@@ -30,7 +30,7 @@ Action to retrieve some deployment information.
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.6.1
+- uses: hoverkraft-tech/ci-github-publish@0.8.0
   with:
     # Description: The ID of the deployment to update
     #
@@ -56,7 +56,7 @@ Action to retrieve some deployment information.
 | **Output**               | **Description**                   |
 | ------------------------ | --------------------------------- |
 | <code>environment</code> | The environment of the deployment |
-| <code>URL</code>         | The URL of the deployment         |
+| <code>url</code>         | The URL of the deployment         |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

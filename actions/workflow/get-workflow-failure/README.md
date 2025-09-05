@@ -31,7 +31,7 @@ Action to get workflow failed jobs, if any.
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.6.1
+- uses: hoverkraft-tech/ci-github-publish@0.8.0
   with:
 ```
 

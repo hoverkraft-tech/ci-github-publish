@@ -55,7 +55,7 @@ concurrency:
 
 jobs:
   deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@0.7.1
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@0.8.0
     with:
       # JSON array of runner(s) to use.
       # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.

@@ -91,7 +91,7 @@ jobs:
       url: ${{ steps.check-client-payload.outputs.url }}
     steps:
       - id: check-client-payload
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const fs = require("node:fs");
@@ -155,7 +155,7 @@ jobs:
           if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
       # jscpd:ignore-end
       - id: get-namespace
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const namespace = `${{ steps.check-client-payload.outputs.repository }}-${{ steps.check-client-payload.outputs.environment }}`;
@@ -173,7 +173,7 @@ jobs:
           repository: ${{ steps.check-client-payload.outputs.repository }}
 
       - id: get-manifest-templates
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const fs = require("node:fs");

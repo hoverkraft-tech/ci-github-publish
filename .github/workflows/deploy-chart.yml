@@ -184,7 +184,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - id: set-images-tag
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const tag = ${{ toJSON(steps.get-tag.outputs.tag) }};
@@ -228,7 +228,7 @@ jobs:
       deploy-values: ${{ steps.set-chart-values.outputs.deploy-values }}
     steps:
       - id: set-chart-values
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const tag = ${{ toJSON(needs.prepare-deploy.outputs.tag) }};
@@ -342,7 +342,7 @@ jobs:
           if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
       # jscpd:ignore-end
       - id: prepare-deployment
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             // Repository

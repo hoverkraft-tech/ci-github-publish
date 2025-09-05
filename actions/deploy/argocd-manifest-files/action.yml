@@ -114,7 +114,7 @@ runs:
   using: "composite"
   steps:
     - id: common-chart-yq-updates
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
         script: |
           const chartValuesInput = ${{ toJSON(inputs.chart-values) }};
@@ -153,7 +153,7 @@ runs:
           core.setOutput('cmd', yqUpdates);
 
     - id: vendor-specific-chart-yq-updates
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
         script: |
           // Datadog

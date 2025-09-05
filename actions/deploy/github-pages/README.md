@@ -42,7 +42,7 @@ permissions:
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.7.1
+- uses: hoverkraft-tech/ci-github-publish@0.8.0
   with:
     # Description: The path to the assets to deploy. Can be absolute or relative
     # $GITHUB_WORKSPACE.
@@ -88,9 +88,9 @@ permissions:
 <!-- end inputs -->
 <!-- start outputs -->
 
-| **Output**         | **Description**               |
-| ------------------ | ----------------------------- |
-| <code>`url`</code> | The URL of the deployed site. |
+| **Output**       | **Description**               |
+| ---------------- | ----------------------------- |
+| <code>url</code> | The URL of the deployed site. |
 
 <!-- end outputs -->
 <!-- start [.github/ghadocs/examples/] -->

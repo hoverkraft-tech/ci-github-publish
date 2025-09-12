@@ -44,7 +44,7 @@ jobs:
             ]
 
       - name: Assert - Check generated files are valid YAML
-        uses: mikefarah/yq@f03c9dc599c37bfcaf533427211d05e51e6fee64 # v4.47.1
+        uses: mikefarah/yq@6251e95af8df3505def48c71f3119836701495d6 # v4.47.2
         with:
           cmd: |
             echo "Check application file"

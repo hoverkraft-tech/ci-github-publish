@@ -1,15 +1,41 @@
-<!-- start branding -->
-<!-- end branding -->
-<!-- start title -->
+<!-- header:start -->
 
 # GitHub Reusable Workflow: Deploy - Start
 
-<!-- end title -->
-<!-- start badges -->
-<!-- end badges -->
-<!-- start description -->
+<div align="center">
+  <img src="../logo.svg" width="60px" align="center" alt="Deploy - Start" />
+</div>
 
-Reusable workflow that performs the beginning of a deployment.
+---
+
+<!-- header:end -->
+
+<!-- badges:start -->
+
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
+<!--
+// jscpd:ignore-start
+-->
+
+<!-- overview:start -->
+
+## Overview
+
+Reusable workflow: prepare and start a deployment.
+
+Purpose:
+
+- Decide whether a deployment should start (comment trigger or other events).
+- Resolve the target environment; supports dynamic environment names when
+  invoked from issue or pull-request events (e.g. `environment:issue_number`).
+- Create a GitHub deployment and set its initial state to `in_progress`.
+
 Trigger:
 
 - Can be triggered by a specific comment.
@@ -19,99 +45,125 @@ Environment:
 
 - Support dynamic env when comming from issue or pull-request event
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
+### Permissions
+
+- **`actions`**: `read`
+- **`deployments`**: `write`
+- **`issues`**: `write`
+- **`pull-requests`**: `write`
+- **`id-token`**: `write`
+
+<!-- overview:end -->
+
+<!-- usage:start -->
 
 ## Usage
 
-<!-- start usage -->
-
 ```yaml
-name: "Deploy - Start"
-
+name: Deploy - Start
 on:
-  workflow_call:
-
+  push:
+    branches:
+      - main
 permissions:
-  contents: write
-  issues: read
-  pull-requests: write
   actions: read
   deployments: write
-  # FIXME: This is a workaround for having workflow ref. See https://github.com/orgs/community/discussions/38659
+  issues: write
+  pull-requests: write
   id-token: write
-
 jobs:
-  deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@0.14.0
+  deploy-start:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-start.yml@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
     with:
       # JSON array of runner(s) to use.
-      # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+      # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
+      #
+      # Default: `["ubuntu-latest"]`
       runs-on: '["ubuntu-latest"]'
 
       # Environment where to deploy.
       # If trigger is from an issue event (or pull-request), environment will be set to `environment:issue_number`.
-      # See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>.
+      # See https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment.
       environment: ""
 
       # Comment trigger to start the workflow.
-      # See <https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment>.
-      trigger-on-comment: "/deploy"
+      # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment.
+      #
+      # Default: `/deploy`
+      trigger-on-comment: /deploy
 ```
 
-<!-- end usage -->
+<!-- usage:end -->
 
-## Permissions
-
-<!-- start permissions -->
-
-This workflow requires the following permissions:
-
-- `actions: read`: to create deployment
-- `deployments: write`: to create deployment
-- `issues: write`: to write the comment on the PR
-- `pull-requests: write`: to write the comment on the PR
-
-<!-- end permissions -->
-<!--
-// jscpd:ignore-start
--->
-
-## Secrets
-
-<!-- start secrets -->
-
-| **Secret** | **Description** | **Default** | **Required** |
-| ---------- | --------------- | ----------- | ------------ |
-
-<!-- end secrets -->
-<!--
-// jscpd:ignore-end
--->
+<!-- inputs:start -->
 
 ## Inputs
 
-<!-- start inputs -->
+### Workflow Call Inputs
 
-| **Input**                           | **Description**                                                                                                                                                                                                                                                  | **Default**                    | **Type** | **Required** |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------- | ------------ |
-| **<code>runs-on</code>**            | JSON array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                                                                                                                               | <code>["ubuntu-latest"]</code> | `string` | **false**    |
-| **<code>environment</code>**        | Environment where to deploy. If trigger is from an issue event (or pull-request), environment will be set to `environment:issue_number`. See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>. | <code></code>                  | `string` | **false**    |
-| **<code>trigger-on-comment</code>** | Comment trigger to start the workflow. See <https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment>.                                                                                                                     | <code>/deploy</code>           | `string` | **false**    |
+| **Input**                | **Description**                                                                                                         | **Required** | **Type**   | **Default**         |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
+| **`runs-on`**            | JSON array of runner(s) to use.                                                                                         | **false**    | **string** | `["ubuntu-latest"]` |
+|                          | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                      |              |            |                     |
+| **`environment`**        | Environment where to deploy.                                                                                            | **false**    | **string** | -                   |
+|                          | If trigger is from an issue event (or pull-request), environment will be set to `environment:issue_number`.             |              |            |                     |
+|                          | See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>. |              |            |                     |
+| **`trigger-on-comment`** | Comment trigger to start the workflow.                                                                                  | **false**    | **string** | `/deploy`           |
+|                          | See <https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment>.                   |              |            |                     |
 
-<!-- end inputs -->
+<!-- inputs:end -->
+
+<!-- secrets:start -->
+<!-- secrets:end -->
+
+<!-- outputs:start -->
 
 ## Outputs
 
-<!-- start outputs -->
+| **Output**          | **Description**                          |
+| ------------------- | ---------------------------------------- |
+| **`trigger`**       | Trigger event that started the workflow. |
+| **`environment`**   | Environment where to deploy.             |
+| **`deployment-id`** | Deployment ID to use for the deployment. |
 
-| **Output**                     | **Description**                          |
-| ------------------------------ | ---------------------------------------- |
-| **<code>trigger</code>**       | Trigger event that started the workflow. |
-| **<code>environment</code>**   | Environment where to deploy.             |
-| **<code>deployment-id</code>** | Deployment ID to use for the deployment. |
+<!-- outputs:end -->
 
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft-tech
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

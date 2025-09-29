@@ -1,63 +1,114 @@
-<!-- start title -->
+<!-- header:start -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:layers color:blue>" /> GitHub Action: Build a Jekyll site
+# ![Icon](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItbGF5ZXJzIiBjb2xvcj0iYmx1ZSI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDIgNyAxMiAxMiAyMiA3IDEyIDIiPjwvcG9seWdvbj48cG9seWxpbmUgcG9pbnRzPSIyIDE3IDEyIDIyIDIyIDE3Ij48L3BvbHlsaW5lPjxwb2x5bGluZSBwb2ludHM9IjIgMTIgMTIgMTcgMjIgMTIiPjwvcG9seWxpbmU+PC9zdmc+) GitHub Action: Build a Jekyll site
 
-<!-- end title -->
+<div align="center">
+  <img src="../../../.github/logo.svg" width="60px" align="center" alt="Build a Jekyll site" />
+</div>
+
+---
+
+<!-- header:end -->
+
+<!-- badges:start -->
+
+[![Marketplace](https://img.shields.io/badge/Marketplace-build--a--jekyll--site-blue?logo=github-actions)](https://github.com/marketplace/actions/build-a-jekyll-site)
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
 <!--
 // jscpd:ignore-start
 -->
-<!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:layers color:blue>" />
+<!-- overview:start -->
 
-<!-- end branding -->
-<!-- markdownlint-disable MD013 -->
-<!-- start badges -->
-
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Fissues"><img src="https://img.shields.io/github/issues/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads/hoverkraft-tech/ci-github-publish/total?logo=github&style=flat-square" alt="Downloads" />
-
-<!-- end badges -->
-<!-- markdownlint-enable MD013 -->
-<!--
-// jscpd:ignore-end
--->
-<!-- start description -->
+## Overview
 
 This action builds a Jekyll site from the source files.
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
-<!-- start usage -->
+<!-- overview:end -->
+
+<!-- usage:start -->
+
+## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.8.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jekyll@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
   with:
-    # Description: The Jekyll theme to use for the site.
-    #
-    # Default: jekyll-theme-cayman
-    theme: ""
+    # The Jekyll theme to use for the site.
+    # Default: `jekyll-theme-cayman`
+    theme: jekyll-theme-cayman
 
-    # Description: The Jekyll pages path to build.
-    #
+    # The Jekyll pages path to build.
     pages: ""
 ```
 
-<!-- end usage -->
-<!-- start inputs -->
+<!-- usage:end -->
 
-| **Input**          | **Description**                       | **Default**                      | **Required** |
-| ------------------ | ------------------------------------- | -------------------------------- | ------------ |
-| <code>theme</code> | The Jekyll theme to use for the site. | <code>jekyll-theme-cayman</code> | **false**    |
-| <code>pages</code> | The Jekyll pages path to build.       |                                  | **false**    |
+<!-- inputs:start -->
 
-<!-- end inputs -->
-<!-- start outputs -->
+## Inputs
 
-| **Output**              | **Description**                    |
-| ----------------------- | ---------------------------------- |
-| <code>build-path</code> | The path to the built site assets. |
+| **Input**   | **Description**                       | **Required** | **Default**           |
+| ----------- | ------------------------------------- | ------------ | --------------------- |
+| **`theme`** | The Jekyll theme to use for the site. | **false**    | `jekyll-theme-cayman` |
+| **`pages`** | The Jekyll pages path to build.       | **false**    | -                     |
 
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+<!-- inputs:end -->
+
+<!-- outputs:start -->
+
+## Outputs
+
+| **Output**       | **Description**                    |
+| ---------------- | ---------------------------------- |
+| **`build-path`** | The path to the built site assets. |
+
+<!-- outputs:end -->
+
+<!-- secrets:start -->
+<!-- secrets:end -->
+
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

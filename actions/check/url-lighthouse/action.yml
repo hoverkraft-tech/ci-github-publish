@@ -10,7 +10,7 @@ inputs:
     description: "The URL to audit using Lighthouse."
     required: true
   budget-path:
-    description: "The path to the performance budget file. See <https://web.dev/articles/use-lighthouse-for-performance-budgets>."
+    description: "The path to the performance budget file. See https://web.dev/articles/use-lighthouse-for-performance-budgets."
     required: false
     default: "./budget.json"
 

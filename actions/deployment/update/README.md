@@ -1,35 +1,38 @@
-<!-- start title -->
+<!-- header:start -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:refresh-cw color:blue>" /> GitHub Action: Update deployment
+# ![Icon](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItcmVmcmVzaC1jdyIgY29sb3I9ImJsdWUiPjxwb2x5bGluZSBwb2ludHM9IjIzIDQgMjMgMTAgMTcgMTAiPjwvcG9seWxpbmU+PHBvbHlsaW5lIHBvaW50cz0iMSAyMCAxIDE0IDcgMTQiPjwvcG9seWxpbmU+PHBhdGggZD0iTTMuNTEgOWE5IDkgMCAwIDEgMTQuODUtMy4zNkwyMyAxME0xIDE0bDQuNjQgNC4zNkE5IDkgMCAwIDAgMjAuNDkgMTUiPjwvcGF0aD48L3N2Zz4=) GitHub Action: Deployment - Update deployment
 
-<!-- end title -->
+<div align="center">
+  <img src="../../../.github/logo.svg" width="60px" align="center" alt="Deployment - Update deployment" />
+</div>
+
+---
+
+<!-- header:end -->
+
+<!-- badges:start -->
+
+[![Marketplace](https://img.shields.io/badge/Marketplace-deployment------update--deployment-blue?logo=github-actions)](https://github.com/marketplace/actions/deployment---update-deployment)
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
 <!--
 // jscpd:ignore-start
 -->
-<!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:refresh-cw color:blue>" />
+<!-- overview:start -->
 
-<!-- end branding -->
-<!-- markdownlint-disable MD013 -->
-<!-- start badges -->
-
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Fissues"><img src="https://img.shields.io/github/issues/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads/hoverkraft-tech/ci-github-publish/total?logo=github&style=flat-square" alt="Downloads" />
-
-<!-- end badges -->
-<!-- markdownlint-enable MD013 -->
-<!--
-// jscpd:ignore-end
--->
-<!-- start description -->
+## Overview
 
 Action to update a deployment. Create a new status.
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
+<!-- overview:end -->
 
-## Usage
+## Permissions
 
 Set permissions to write deployments.
 
@@ -39,61 +42,107 @@ permissions:
   deployments: write
 ```
 
-<!-- start usage -->
+<!-- usage:start -->
+
+## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.8.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/update@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
   with:
-    # Description: The ID of the deployment to update
-    #
+    # The ID of the deployment to update
+    # This input is required.
     deployment-id: ""
 
-    # Description: The repository where the deployment was made
-    #
-    # Default: ${{ github.event.repository.name }}
-    repository: ""
+    # The repository where the deployment was made
+    # Default: `${{ github.event.repository.name }}`
+    repository: ${{ github.event.repository.name }}
 
-    # Description: The state of the deployment
-    #
+    # The state of the deployment
+    # This input is required.
     state: ""
 
-    # Description: The description of the deployment
-    #
+    # The description of the deployment
     description: ""
 
-    # Description: The URL of the deployment
-    #
+    # The URL of the deployment
     url: ""
 
-    # Description: Update the log URL of the deployment
-    #
-    # Default: true
-    update-log-url: ""
+    # Update the log URL of the deployment
+    # Default: `true`
+    update-log-url: "true"
 
-    # Description: GitHub Token to update the deployment. Permissions:
+    # GitHub Token to update the deployment.
+    # Permissions:
+    # - deployments: write
+    # See https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status.
     #
-    # - deployments: write See
-    #   <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>.
-    #
-    # Default: ${{ github.token }}
-    github-token: ""
+    # Default: `${{ github.token }}`
+    github-token: ${{ github.token }}
 ```
 
-<!-- end usage -->
-<!-- start inputs -->
+<!-- usage:end -->
 
-| **Input**                   | **Description**                                                                                                                                                                                       | **Default**                                      | **Required** |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------ |
-| <code>deployment-id</code>  | The ID of the deployment to update                                                                                                                                                                    |                                                  | **true**     |
-| <code>repository</code>     | The repository where the deployment was made                                                                                                                                                          | <code>${{ github.event.repository.name }}</code> | **false**    |
-| <code>state</code>          | The state of the deployment                                                                                                                                                                           |                                                  | **true**     |
-| <code>description</code>    | The description of the deployment                                                                                                                                                                     |                                                  | **false**    |
-| <code>url</code>            | The URL of the deployment                                                                                                                                                                             |                                                  | **false**    |
-| <code>update-log-url</code> | Update the log URL of the deployment                                                                                                                                                                  | <code>true</code>                                | **false**    |
-| <code>github-token</code>   | GitHub Token to update the deployment.<br />Permissions:<br /> - deployments: write<br />See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. | <code>${{ github.token }}</code>                 | **false**    |
+<!-- inputs:start -->
 
-<!-- end inputs -->
-<!-- start outputs -->
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+## Inputs
+
+| **Input**            | **Description**                                                                                              | **Required** | **Default**                           |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ | ------------ | ------------------------------------- |
+| **`deployment-id`**  | The ID of the deployment to update                                                                           | **true**     | -                                     |
+| **`repository`**     | The repository where the deployment was made                                                                 | **false**    | `${{ github.event.repository.name }}` |
+| **`state`**          | The state of the deployment                                                                                  | **true**     | -                                     |
+| **`description`**    | The description of the deployment                                                                            | **false**    | -                                     |
+| **`url`**            | The URL of the deployment                                                                                    | **false**    | -                                     |
+| **`update-log-url`** | Update the log URL of the deployment                                                                         | **false**    | `true`                                |
+| **`github-token`**   | GitHub Token to update the deployment.                                                                       | **false**    | `${{ github.token }}`                 |
+|                      | Permissions:                                                                                                 |              |                                       |
+|                      | - deployments: write                                                                                         |              |                                       |
+|                      | See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. |              |                                       |
+
+<!-- inputs:end -->
+
+<!-- outputs:start -->
+<!-- outputs:end -->
+
+<!-- secrets:start -->
+<!-- secrets:end -->
+
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

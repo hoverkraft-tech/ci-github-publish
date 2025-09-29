@@ -1,5 +1,14 @@
-name: "Get workflow failure"
-description: "Action to get workflow failed jobs, if any."
+name: "Deployment - Get workflow failure"
+description: |
+  Inspect the current workflow run and return any failed jobs.
+
+  This action calls the GitHub Actions API to list all jobs for the workflow run that triggered the current workflow (using `context.runId`).
+  It filters jobs with terminal failure conclusions (for example `failure` and `timed_out`)
+  and exposes a JSON list of the failed jobs together with a boolean flag indicating whether any job failed.
+  Each failed job entry contains the job name, its conclusion, and the job web URL for quick access.
+
+  Note: this action reads jobs for the current run and therefore relies on the workflow run context;
+  the default `GITHUB_TOKEN` already has read access to Actions in typical workflows.
 author: hoverkraft
 branding:
   icon: zap-off
@@ -7,10 +16,20 @@ branding:
 
 outputs:
   failed-jobs:
-    description: "List of failed jobs."
+    description: |
+      JSON array (string) of failed job objects. Each object contains:
+      - `name`: job name
+      - `conclusion`: job conclusion (e.g. `failure`, `timed_out`)
+      - `html_url`: link to the job run in GitHub UI
+      Example:
+      ```json
+      [
+        { "name": "build", "conclusion": "failure", "html_url": "https://..." }
+      ]
+      ```
     value: ${{ steps.get-deployment-result.outputs.failed-jobs }}
   has-failed:
-    description: "True if there are failed jobs."
+    description: "Boolean (string) value: `true` if at least one job failed, otherwise `false`."
     value: ${{ steps.get-deployment-result.outputs.has-failed }}
 
 runs:

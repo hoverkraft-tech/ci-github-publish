@@ -1,18 +1,18 @@
-# Clean Deploy - ArgoCD App Of Apps
-# ==========================
 # Reusable workflow that clean a deployment in an ArgoCD App Of Apps Pattern context.
-# See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern>.
+# See https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern.
 # This workflow is triggered by a repository dispatch event.
-# See <https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch>.
+# See https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch.
 # Payload:
+#
+# ```json
 # {
 #   "event_type": "clean-deploy",
 #   "client_payload": {
 #     "repository": "repository name (e.g. my-repository)",
-#     "environment": "environment name (e.g. production, review-apps:pr-1234)",
+#     "environment": "environment name (e.g. production, review-apps:pr-1234)"
 #   }
 # }
-#
+# ```
 ---
 name: Clean Deploy - ArgoCD App Of Apps
 
@@ -22,25 +22,25 @@ on:
       runs-on:
         description: |
           JSON array of runner(s) to use.
-          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
         type: string
         default: '["ubuntu-latest"]'
         required: false
       github-app-id:
         description: |
           GitHub App ID to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
         required: false
         type: string
     secrets:
       github-token:
         description: |
           GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
-          See <https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md>.
+          See https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md.
       github-app-key:
         description: |
           GitHub App private key to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
 
 permissions:
   contents: read

@@ -1,4 +1,4 @@
-name: "Update deployment"
+name: "Deployment - Update deployment"
 description: "Action to update a deployment. Create a new status."
 author: hoverkraft
 branding:
@@ -31,7 +31,7 @@ inputs:
       GitHub Token to update the deployment.
       Permissions:
         - deployments: write
-      See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>.
+      See https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status.
     required: false
     default: ${{ github.token }}
 

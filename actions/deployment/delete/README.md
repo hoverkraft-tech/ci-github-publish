@@ -1,35 +1,38 @@
-<!-- start title -->
+<!-- header:start -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:trash-2 color:blue>" /> GitHub Action: Delete deployment(s)
+# ![Icon](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItdHJhc2gtMiIgY29sb3I9ImJsdWUiPjxwb2x5bGluZSBwb2ludHM9IjMgNiA1IDYgMjEgNiI+PC9wb2x5bGluZT48cGF0aCBkPSJNMTkgNnYxNGEyIDIgMCAwIDEtMiAySDdhMiAyIDAgMCAxLTItMlY2bTMgMFY0YTIgMiAwIDAgMSAyLTJoNGEyIDIgMCAwIDEgMiAydjIiPjwvcGF0aD48bGluZSB4MT0iMTAiIHkxPSIxMSIgeDI9IjEwIiB5Mj0iMTciPjwvbGluZT48bGluZSB4MT0iMTQiIHkxPSIxMSIgeDI9IjE0IiB5Mj0iMTciPjwvbGluZT48L3N2Zz4=) GitHub Action: Deployment - Delete deployment(s)
 
-<!-- end title -->
+<div align="center">
+  <img src="../../../.github/logo.svg" width="60px" align="center" alt="Deployment - Delete deployment(s)" />
+</div>
+
+---
+
+<!-- header:end -->
+
+<!-- badges:start -->
+
+[![Marketplace](https://img.shields.io/badge/Marketplace-deployment------delete--deployment--s---blue?logo=github-actions)](https://github.com/marketplace/actions/deployment---delete-deployment-s-)
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
 <!--
 // jscpd:ignore-start
 -->
-<!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:trash-2 color:blue>" />
+<!-- overview:start -->
 
-<!-- end branding -->
-<!-- markdownlint-disable MD013 -->
-<!-- start badges -->
-
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Fissues"><img src="https://img.shields.io/github/issues/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads/hoverkraft-tech/ci-github-publish/total?logo=github&style=flat-square" alt="Downloads" />
-
-<!-- end badges -->
-<!-- markdownlint-enable MD013 -->
-<!--
-// jscpd:ignore-end
--->
-<!-- start description -->
+## Overview
 
 Action to delete some deployment(s) for the current ref. It also deletes the associated review apps environment(s) if any.
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
+<!-- overview:end -->
 
-## Usage
+## Permissions
 
 Set permissions to write deployments.
 
@@ -39,32 +42,79 @@ permissions:
   deployments: write
 ```
 
-<!-- start usage -->
+<!-- usage:start -->
+
+## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.8.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/delete@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
   with:
-    # Description: The token to use to delete the review apps environment(s). It needs
-    # the `repo` scope.
-    #
+    # The token to use to delete the review apps environment(s). It needs the `repo` scope.
     token: ""
 ```
 
-<!-- end usage -->
-<!-- start inputs -->
+<!-- usage:end -->
 
-| **Input**          | **Description**                                                                                  | **Default** | **Required** |
-| ------------------ | ------------------------------------------------------------------------------------------------ | ----------- | ------------ |
-| <code>token</code> | The token to use to delete the review apps environment(s). It needs the <code>repo</code> scope. |             | **false**    |
+<!-- inputs:start -->
 
-<!-- end inputs -->
-<!-- start outputs -->
+## Inputs
 
-| **Output**                  | **Description**                                                                        |
-| --------------------------- | -------------------------------------------------------------------------------------- |
-| <code>deployment-ids</code> | The id(s) of the deleted deployment(s). JSON array format.                             |
-| <code>environments</code>   | The name(s) of the environment(s) related to deleted deployment(s). JSON array format. |
+| **Input**   | **Description**                                                                       | **Required** | **Default** |
+| ----------- | ------------------------------------------------------------------------------------- | ------------ | ----------- |
+| **`token`** | The token to use to delete the review apps environment(s). It needs the `repo` scope. | **false**    | -           |
 
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+<!-- inputs:end -->
+
+<!-- outputs:start -->
+
+## Outputs
+
+| **Output**           | **Description**                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| **`deployment-ids`** | The id(s) of the deleted deployment(s). JSON array format.                             |
+| **`environments`**   | The name(s) of the environment(s) related to deleted deployment(s). JSON array format. |
+
+<!-- outputs:end -->
+
+<!-- secrets:start -->
+<!-- secrets:end -->
+
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

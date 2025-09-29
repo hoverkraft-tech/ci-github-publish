@@ -1,81 +1,130 @@
-<!-- start title -->
+<!-- header:start -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:activity color:blue>" /> GitHub Action: Check - URL - Ping
+# ![Icon](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItYWN0aXZpdHkiIGNvbG9yPSJibHVlIj48cG9seWxpbmUgcG9pbnRzPSIyMiAxMiAxOCAxMiAxNSAyMSA5IDMgNiAxMiAyIDEyIj48L3BvbHlsaW5lPjwvc3ZnPg==) GitHub Action: Check - URL - Ping
 
-<!-- end title -->
-<!--
-// jscpd:ignore-start
--->
-<!-- start branding -->
+<div align="center">
+  <img src="../../../.github/logo.svg" width="60px" align="center" alt="Check - URL - Ping" />
+</div>
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:activity color:blue>" />
+---
 
-<!-- end branding -->
-<!-- markdownlint-disable MD013 -->
-<!-- start badges -->
+<!-- header:end -->
 
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Fissues"><img src="https://img.shields.io/github/issues/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads/hoverkraft-tech/ci-github-publish/total?logo=github&style=flat-square" alt="Downloads" />
+<!-- badges:start -->
 
-<!-- end badges -->
-<!-- markdownlint-enable MD013 -->
-<!--
-// jscpd:ignore-end
--->
-<!-- start description -->
+[![Marketplace](https://img.shields.io/badge/Marketplace-check------url------ping-blue?logo=github-actions)](https://github.com/marketplace/actions/check---url---ping)
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
+<!-- overview:start -->
+
+## Overview
 
 Action to run ping check on given URL.
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
-<!-- start usage -->
+<!-- overview:end -->
+
+<!-- usage:start -->
+
+## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.8.0
+- uses: hoverkraft-tech/ci-github-publish/actions/check/url-ping@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
   with:
-    # Description: The URL to check.
-    #
+    # The URL to check.
+    # This input is required.
     url: ""
 
-    # Description: Whether to follow redirects.
-    #
-    # Default: false
-    follow-redirect: ""
+    # Whether to follow redirects.
+    # Default: `false`
+    follow-redirect: "false"
 
-    # Description: Timeout in seconds for the URL check.
-    #
-    # Default: 10
-    timeout: ""
+    # Timeout in seconds for the URL check.
+    # Default: `10`
+    timeout: "10"
 
-    # Description: Number of retries if the URL check fails.
-    #
-    # Default: 3
-    retries: ""
+    # Number of retries if the URL check fails.
+    # Default: `3`
+    retries: "3"
 
-    # Description: Expected HTTP status codes. Comma separated list.
-    #
-    # Default: 200
-    expected-statuses: ""
+    # Expected HTTP status codes. Comma separated list.
+    # Default: `200`
+    expected-statuses: "200"
 ```
 
-<!-- end usage -->
-<!-- start inputs -->
+<!-- usage:end -->
 
-| **Input**                      | **Description**                                   | **Default**        | **Required** |
-| ------------------------------ | ------------------------------------------------- | ------------------ | ------------ |
-| <code>url</code>               | The URL to check.                                 |                    | **true**     |
-| <code>follow-redirect</code>   | Whether to follow redirects.                      | <code>false</code> | **false**    |
-| <code>timeout</code>           | Timeout in seconds for the URL check.             | <code>10</code>    | **false**    |
-| <code>retries</code>           | Number of retries if the URL check fails.         | <code>3</code>     | **false**    |
-| <code>expected-statuses</code> | Expected HTTP status codes. Comma separated list. | <code>200</code>   | **false**    |
+<!--
+// jscpd:ignore-start
+-->
 
-<!-- end inputs -->
-<!-- start outputs -->
+<!-- inputs:start -->
 
-| **Output**               | **Description**                                 |
-| ------------------------ | ----------------------------------------------- |
-| <code>status-code</code> | The HTTP status code returned by the URL check. |
+## Inputs
 
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+| **Input**               | **Description**                                   | **Required** | **Default** |
+| ----------------------- | ------------------------------------------------- | ------------ | ----------- |
+| **`url`**               | The URL to check.                                 | **true**     | -           |
+| **`follow-redirect`**   | Whether to follow redirects.                      | **false**    | `false`     |
+| **`timeout`**           | Timeout in seconds for the URL check.             | **false**    | `10`        |
+| **`retries`**           | Number of retries if the URL check fails.         | **false**    | `3`         |
+| **`expected-statuses`** | Expected HTTP status codes. Comma separated list. | **false**    | `200`       |
+
+<!-- inputs:end -->
+
+<!-- outputs:start -->
+
+## Outputs
+
+| **Output**        | **Description**                                 |
+| ----------------- | ----------------------------------------------- |
+| **`status-code`** | The HTTP status code returned by the URL check. |
+
+<!-- outputs:end -->
+
+<!-- secrets:start -->
+<!-- secrets:end -->
+
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

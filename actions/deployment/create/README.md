@@ -1,35 +1,38 @@
-<!-- start title -->
+<!-- header:start -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:arrow-right-circle color:blue>" /> GitHub Action: Create deployment
+# ![Icon](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItYXJyb3ctcmlnaHQtY2lyY2xlIiBjb2xvcj0iYmx1ZSI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwb2x5bGluZSBwb2ludHM9IjEyIDE2IDE2IDEyIDEyIDgiPjwvcG9seWxpbmU+PGxpbmUgeDE9IjgiIHkxPSIxMiIgeDI9IjE2IiB5Mj0iMTIiPjwvbGluZT48L3N2Zz4=) GitHub Action: Deployment - Create deployment
 
-<!-- end title -->
+<div align="center">
+  <img src="../../../.github/logo.svg" width="60px" align="center" alt="Deployment - Create deployment" />
+</div>
+
+---
+
+<!-- header:end -->
+
+<!-- badges:start -->
+
+[![Marketplace](https://img.shields.io/badge/Marketplace-deployment------create--deployment-blue?logo=github-actions)](https://github.com/marketplace/actions/deployment---create-deployment)
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
 <!--
 // jscpd:ignore-start
 -->
-<!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:arrow-right-circle color:blue>" />
+<!-- overview:start -->
 
-<!-- end branding -->
-<!-- markdownlint-disable MD013 -->
-<!-- start badges -->
-
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Fissues"><img src="https://img.shields.io/github/issues/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads/hoverkraft-tech/ci-github-publish/total?logo=github&style=flat-square" alt="Downloads" />
-
-<!-- end badges -->
-<!-- markdownlint-enable MD013 -->
-<!--
-// jscpd:ignore-end
--->
-<!-- start description -->
+## Overview
 
 Action to create a new deployment
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
+<!-- overview:end -->
 
-## Usage
+## Permissions
 
 Set permissions to write deployments.
 
@@ -38,30 +41,79 @@ permissions:
   deployments: write
 ```
 
-<!-- start usage -->
+<!-- usage:start -->
+
+## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.8.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/create@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
   with:
-    # Description: The environment to deploy to
-    #
+    # The environment to deploy to
+    # This input is required.
     environment: ""
 ```
 
-<!-- end usage -->
-<!-- start inputs -->
+<!-- usage:end -->
 
-| **Input**                | **Description**              | **Default** | **Required** |
-| ------------------------ | ---------------------------- | ----------- | ------------ |
-| <code>environment</code> | The environment to deploy to |             | **true**     |
+<!-- inputs:start -->
 
-<!-- end inputs -->
-<!-- start outputs -->
+## Inputs
 
-| **Output**                 | **Description**                  |
-| -------------------------- | -------------------------------- |
-| <code>deployment-id</code> | The ID of the created deployment |
+| **Input**         | **Description**              | **Required** | **Default** |
+| ----------------- | ---------------------------- | ------------ | ----------- |
+| **`environment`** | The environment to deploy to | **true**     | -           |
 
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+<!-- inputs:end -->
+
+<!-- outputs:start -->
+
+## Outputs
+
+| **Output**          | **Description**                  |
+| ------------------- | -------------------------------- |
+| **`deployment-id`** | The ID of the created deployment |
+
+<!-- outputs:end -->
+
+<!-- secrets:start -->
+<!-- secrets:end -->
+
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

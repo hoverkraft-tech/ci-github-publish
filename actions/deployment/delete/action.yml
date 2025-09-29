@@ -1,4 +1,4 @@
-name: "Delete deployment(s)"
+name: "Deployment - Delete deployment(s)"
 description: "Action to delete some deployment(s) for the current ref. It also deletes the associated review apps environment(s) if any."
 author: hoverkraft
 branding:
@@ -15,7 +15,7 @@ outputs:
     description: "The id(s) of the deleted deployment(s). JSON array format."
     value: ${{ steps.delete-deployments.outputs.deployment-ids }}
   environments:
-    description: "The name(s) of the environment(s) related to  deleted deployment(s). JSON array format."
+    description: "The name(s) of the environment(s) related to deleted deployment(s). JSON array format."
     value: ${{ steps.delete-deployments.outputs.environments }}
 
 runs:

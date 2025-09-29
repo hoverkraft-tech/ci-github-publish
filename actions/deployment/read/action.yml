@@ -1,4 +1,4 @@
-name: "Read deployment"
+name: "Deployment - Read deployment"
 description: "Action to retrieve some deployment information."
 author: hoverkraft
 branding:

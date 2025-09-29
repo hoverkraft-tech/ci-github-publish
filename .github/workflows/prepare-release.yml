@@ -1,11 +1,9 @@
-# Prepare release
-# ==========================
 # Reusable workflow that performs release preparation tasks:
 #
 # - Add proper labels to pull requests
 # - Ensure release configuration is up to date
 
-name: Release Actions
+name: Prepare release
 
 on:
   workflow_call:
@@ -13,14 +11,14 @@ on:
       runs-on:
         description: |
           JSON array of runner(s) to use.
-          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
         type: string
         default: '["ubuntu-latest"]'
         required: false
       github-app-id:
         description: |
           GitHub App ID to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
         required: false
         type: string
     secrets:
@@ -30,7 +28,7 @@ on:
       github-app-key:
         description: |
           GitHub App private key to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
 
 permissions:
   contents: read

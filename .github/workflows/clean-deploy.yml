@@ -1,6 +1,14 @@
-# Clean deploy
-# ==========================
-# Reusable workflow to clean a deployment.
+# Reusable workflow to clean some deployment.
+#
+# Deletes one or more deployments and runs a follow-up "clean" action
+# (for example a repository-dispatch) to perform any repository-specific cleanup required after deployment removal.
+#
+# Behavior / outputs:
+#
+# - Deletes matching deployment(s) via the local action at `./actions/deployment/delete`.
+# - Exposes deleted environments in step output `environments`.
+# - If environments were deleted the workflow will optionally trigger the configured clean action
+#   (e.g. repository-dispatch) against the target repository and post a summary comment.
 
 name: "Clean deploy"
 
@@ -10,14 +18,14 @@ on:
       runs-on:
         description: |
           JSON array of runner(s) to use.
-          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
         type: string
         default: '["ubuntu-latest"]'
         required: false
       github-app-id:
         description: |
           GitHub App ID to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
         required: false
         type: string
       clean-deploy-type:
@@ -33,9 +41,11 @@ on:
           Inputs to pass to the clean action.
           JSON object, depending on the clean-deploy-type.
           For example, for `repository-dispatch`:
-            {
-              "repository": "my-org/my-repo"
-            }
+          ```json
+          {
+            "repository": "my-org/my-repo"
+          }
+          ```
         type: string
     secrets:
       github-token:
@@ -46,7 +56,7 @@ on:
       github-app-key:
         description: |
           GitHub App private key to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
 
 permissions:
   contents: write

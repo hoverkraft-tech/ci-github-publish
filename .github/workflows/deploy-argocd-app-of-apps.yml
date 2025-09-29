@@ -164,7 +164,7 @@ jobs:
             core.setOutput("namespace", namespace);
 
       - id: slugify-namespace
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@b4883995e100e291a1fed68678d47a560328ed08 # 0.24.0
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@d324c777132734fc988c79a74dff3ee0248835fc # 0.25.0
         with:
           value: ${{ steps.get-namespace.outputs.namespace }}
 
@@ -232,7 +232,7 @@ jobs:
           private-key: ${{ secrets.github-app-key }}
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@b4883995e100e291a1fed68678d47a560328ed08 # 0.24.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@d324c777132734fc988c79a74dff3ee0248835fc # 0.25.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: feat/deploy-${{ steps.slugify-namespace.outputs.result }}

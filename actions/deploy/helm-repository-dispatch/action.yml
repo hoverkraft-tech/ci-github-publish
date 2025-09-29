@@ -1,11 +1,11 @@
 name: Deploy Helm chart via a repository dispatch
 description: |
   Action to deploy an Helm chart via GitHub repository dispatch event.
-  See <https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event>.
-  See <https://github.com/peter-evans/repository-dispatch>.
+  See https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event.
+  See https://github.com/peter-evans/repository-dispatch.
 
   The target repository should implement a workflow that handle this dispatch event.
-  See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#repository_dispatch>.
+  See https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#repository_dispatch.
 author: hoverkraft
 branding:
   icon: upload-cloud
@@ -17,12 +17,16 @@ inputs:
     required: true
   chart:
     description: |
-      Chart to deploy. Example: "ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0".
+      Chart to deploy. Example: `ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0`.
     required: true
   chart-values:
     description: |
-      Chart values to be sent to deployment. JSON array.
-      Example: '[{"path":".application.test","value":"ok"}]'.
+      Chart values to be sent to deployment. JSON array. Example:
+      ```json
+      [
+        { "path": ".application.test", "value": "ok" }
+      ]
+      ```
     required: false
   repository:
     description: "Target repository where to deploy given chart."
@@ -38,7 +42,7 @@ inputs:
       GitHub Token for dispatch an event to a remote repository.
       Permissions:
         - contents: write
-      See <https://github.com/peter-evans/repository-dispatch#usage>.
+      See https://github.com/peter-evans/repository-dispatch#usage.
     required: false
     default: ${{ github.token }}
 

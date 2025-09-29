@@ -1,10 +1,17 @@
-# Deploy chart
-# ==========================
-# Reusable workflow that performs a deployment of an Helm chart.
+# Reusable workflow: Deploy Helm chart
 #
-# - Builds OCI images.
-# - Releases the chart.
-# - Supports multiple deployment types.
+# Builds OCI images, releases a Helm chart and optionally triggers a
+# follow-up deployment action (for example a repository-dispatch). This
+# workflow supports multiple deployment types and is designed to be
+# called via `workflow_call` from other workflows or repositories.
+#
+# Key features:
+#
+# - Builds OCI images using a separate reusable workflow.
+# - Releases a Helm chart and injects image and placeholder values.
+# - Supports configurable deployment actions (via `deploy-type` and
+#   `deploy-parameters`).
+# - Posts status and uses local actions via a self-checkout when needed.
 ---
 name: Deploy chart
 
@@ -14,7 +21,7 @@ on:
       runs-on:
         description: |
           JSON array of runner(s) to use.
-          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
         type: string
         default: '["ubuntu-latest"]'
         required: false
@@ -36,7 +43,7 @@ on:
           The URL which respond to deployed application.
           If not provided, will be set to the environment URL.
           URL can contains placeholders:
-            - `{{ identifier }}`: will be replaced by the environment identifier.
+          - `{{ identifier }}`: will be replaced by the environment identifier.
           Example: `https://{{ identifier }}.my-application.com`.
         type: string
         required: false
@@ -44,7 +51,7 @@ on:
         description: |
           Type of deployment to perform.
           Supported values:
-            - [`helm-repository-dispatch`](../../actions/deploy/helm-repository-dispatch/README.md).
+          - [`helm-repository-dispatch`](../../actions/deploy/helm-repository-dispatch/README.md).
         type: string
         required: false
         default: helm-repository-dispatch
@@ -53,9 +60,11 @@ on:
           Inputs to pass to the deployment action.
           JSON object, depending on the deploy-type.
           For example, for `helm-repository-dispatch`:
-            {
-              "repository": "my-org/my-repo"
-            }
+          ```json
+          {
+            "repository": "my-org/my-repo"
+          }
+          ```
         type: string
       oci-registry:
         type: string
@@ -65,44 +74,46 @@ on:
       images:
         description: |
           Images to build parameters.
-          See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/.github/workflows/docker-build-images.md>.
+          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/.github/workflows/docker-build-images.md.
         type: string
         required: true
       chart-name:
         description: |
           Chart name to release.
-          See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.
+          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
         required: false
         type: string
         default: application
       chart-path:
         description: |
           Path to the chart to release.
-          See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.
+          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
         required: false
         type: string
         default: charts/application
       chart-values:
         description: |
           Define chart values to be filled.
-          See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.
-          Accept placeholders:
-            - `{{ tag }}`: will be replaced by the tag.
-            - `{{ url }}`: will be replaced by the URL.
+          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
+          Accept placeholders:          
+          - `{{ tag }}`: will be replaced by the tag.
+          - `{{ url }}`: will be replaced by the URL.
           If "path" starts with "deploy", the chart value wil be passed to the deploy action.
           Example:
-            [
-              { "path": ".image", "image": "application" },
-              { "path": ".application.version", "value": "{{ tag }}" },
-              { "path": "deploy.ingress.hosts[0].host", "value": "{{ url }}" }
-            ]
+          ```json
+          [
+            { "path": ".image", "image": "application" },
+            { "path": ".application.version", "value": "{{ tag }}" },
+            { "path": "deploy.ingress.hosts[0].host", "value": "{{ url }}" }
+          ]
+          ```
         type: string
         required: false
         default: "[]"
       github-app-id:
         description: |
           GitHub App ID to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
         required: false
         type: string
     secrets:
@@ -117,7 +128,7 @@ on:
       github-app-key:
         description: |
           GitHub App private key to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
 
 permissions:
   actions: read

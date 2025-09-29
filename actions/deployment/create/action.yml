@@ -1,4 +1,4 @@
-name: "Create deployment"
+name: "Deployment - Create deployment"
 description: "Action to create a new deployment"
 author: hoverkraft
 branding:

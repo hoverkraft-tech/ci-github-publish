@@ -1,35 +1,38 @@
-<!-- start title -->
+<!-- header:start -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:upload-cloud color:blue>" /> GitHub Action: Deploy - GitHub Pages
+# ![Icon](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItdXBsb2FkLWNsb3VkIiBjb2xvcj0iYmx1ZSI+PHBvbHlsaW5lIHBvaW50cz0iMTYgMTYgMTIgMTIgOCAxNiI+PC9wb2x5bGluZT48bGluZSB4MT0iMTIiIHkxPSIxMiIgeDI9IjEyIiB5Mj0iMjEiPjwvbGluZT48cGF0aCBkPSJNMjAuMzkgMTguMzlBNSA1IDAgMCAwIDE4IDloLTEuMjZBOCA4IDAgMSAwIDMgMTYuMyI+PC9wYXRoPjxwb2x5bGluZSBwb2ludHM9IjE2IDE2IDEyIDEyIDggMTYiPjwvcG9seWxpbmU+PC9zdmc+) GitHub Action: Deploy - GitHub Pages
 
-<!-- end title -->
+<div align="center">
+  <img src="../../../.github/logo.svg" width="60px" align="center" alt="Deploy - GitHub Pages" />
+</div>
+
+---
+
+<!-- header:end -->
+
+<!-- badges:start -->
+
+[![Marketplace](https://img.shields.io/badge/Marketplace-deploy------github--pages-blue?logo=github-actions)](https://github.com/marketplace/actions/deploy---github-pages)
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
 <!--
 // jscpd:ignore-start
 -->
-<!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:upload-cloud color:blue>" />
+<!-- overview:start -->
 
-<!-- end branding -->
-<!-- markdownlint-disable MD013 -->
-<!-- start badges -->
-
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Fissues"><img src="https://img.shields.io/github/issues/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads/hoverkraft-tech/ci-github-publish/total?logo=github&style=flat-square" alt="Downloads" />
-
-<!-- end badges -->
-<!-- markdownlint-enable MD013 -->
-<!--
-// jscpd:ignore-end
--->
-<!-- start description -->
+## Overview
 
 Action to deploy a static site to GitHub Pages.
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
+<!-- overview:end -->
 
-## Usage
+## Permissions
 
 Set permissions to deploy to pages.
 
@@ -39,59 +42,107 @@ permissions:
   id-token: write
 ```
 
-<!-- start usage -->
+<!-- usage:start -->
+
+## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.8.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
   with:
-    # Description: The path to the assets to deploy. Can be absolute or relative
-    # $GITHUB_WORKSPACE.
-    #
+    # The path to the assets to deploy.
+    # Can be absolute or relative $GITHUB_WORKSPACE.
     build-path: ""
 
-    # Description: The name of the "build" artifact to download.
-    #
-    # Default:
+    # The name of the "build" artifact to download.
     build-artifact-name: ""
 
-    # Description: The path to the performance budget file. See
-    # <../lighthouse/README.md>.
-    #
-    # Default: ./budget.json
-    budget-path: ""
+    # The path to the performance budget file. See action [Check - URL - Lighthouse](../../check/url-lighthouse/README.md).
+    # Default: `./budget.json`
+    budget-path: ./budget.json
 
-    # Description: The static site generator used to build the site. See
-    # <https://github.com/actions/configure-pages>.
-    #
+    # The static site generator used to build the site. See https://github.com/actions/configure-pages.
     static-site-generator: ""
 
-    # Description: GitHub Token for deploying to GitHub Pages. Permissions:
-    #
+    # GitHub Token for deploying to GitHub Pages.
+    # Permissions:
     # - pages: write
-    # - id-token: write See <https://github.com/actions/configure-pages>.
+    # - id-token: write
+    # See https://github.com/actions/configure-pages.
     #
-    # Default: ${{ github.token }}
-    github-token: ""
+    # Default: `${{ github.token }}`
+    github-token: ${{ github.token }}
 ```
 
-<!-- end usage -->
-<!-- start inputs -->
+<!-- usage:end -->
 
-| **Input**                          | **Description**                                                                                                                                                   | **Default**                      | **Required** |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------ |
-| <code>build-path</code>            | The path to the assets to deploy.<br />Can be absolute or relative $GITHUB_WORKSPACE.                                                                             |                                  | **false**    |
-| <code>build-artifact-name</code>   | The name of the "build" artifact to download.                                                                                                                     |                                  | **false**    |
-| <code>budget-path</code>           | The path to the performance budget file. See <../lighthouse/README.md>.                                                                                           | <code>./budget.json</code>       | **false**    |
-| <code>static-site-generator</code> | The static site generator used to build the site. See <https://github.com/actions/configure-pages>.                                                               |                                  | **false**    |
-| <code>github-token</code>          | GitHub Token for deploying to GitHub Pages.<br />Permissions:<br /> - pages: write<br /> - id-token: write<br />See <https://github.com/actions/configure-pages>. | <code>${{ github.token }}</code> | **false**    |
+<!-- inputs:start -->
 
-<!-- end inputs -->
-<!-- start outputs -->
+## Inputs
 
-| **Output**       | **Description**               |
-| ---------------- | ----------------------------- |
-| <code>url</code> | The URL of the deployed site. |
+| **Input**                   | **Description**                                                                                                       | **Required** | **Default**           |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`build-path`**            | The path to the assets to deploy.                                                                                     | **false**    | -                     |
+|                             | Can be absolute or relative $GITHUB_WORKSPACE.                                                                        |              |                       |
+| **`build-artifact-name`**   | The name of the "build" artifact to download.                                                                         | **false**    | -                     |
+| **`budget-path`**           | The path to the performance budget file. See action [Check - URL - Lighthouse](../../check/url-lighthouse/README.md). | **false**    | `./budget.json`       |
+| **`static-site-generator`** | The static site generator used to build the site. See <https://github.com/actions/configure-pages>.                   | **false**    | -                     |
+| **`github-token`**          | GitHub Token for deploying to GitHub Pages.                                                                           | **false**    | `${{ github.token }}` |
+|                             | Permissions:                                                                                                          |              |                       |
+|                             | - pages: write                                                                                                        |              |                       |
+|                             | - id-token: write                                                                                                     |              |                       |
+|                             | See <https://github.com/actions/configure-pages>.                                                                     |              |                       |
 
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+<!-- inputs:end -->
+
+<!-- outputs:start -->
+
+## Outputs
+
+| **Output** | **Description**               |
+| ---------- | ----------------------------- |
+| **`url`**  | The URL of the deployed site. |
+
+<!-- outputs:end -->
+
+<!-- secrets:start -->
+<!-- secrets:end -->
+
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

@@ -1,97 +1,158 @@
-<!-- start title -->
+<!-- header:start -->
 
-# <img src=".github/ghadocs/branding.svg" width="60px" align="center" alt="branding<icon:upload-cloud color:blue>" /> GitHub Action: Deploy Helm chart via a repository dispatch
+# ![Icon](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItdXBsb2FkLWNsb3VkIiBjb2xvcj0iYmx1ZSI+PHBvbHlsaW5lIHBvaW50cz0iMTYgMTYgMTIgMTIgOCAxNiI+PC9wb2x5bGluZT48bGluZSB4MT0iMTIiIHkxPSIxMiIgeDI9IjEyIiB5Mj0iMjEiPjwvbGluZT48cGF0aCBkPSJNMjAuMzkgMTguMzlBNSA1IDAgMCAwIDE4IDloLTEuMjZBOCA4IDAgMSAwIDMgMTYuMyI+PC9wYXRoPjxwb2x5bGluZSBwb2ludHM9IjE2IDE2IDEyIDEyIDggMTYiPjwvcG9seWxpbmU+PC9zdmc+) GitHub Action: Deploy Helm chart via a repository dispatch
 
-<!-- end title -->
+<div align="center">
+  <img src="../../../.github/logo.svg" width="60px" align="center" alt="Deploy Helm chart via a repository dispatch" />
+</div>
+
+---
+
+<!-- header:end -->
+
+<!-- badges:start -->
+
+[![Marketplace](https://img.shields.io/badge/Marketplace-deploy--helm--chart--via--a--repository--dispatch-blue?logo=github-actions)](https://github.com/marketplace/actions/deploy-helm-chart-via-a-repository-dispatch)
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
 <!--
 // jscpd:ignore-start
 -->
-<!-- start branding -->
 
-<img src=".github/ghadocs/branding.svg" width="15%" align="center" alt="branding<icon:upload-cloud color:blue>" />
+<!-- overview:start -->
 
-<!-- end branding -->
-<!-- markdownlint-disable MD013 -->
-<!-- start badges -->
-
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/hoverkraft-tech/ci-github-publish?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fci-github-publish%2Fissues"><img src="https://img.shields.io/github/issues/hoverkraft-tech/ci-github-publish?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads/hoverkraft-tech/ci-github-publish/total?logo=github&style=flat-square" alt="Downloads" />
-
-<!-- end badges -->
-<!-- markdownlint-enable MD013 -->
-<!--
-// jscpd:ignore-end
--->
-<!-- start description -->
+## Overview
 
 Action to deploy an Helm chart via GitHub repository dispatch event.
 See <https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event>.
-See <https://github.com/peter-evans/repository-dispatch>.<br />The target repository should implement a workflow that handle this dispatch event.
+See <https://github.com/peter-evans/repository-dispatch>.
+
+The target repository should implement a workflow that handle this dispatch event.
 See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#repository_dispatch>.
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
-<!-- start usage -->
+<!-- overview:end -->
 
-```yaml
-- uses: hoverkraft-tech/ci-github-publish@0.8.0
+<!-- usage:start -->
+
+## Usage
+
+````yaml
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/helm-repository-dispatch@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
   with:
-    # Description: Deployment ID to be used in the ArgoCD application manifest
-    #
+    # Deployment ID to be used in the ArgoCD application manifest
+    # This input is required.
     deployment-id: ""
 
-    # Description: Chart to deploy. Example:
-    # "ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0".
+    # Chart to deploy. Example: `ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0`.
     #
+    # This input is required.
     chart: ""
 
-    # Description: Chart values to be sent to deployment. JSON array. Example:
-    # '[{"path":".application.test","value":"ok"}]'.
-    #
+    # Chart values to be sent to deployment. JSON array. Example:
+    # ```json
+    # [
+    # { "path": ".application.test", "value": "ok" }
+    # ]
+    # ```
     chart-values: ""
 
-    # Description: Target repository where to deploy given chart.
-    #
+    # Target repository where to deploy given chart.
+    # This input is required.
     repository: ""
 
-    # Description: Environment where to deploy given chart.
-    #
+    # Environment where to deploy given chart.
+    # This input is required.
     environment: ""
 
-    # Description: The URL which respond to deployed application.
-    #
+    # The URL which respond to deployed application.
+    # This input is required.
     url: ""
 
-    # Description: GitHub Token for dispatch an event to a remote repository.
+    # GitHub Token for dispatch an event to a remote repository.
     # Permissions:
+    # - contents: write
+    # See https://github.com/peter-evans/repository-dispatch#usage.
     #
-    # - contents: write See
-    #   <https://github.com/peter-evans/repository-dispatch#usage>.
-    #
-    # Default: ${{ github.token }}
-    github-token: ""
-```
+    # Default: `${{ github.token }}`
+    github-token: ${{ github.token }}
+````
 
-<!-- end usage -->
-<!-- start inputs -->
+<!-- usage:end -->
 
-| **Input**                  | **Description**                                                                                                                                                           | **Default**                      | **Required** |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------ |
-| <code>deployment-id</code> | Deployment ID to be used in the ArgoCD application manifest                                                                                                               |                                  | **true**     |
-| <code>chart</code>         | Chart to deploy. Example: "ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0".                                                                                 |                                  | **true**     |
-| <code>chart-values</code>  | Chart values to be sent to deployment. JSON array.<br />Example: '[{"path":".application.test","value":"ok"}]'.                                                           |                                  | **false**    |
-| <code>repository</code>    | Target repository where to deploy given chart.                                                                                                                            |                                  | **true**     |
-| <code>environment</code>   | Environment where to deploy given chart.                                                                                                                                  |                                  | **true**     |
-| <code>url</code>           | The URL which respond to deployed application.                                                                                                                            |                                  | **true**     |
-| <code>github-token</code>  | GitHub Token for dispatch an event to a remote repository.<br />Permissions:<br /> - contents: write<br />See <https://github.com/peter-evans/repository-dispatch#usage>. | <code>${{ github.token }}</code> | **false**    |
+<!-- inputs:start -->
 
-<!-- end inputs -->
-<!-- start outputs -->
+## Inputs
 
-| **Output**       | **Description**                 |
-| ---------------- | ------------------------------- |
-| <code>url</code> | URL of the deployed application |
+| **Input**           | **Description**                                                                                                                     | **Required** | **Default**           |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`deployment-id`** | Deployment ID to be used in the ArgoCD application manifest                                                                         | **true**     | -                     |
+| **`chart`**         | Chart to deploy. Example: `ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0`.                                           | **true**     | -                     |
+| **`chart-values`**  | Chart values to be sent to deployment. JSON array. Example:                                                                         | **false**    | -                     |
+|                     | <!-- textlint-disable --><pre lang="json">[&#13; { "path": ".application.test", "value": "ok" }&#13;]</pre><!-- textlint-enable --> |              |                       |
+| **`repository`**    | Target repository where to deploy given chart.                                                                                      | **true**     | -                     |
+| **`environment`**   | Environment where to deploy given chart.                                                                                            | **true**     | -                     |
+| **`url`**           | The URL which respond to deployed application.                                                                                      | **true**     | -                     |
+| **`github-token`**  | GitHub Token for dispatch an event to a remote repository.                                                                          | **false**    | `${{ github.token }}` |
+|                     | Permissions:                                                                                                                        |              |                       |
+|                     | - contents: write                                                                                                                   |              |                       |
+|                     | See <https://github.com/peter-evans/repository-dispatch#usage>.                                                                     |              |                       |
 
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+<!-- inputs:end -->
+
+<!-- outputs:start -->
+
+## Outputs
+
+| **Output** | **Description**                 |
+| ---------- | ------------------------------- |
+| **`url`**  | URL of the deployed application |
+
+<!-- outputs:end -->
+
+<!-- secrets:start -->
+<!-- secrets:end -->
+
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

@@ -1,5 +1,13 @@
-name: "Get finished deployment"
-description: "Action to wait for a deployment to finish"
+name: "Deployment - Get finished deployment"
+description: |
+  Waits for a GitHub deployment to reach a terminal state and returns its latest status and metadata.
+
+  This action polls the GitHub Deployment Status API for the
+  provided deployment ID until it observes a terminal state (`success`, `failure` or `error`),
+  or until the specified timeout (in seconds) elapses.
+
+  It uses exponential backoff between checks to reduce API pressure.
+  The action sets outputs with the final deployment state, the environment name and the environment URL (if present).
 author: hoverkraft
 branding:
   icon: clock
@@ -7,27 +15,29 @@ branding:
 
 inputs:
   deployment-id:
-    description: "The id of the deployment to update"
+    description: "The ID of the GitHub deployment to wait for (numeric ID)"
     required: true
   timeout:
-    description: "Timeout in seconds"
+    description: "Maximum time to wait for a terminal deployment status, in seconds"
     required: false
     default: "240"
   allow-failure:
     description: |
-      Defines if the action should fail if the deployment status is not "success".
+      If "true", the action will not mark the step as failed when the deployment finishes with a non-success terminal state
+      (for example `failure` or `error`).
+      When `false` (default), the step fails if the final deployment status is not `success`.
     required: false
     default: "false"
 
 outputs:
   status:
-    description: "The status of the deployment"
+    description: "The final terminal state of the deployment (e.g. `success`, `failure`, `error`)"
     value: ${{ steps.get-deployment-status.outputs.status }}
   url:
-    description: "The URL of the deployment"
+    description: "The environment URL associated with the deployment (if provided by the status)"
     value: ${{ steps.get-deployment-status.outputs.url }}
   environment:
-    description: "The environment of the deployment"
+    description: "The target environment name for the deployment (e.g. `production`, `staging`)"
     value: ${{ steps.get-deployment-status.outputs.environment }}
 
 runs:
@@ -62,7 +72,7 @@ runs:
             }
 
             const deploymentStatus = deploymentStatuses[0];
-            
+
             const state = deploymentStatus.state;
             core.info(`Deployment status state: ${state}`);
 
@@ -82,10 +92,10 @@ runs:
                   if (deploymentStatus !== null) {
                       return deploymentStatus;
                   }
-                  
+
                   core.info(`Waiting for deployment... Next check in ${delay / 1000} seconds`);
                   await new Promise(resolve => setTimeout(resolve, delay));
-                  
+
                   delay = Math.min(delay * 2, timeout * 1000); // Exponential backoff up to timeout max
               }
               return null;
@@ -96,7 +106,7 @@ runs:
           if (!deploymentStatus) {
             core.setFailed(`Deployment ${deploymentId} did not finish within ${timeout} seconds.`);
             return;
-          }          
+          }
 
           core.setOutput("url", deploymentStatus.environment_url);
           core.setOutput("status", deploymentStatus.state);

@@ -1,113 +1,158 @@
-<!-- start branding -->
-<!-- end branding -->
-<!-- start title -->
+<!-- header:start -->
 
 # GitHub Reusable Workflow: Deploy - Finish
 
-<!-- end title -->
-<!-- start badges -->
-<!-- end badges -->
-<!-- start description -->
+<div align="center">
+  <img src="../logo.svg" width="60px" align="center" alt="Deploy - Finish" />
+</div>
+
+---
+
+<!-- header:end -->
+
+<!-- badges:start -->
+
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
+<!--
+// jscpd:ignore-start
+-->
+
+<!-- overview:start -->
+
+## Overview
 
 Reusable workflow that performs the end of a deployment.
 
-- Perform checks on the deployment if a URL is provided:
-  - [Ping check](../../actions/check/url-ping/README.md).
-  - [Lighthouse check](../../actions/check/url-lighthouse/README.md).
-- Update the deployment status to success or failure.
-- Report the deployment summary and status. See [report](../../actions/deploy/report/README.md).
+What this workflow does:
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
+- If the deployment exposes a URL, run quick health and performance checks:
+  - URL ping check. See [Ping check](../../actions/check/url-ping/README.md).
+  - Lighthouse audit. See [Lighthouse check](../../actions/check/url-lighthouse/README.md).
+- Update the GitHub deployment status (success or failure).
+- Publish a human-readable deployment summary using the deploy/report action. See [report](../../actions/deploy/report/README.md).
+
+### Permissions
+
+- **`issues`**: `read`
+- **`pull-requests`**: `write`
+- **`actions`**: `read`
+- **`deployments`**: `write`
+- **`id-token`**: `write`
+
+<!-- overview:end -->
+
+<!-- usage:start -->
 
 ## Usage
 
-<!-- start usage -->
-
 ```yaml
-name: "Deploy - Finish"
-
+name: Deploy - Finish
 on:
-  workflow_call:
-
+  push:
+    branches:
+      - main
 permissions:
-  actions: read
-  deployments: write
   issues: read
   pull-requests: write
-  # FIXME: This is a workaround for having workflow ref. See https://github.com/orgs/community/discussions/38659
+  actions: read
+  deployments: write
   id-token: write
-
 jobs:
-  deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@0.8.0
+  deploy-finish:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
     with:
       # JSON array of runner(s) to use.
-      # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+      # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
+      #
+      # Default: `["ubuntu-latest"]`
       runs-on: '["ubuntu-latest"]'
 
-      # Environment where to deployment has been made.
-      environment: ""
-
       # Deployment ID to use for the deployment.
-      # See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments>.
+      # See https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments.
+      #
+      # This input is required.
       deployment-id: ""
 
       # Path to the budget file to use for the Lighthouse check.
-      # See [`url-lighthouse`](../../actions/check/url-lighthouse/action.yml/README.md).
-      budget-path: "./budget.json"
+      # See [`url-lighthouse`](../../actions/check/url-lighthouse/README.md).
+      #
+      # Default: `./budget.json`
+      budget-path: ./budget.json
 
       # Extra information to send to the deployment summary.
       # Should be a JSON object.
       extra: ""
 ```
 
-<!-- end usage -->
+<!-- usage:end -->
 
-## Permissions
-
-<!-- start permissions -->
-
-This workflow requires the following permissions:
-
-- `actions: read`: to update deployment status
-- `deployments: write`: to update deployment status
-- `issues: write`: to write the comment on the PR
-- `pull-requests: write`: to write the comment on the PR
-
-<!-- end permissions -->
-<!--
-// jscpd:ignore-start
--->
-
-## Secrets
-
-<!-- start secrets -->
-
-| **Secret** | **Description** | **Default** | **Required** |
-| ---------- | --------------- | ----------- | ------------ |
-
-<!-- end secrets -->
-<!--
-// jscpd:ignore-end
--->
+<!-- inputs:start -->
 
 ## Inputs
 
-<!-- start inputs -->
+### Workflow Call Inputs
 
-| **Input**                      | **Description**                                                                                                                                | **Default**                    | **Type** | **Required** |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------- | ------------ |
-| **<code>runs-on</code>**       | JSON array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                             | <code>["ubuntu-latest"]</code> | `string` | **false**    |
-| **<code>environment</code>**   | Environment where to deployment has been made.                                                                                                 | <code></code>                  | `string` | **true**     |
-| **<code>deployment-id</code>** | Deployment ID to use for the deployment. See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments>. | <code></code>                  | `string` | **true**     |
-| **<code>budget-path</code>**   | Path to the budget file to use for the Lighthouse check. See [`url-lighthouse`](../../actions/check/url-lighthouse/action.yml/README.md).      | <code>./budget.json</code>     | `string` | **false**    |
-| **<code>extra</code>**         | Extra information to send to the deployment summary. Should be a JSON object.                                                                  | <code></code>                  | `string` | **false**    |
+| **Input**           | **Description**                                                                                       | **Required** | **Type**   | **Default**         |
+| ------------------- | ----------------------------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
+| **`runs-on`**       | JSON array of runner(s) to use.                                                                       | **false**    | **string** | `["ubuntu-latest"]` |
+|                     | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                    |              |            |                     |
+| **`deployment-id`** | Deployment ID to use for the deployment.                                                              | **true**     | **string** | -                   |
+|                     | See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments>. |              |            |                     |
+| **`budget-path`**   | Path to the budget file to use for the Lighthouse check.                                              | **false**    | **string** | `./budget.json`     |
+|                     | See [`url-lighthouse`](../../actions/check/url-lighthouse/README.md).                                 |              |            |                     |
+| **`extra`**         | Extra information to send to the deployment summary.                                                  | **false**    | **string** | -                   |
+|                     | Should be a JSON object.                                                                              |              |            |                     |
 
-<!-- end inputs -->
+<!-- inputs:end -->
 
-<!-- start outputs -->
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+<!-- secrets:start -->
+<!-- secrets:end -->
+
+<!-- outputs:start -->
+<!-- outputs:end -->
+
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft-tech
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

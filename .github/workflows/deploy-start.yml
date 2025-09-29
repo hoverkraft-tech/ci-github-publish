@@ -1,6 +1,10 @@
-# Deploy - Start
-# ==========================
-# Reusable workflow that performs the beginning of a deployment.
+# Reusable workflow: prepare and start a deployment.
+#
+# Purpose:
+# - Decide whether a deployment should start (comment trigger or other events).
+# - Resolve the target environment; supports dynamic environment names when
+#   invoked from issue or pull-request events (e.g. `environment:issue_number`).
+# - Create a GitHub deployment and set its initial state to `in_progress`.
 #
 # Trigger:
 # - Can be triggered by a specific comment.
@@ -17,7 +21,7 @@ on:
       runs-on:
         description: |
           JSON array of runner(s) to use.
-          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
         type: string
         default: '["ubuntu-latest"]'
         required: false
@@ -25,13 +29,13 @@ on:
         description: |
           Environment where to deploy.
           If trigger is from an issue event (or pull-request), environment will be set to `environment:issue_number`.
-          See <https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment>.
+          See https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/using-environments-for-deployment.
         type: string
         required: false
       trigger-on-comment:
         description: |
           Comment trigger to start the workflow.
-          See <https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment>.
+          See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment.
         type: string
         default: "/deploy"
         required: false

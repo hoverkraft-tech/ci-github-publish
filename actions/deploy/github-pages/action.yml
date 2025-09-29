@@ -16,12 +16,12 @@ inputs:
     required: false
     default: ""
   budget-path:
-    description: "The path to the performance budget file. See <../lighthouse/README.md>."
+    description: "The path to the performance budget file. See action [Check - URL - Lighthouse](../../check/url-lighthouse/README.md)."
     required: false
     default: "./budget.json"
   static-site-generator:
     description: |
-      The static site generator used to build the site. See <https://github.com/actions/configure-pages>.
+      The static site generator used to build the site. See https://github.com/actions/configure-pages.
     required: false
   github-token:
     description: |
@@ -29,7 +29,7 @@ inputs:
       Permissions:
         - pages: write
         - id-token: write
-      See <https://github.com/actions/configure-pages>.
+      See https://github.com/actions/configure-pages.
     required: false
     default: ${{ github.token }}
 

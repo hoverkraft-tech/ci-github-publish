@@ -1,31 +1,66 @@
-<!-- start branding -->
-<!-- end branding -->
-<!-- start title -->
+<!-- header:start -->
 
 # GitHub Reusable Workflow: Clean deploy
 
-<!-- end title -->
-<!-- start badges -->
-<!-- end badges -->
-<!-- start description -->
+<div align="center">
+  <img src="../logo.svg" width="60px" align="center" alt="Clean deploy" />
+</div>
 
-Reusable workflow to clean a deployment.
+---
 
-<!-- end description -->
-<!-- start contents -->
-<!-- end contents -->
+<!-- header:end -->
+
+<!-- badges:start -->
+
+[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
+[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
+[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+
+<!-- badges:end -->
+
+<!--
+// jscpd:ignore-start
+-->
+
+<!-- overview:start -->
+
+## Overview
+
+Reusable workflow to clean some deployment.
+
+Deletes one or more deployments and runs a follow-up "clean" action
+(for example a repository-dispatch) to perform any repository-specific cleanup required after deployment removal.
+
+Behavior / outputs:
+
+- Deletes matching deployment(s) via the local action at `./actions/deployment/delete`.
+- Exposes deleted environments in step output `environments`.
+- If environments were deleted the workflow will optionally trigger the configured clean action
+  (e.g. repository-dispatch) against the target repository and post a summary comment.
+
+### Permissions
+
+- **`contents`**: `write`
+- **`issues`**: `write`
+- **`packages`**: `write`
+- **`pull-requests`**: `write`
+- **`actions`**: `read`
+- **`deployments`**: `write`
+- **`id-token`**: `write`
+
+<!-- overview:end -->
+
+<!-- usage:start -->
 
 ## Usage
 
-<!-- start usage -->
-
 ````yaml
-name: "Clean deploy"
-
+name: Clean deploy
 on:
-  pull_request_target:
-    types: [closed]
-
+  push:
+    branches:
+      - main
 permissions:
   contents: write
   issues: write
@@ -33,97 +68,125 @@ permissions:
   pull-requests: write
   actions: read
   deployments: write
-  # FIXME: This is a workaround for having workflow ref. See https://github.com/orgs/community/discussions/38659
   id-token: write
-
-concurrency:
-  group: ci-commit-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@0.8.0
+  clean-deploy:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
+    secrets:
+      # GitHub token for deploying.
+      # Permissions:
+      # - contents: write
+      github-token: ""
+
+      # GitHub App private key to generate GitHub token in place of github-token.
+      # See https://github.com/actions/create-github-app-token.
+      github-app-key: ""
     with:
       # JSON array of runner(s) to use.
-      # See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+      # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
+      #
+      # Default: `["ubuntu-latest"]`
       runs-on: '["ubuntu-latest"]'
 
-      # Type of clean-deploy action
+      # GitHub App ID to generate GitHub token in place of github-token.
+      # See https://github.com/actions/create-github-app-token.
+      github-app-id: ""
+
+      # Type of clean-deploy action.
       # Supported values:
-      #   - [`repository-dispatch`](../../actions/clean-deploy/repository-dispatch/README.md).
-      clean-deploy-type: "repository-dispatch"
+      # - [`repository-dispatch`](../../actions/clean-deploy/repository-dispatch/README.md).
+      #
+      # Default: `repository-dispatch`
+      clean-deploy-type: repository-dispatch
 
       # Inputs to pass to the clean action.
       # JSON object, depending on the clean-deploy-type.
       # For example, for `repository-dispatch`:
       # ```json
       # {
-      #   "repository": "my-org/my-repo"
+      # "repository": "my-org/my-repo"
       # }
       # ```
       clean-deploy-parameters: ""
-
-      # GitHub App ID to generate GitHub token in place of github-token.
-      # See <https://github.com/actions/create-github-app-token>.
-      github-app-id: ""
-    secrets:
-      # GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
-      # See <https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md>.
-      github-token: ""
-
-      # GitHub App private key to generate GitHub token in place of github-token.
-      # See <https://github.com/actions/create-github-app-token>.
-      github-app-key: ""
 ````
 
-<!-- end usage -->
+<!-- usage:end -->
 
-## Permissions
-
-<!-- start permissions -->
-
-This workflow requires the following permissions:
-
-- `actions: read`: to delete deployment
-- `contents: write`: to dispatch an event to a remote repository
-- `deployments: write`: to delete deployment
-- `issues: write`: to write the comment on the PR
-- `packages: write`: to delete packages
-- `pull-requests: write`: to write the comment on the PR
-
-<!-- end permissions -->
-<!--
-// jscpd:ignore-start
--->
-
-## Secrets
-
-<!-- start secrets -->
-
-| **Secret**                      | **Description**                                                                                                                                                                                                                                   | **Default**               | **Required** |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------ |
-| **<code>github-token</code>**   | GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write). See <https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md>. | <code>GITHUB_TOKEN</code> | **false**    |
-| **<code>github-app-key</code>** | GitHub App private key to generate GitHub token in place of github-token. See <https://github.com/actions/create-github-app-token>.                                                                                                               | <code></code>             | **false**    |
-
-<!-- end secrets -->
-<!--
-// jscpd:ignore-end
--->
+<!-- inputs:start -->
 
 ## Inputs
 
-<!-- start inputs -->
+### Workflow Call Inputs
 
-| **Input**                                | **Description**                                                                                                                                                 | **Default**                      | **Type** | **Required** |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------- | ------------ |
-| **<code>runs-on</code>**                 | JSON array of runner(s) to use. See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                              | <code>["ubuntu-latest"]</code>   | `string` | **false**    |
-| **<code>clean-deploy-type</code>**       | Type of clean-deploy action. Supported values: - [`repository-dispatch`](../../actions/clean-deploy/repository-dispatch/README.md).                             | <code>repository-dispatch</code> | `string` | **false**    |
-| **<code>clean-deploy-parameters</code>** | Inputs to pass to the clean action. JSON object, depending on the clean-deploy-type. For example, for `repository-dispatch`: { "repository": "my-org/my-repo" } | <code></code>                    | `string` | **false**    |
-| **<code>github-app-id</code>**           | GitHub App ID to generate GitHub token in place of github-token. See <https://github.com/actions/create-github-app-token>.                                      | <code></code>                    | `string` | **false**    |
+| **Input**                     | **Description**                                                                                                     | **Required** | **Type**   | **Default**           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | --------------------- |
+| **`runs-on`**                 | JSON array of runner(s) to use.                                                                                     | **false**    | **string** | `["ubuntu-latest"]`   |
+|                               | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                  |              |            |                       |
+| **`github-app-id`**           | GitHub App ID to generate GitHub token in place of github-token.                                                    | **false**    | **string** | -                     |
+|                               | See <https://github.com/actions/create-github-app-token>.                                                           |              |            |                       |
+| **`clean-deploy-type`**       | Type of clean-deploy action.                                                                                        | **false**    | **string** | `repository-dispatch` |
+|                               | Supported values:                                                                                                   |              |            |                       |
+|                               | - [`repository-dispatch`](../../actions/clean-deploy/repository-dispatch/README.md).                                |              |            |                       |
+| **`clean-deploy-parameters`** | Inputs to pass to the clean action.                                                                                 | **false**    | **string** | -                     |
+|                               | JSON object, depending on the clean-deploy-type.                                                                    |              |            |                       |
+|                               | For example, for `repository-dispatch`:                                                                             |              |            |                       |
+|                               | <!-- textlint-disable --><pre lang="json">{&#13; "repository": "my-org/my-repo"&#13;}</pre><!-- textlint-enable --> |              |            |                       |
 
-<!-- end inputs -->
+<!-- inputs:end -->
 
-<!-- start outputs -->
-<!-- end outputs -->
-<!-- start [.github/ghadocs/examples/] -->
-<!-- end [.github/ghadocs/examples/] -->
+<!-- secrets:start -->
+
+## Secrets
+
+| **Secret**           | **Description**                                                           | **Required** |
+| -------------------- | ------------------------------------------------------------------------- | ------------ |
+| **`github-token`**   | GitHub token for deploying.                                               | **false**    |
+|                      | Permissions:                                                              |              |
+|                      | - contents: write                                                         |              |
+| **`github-app-key`** | GitHub App private key to generate GitHub token in place of github-token. | **false**    |
+|                      | See <https://github.com/actions/create-github-app-token>.                 |              |
+
+<!-- secrets:end -->
+
+<!-- outputs:start -->
+<!-- outputs:end -->
+
+<!-- examples:start -->
+<!-- examples:end -->
+
+<!-- contributing:start -->
+
+## Contributing
+
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
+
+<!-- contributing:end -->
+
+<!-- security:start -->
+<!-- security:end -->
+
+<!-- license:start -->
+
+## License
+
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft-tech
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).
+
+<!-- license:end -->
+
+<!-- generated:start -->
+
+---
+
+This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+
+<!-- generated:end -->
+
+<!--
+// jscpd:ignore-end
+-->

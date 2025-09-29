@@ -1,12 +1,11 @@
-# Deploy - Finish
-# ==========================
 # Reusable workflow that performs the end of a deployment.
 #
-# - Perform checks on the deployment if a URL is provided:
-#   - [Ping check](../../actions/check/url-ping/README.md).
-#   - [Lighthouse check](../../actions/check/url-lighthouse/README.md).
-# - Update the deployment status to success or failure.
-# - Report the deployment summary and status. See [report](../../actions/deploy/report/README.md).
+# What this workflow does:
+# - If the deployment exposes a URL, run quick health and performance checks:
+#   - URL ping check. See [Ping check](../../actions/check/url-ping/README.md).
+#   - Lighthouse audit. See [Lighthouse check](../../actions/check/url-lighthouse/README.md).
+# - Update the GitHub deployment status (success or failure).
+# - Publish a human-readable deployment summary using the deploy/report action. See [report](../../actions/deploy/report/README.md).
 ---
 name: Deploy - Finish
 
@@ -16,14 +15,14 @@ on:
       runs-on:
         description: |
           JSON array of runner(s) to use.
-          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
         type: string
         default: '["ubuntu-latest"]'
         required: false
       deployment-id:
         description: |
           Deployment ID to use for the deployment.
-          See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments>.
+          See https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments.
         type: string
         required: true
       budget-path:

@@ -1,37 +1,39 @@
-###################################################################################################
-# Deploy - ArgoCD App Of Apps
-# -------------------------------------------------------------------------------------------------
-# Purpose:
-#   This reusable workflow automates the deployment of a Helm chart using the ArgoCD App Of Apps pattern.
-#   It is designed for environments where applications are managed via ArgoCD and Helm, supporting templated manifests.
+# This reusable workflow automates the deployment of a Helm chart using the ArgoCD App Of Apps pattern.
+# It is designed for environments where applications are managed via ArgoCD and Helm, supporting templated manifests.
 #
 # Usage:
-#   - Triggered by a `repository_dispatch` event (see: https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch).
-#   - Intended for CI/CD pipelines that need to deploy or update applications in Kubernetes via ArgoCD.
-#   - Supports templated Application manifests for flexible deployment scenarios.
+#
+# - Triggered by a `repository_dispatch` event (see: https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch).
+# - Intended for CI/CD pipelines that need to deploy or update applications in Kubernetes via ArgoCD.
+# - Supports templated Application manifests for flexible deployment scenarios.
 #
 # References:
-#   - ArgoCD App Of Apps Pattern: https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern
+#
+# - ArgoCD App Of Apps Pattern: https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern
 #
 # Dispatch Payload Example:
-#   {
-#     "event_type": "deploy",
-#     "client_payload": {
-#       "deployment-id": "unique deployment id (e.g. 1234)",
-#       "environment": "target environment (e.g. reviews-app, staging, production)",
-#       "repository": "source repository name (e.g. my-repository)",
-#       "chart": "Helm chart URI with tag (e.g. ghcr.io/my-org/my-repository/charts/application:0.1.14-pr-82-xxx)",
-#       "chart-values": "Array of values to inject in the chart (e.g. [{\"path\":\"application.appUri\",\"value\":\"https://my-app-review-app-1234.my-org.com\"}])",
-#       "url": "URL of the deployed application (e.g. https://my-app-review-app-1234.my-org.com)"
-#     }
+#
+# ```json
+# {
+#   "event_type": "deploy",
+#   "client_payload": {
+#     "deployment-id": "unique deployment id (e.g. 1234)",
+#     "environment": "target environment (e.g. reviews-app, staging, production)",
+#     "repository": "source repository name (e.g. my-repository)",
+#     "chart": "Helm chart URI with tag (e.g. ghcr.io/my-org/my-repository/charts/application:0.1.14-pr-82-xxx)",
+#     "chart-values": "Array of values to inject in the chart (e.g. [{\"path\":\"application.appUri\",\"value\":\"https://my-app-review-app-1234.my-org.com\"}])",
+#     "url": "URL of the deployed application (e.g. https://my-app-review-app-1234.my-org.com)"
 #   }
+# }
+# ```
 #
 # Key Features:
-#   - Validates and extracts deployment parameters from the dispatch payload.
-#   - Parses Helm chart URI for chart name, repository, and version.
-#   - Supports templated manifest files for both Application and Namespace resources.
-#   - Updates manifest files with deployment-specific values and chart configuration.
-#   - Creates and merges a pull request for the deployment manifest changes.
+#
+# - Validates and extracts deployment parameters from the dispatch payload.
+# - Parses Helm chart URI for chart name, repository, and version.
+# - Supports templated manifest files for both Application and Namespace resources.
+# - Updates manifest files with deployment-specific values and chart configuration.
+# - Creates and merges a pull request for the deployment manifest changes.
 ---
 name: Deploy ArgoCD App of Apps
 
@@ -41,7 +43,7 @@ on:
       runs-on:
         description: |
           JSON array of runner(s) to use.
-          See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
         type: string
         default: '["ubuntu-latest"]'
         required: false
@@ -53,18 +55,18 @@ on:
       github-app-id:
         description: |
           GitHub App ID to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
         required: false
         type: string
     secrets:
       github-token:
         description: |
           GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
-          See <https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md>.
+          See https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md.
       github-app-key:
         description: |
           GitHub App private key to generate GitHub token in place of github-token.
-          See <https://github.com/actions/create-github-app-token>.
+          See https://github.com/actions/create-github-app-token.
     outputs:
       deployment-id:
         description: "Deployment ID"

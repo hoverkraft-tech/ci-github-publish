@@ -3,8 +3,23 @@ author: hoverkraft
 branding:
   icon: list
   color: blue
-description: Action to report deploy result
+description: |
+  Generate a post-deployment report and update GitHub with the deployment result.
 
+  This action collects the workflow run result and builds a human-friendly deployment
+  summary that is written to the GitHub Actions summary (visible in the workflow run UI).
+  The report can include:
+
+  - the deployment environment,
+  - a link to the workflow logs,
+  - the deployed application URL (if provided),
+  - an optional list of failed jobs (when the run failed),
+  - additional key-value pairs passed through the `extra` input.
+
+  When `deployment-id` and `repository` are supplied, the action will also update the
+  corresponding GitHub Deployment status (state, description and URL). If triggered by
+  an `issue_comment` event the action can post (or update) an issue/PR comment and add
+  a reaction to the original comment to provide inline feedback about the deployment.
 inputs:
   repository:
     description: "The repository where the deployment was made"
@@ -27,7 +42,7 @@ inputs:
       GitHub Token to update the deployment.
       Permissions:
         - deployments: write
-      See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>.
+      See https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status.
     required: false
     default: ${{ github.token }}
 

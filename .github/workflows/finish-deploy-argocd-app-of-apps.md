@@ -33,7 +33,6 @@ See <https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapp
 This workflow is triggered by a repository dispatch event.
 See <https://docs.github.com/en/actions/reference/events-that-trigger-workflows#repository_dispatch>.
 Payload:
-
 ```json
 {
   "event_type": "finish-deploy",

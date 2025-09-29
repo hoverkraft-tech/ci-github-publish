@@ -31,6 +31,7 @@ Action to get the environment to deploy regarding the workflow context.
 
 - If the workflow is triggered by an issue event (or pull-request):
   If an environement is given, the environment will be set to `environment:issue_number`.
+  If no environment is given, the environment will be set to `review-apps:issue_number`.
 - Else if no environment is given, the action will fail.
 
 <!-- overview:end -->

@@ -30,7 +30,6 @@
 Reusable workflow that performs the end of a deployment.
 
 What this workflow does:
-
 - If the deployment exposes a URL, run quick health and performance checks:
   - URL ping check. See [Ping check](../../actions/check/url-ping/README.md).
   - Lighthouse audit. See [Lighthouse check](../../actions/check/url-lighthouse/README.md).

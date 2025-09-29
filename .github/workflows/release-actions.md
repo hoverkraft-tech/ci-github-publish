@@ -32,12 +32,10 @@ generates or updates their readme documentation (including version updates),
 and publishes the resulting documentation changes back to the repository.
 
 Key behaviors:
-
 - Detect changed actions and workflows (or optionally update all).
-- Generate readme files for each changed Action/workflow and update version
-  references using the latest tag.
-- Commit and push documentation updates (via a pull request or direct merge
-  depending on repository credentials/inputs).
+- Generate documentation files for each changed Action/workflow
+- Commit and push documentation updates (via a pull request.
+- Publish documentation to GitHub Pages on push to default branch.
 
 ### Permissions
 

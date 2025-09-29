@@ -185,7 +185,7 @@ runs:
         update-log-url: ${{ inputs.repository == github.event.repository.name && "true" || "false" }}
         github-token: ${{ inputs.github-token }}
 
-    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@b4883995e100e291a1fed68678d47a560328ed08 # 0.24.0
+    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@d324c777132734fc988c79a74dff3ee0248835fc # 0.25.0
       if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       with:
         title: "## ${{ steps.get-deployment-result.outputs.title }}"

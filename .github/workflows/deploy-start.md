@@ -30,16 +30,19 @@
 Reusable workflow: prepare and start a deployment.
 
 Purpose:
+
 - Decide whether a deployment should start (comment trigger or other events).
 - Resolve the target environment; supports dynamic environment names when
   invoked from issue or pull-request events (e.g. `environment:issue_number`).
 - Create a GitHub deployment and set its initial state to `in_progress`.
 
 Trigger:
+
 - Can be triggered by a specific comment.
 - Any event that triggers the workflow that's not an "issue_comment".
 
 Environment:
+
 - Support dynamic env when comming from issue or pull-request event
 
 ### Permissions

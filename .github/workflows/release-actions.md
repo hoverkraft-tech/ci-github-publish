@@ -32,6 +32,7 @@ generates or updates their readme documentation (including version updates),
 and publishes the resulting documentation changes back to the repository.
 
 Key behaviors:
+
 - Detect changed actions and workflows (or optionally update all).
 - Generate documentation files for each changed Action/workflow
 - Commit and push documentation updates (via a pull request.

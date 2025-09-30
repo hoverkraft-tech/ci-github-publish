@@ -130,7 +130,7 @@ jobs:
 
       - name: 📖 Generate documentation
         id: generate-documentation
-        uses: hoverkraft-tech/ci-dokumentor@fe7b78e19572b70e2a5db7f2a61b99c70358061a # 0.1.2
+        uses: hoverkraft-tech/ci-dokumentor@ed9fddccd2f5f5596ad929f2fa2a931fcdd5a282 # 0.1.3
         with:
           source: ${{ matrix.manifest }}
 
@@ -144,7 +144,7 @@ jobs:
             core.setOutput('artifact-path', artifactPath);
 
       - id: manifest-slug
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@d324c777132734fc988c79a74dff3ee0248835fc # 0.25.0
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@1c379f7f6e0fc850fe5a7111f74d54e159b4dcd2 # 0.26.0
         with:
           value: ${{ matrix.manifest }}
 
@@ -180,7 +180,7 @@ jobs:
 
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@d324c777132734fc988c79a74dff3ee0248835fc # 0.25.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@1c379f7f6e0fc850fe5a7111f74d54e159b4dcd2 # 0.26.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: docs/actions-workflows-documentation-update

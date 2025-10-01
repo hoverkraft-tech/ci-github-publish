@@ -75,6 +75,8 @@ jobs:
       - id: get-workflow-failure
         if: ${{ inputs.deployment-id }}
         uses: ./self-workflow/actions/workflow/get-workflow-failure
+        with:
+          github-token: ${{ secrets.github-token || github.token }}
 
       - id: get-finished-deployment
         if: ${{ inputs.deployment-id && steps.get-workflow-failure.outputs.has-failed != 'true' }}

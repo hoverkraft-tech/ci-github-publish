@@ -117,7 +117,6 @@ jobs:
         with:
           script: |
             const status = ${{ toJSON(steps.check-client-payload.outputs.status) }};
-            const expectedStatus = "success";
 
             const statesStatuses = {
               "error": [],
@@ -126,20 +125,15 @@ jobs:
               "in_progress": [],
               "queued": [],
               "pending": [],
-              [expectedStatus]: ["Synced"],
+              "success": ["Synced"],
             };
 
             for(const state in statesStatuses) {
               const statuses = statesStatuses[state];
-              if (!statuses.includes(status)) {
-                continue;
-              }
-
-              if (state !== expectedStatus) {
+              if (statuses.includes(status)) {
+                core.setOutput("state", state);
                 return;
               }
-
-              return core.setFailed(`Unexpected deployment status "${status}".`);
             }
 
             core.setFailed(`Status "${status}" is not valid. Valid statuses are: ${JSON.stringify(statesStatuses)}`);
@@ -167,12 +161,23 @@ jobs:
           private-key: ${{ secrets.github-app-key }}
           owner: ${{ github.repository_owner }}
 
+      - uses: ./self-workflow/actions/deployment/update
+        with:
+          deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
+          repository: ${{ steps.check-client-payload.outputs.repository }}
+          url: ${{ steps.check-client-payload.outputs.url }}
+          description: ${{ steps.check-client-payload.outputs.description }}
+          state: ${{ steps.get-state-from-status.outputs.state }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          update-log-url: "false"
+
       - uses: ./self-workflow/actions/deploy/report
         if: always()
         with:
           deployment-id: ${{ github.event.client_payload['deployment-id'] }}
           repository: ${{ github.event.client_payload['application-repository'] }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          url: ${{ steps.check-client-payload.outputs.url }}
           extra: |
             {
               "status": "${{ steps.check-client-payload.outputs.status }}",

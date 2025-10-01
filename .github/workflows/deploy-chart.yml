@@ -311,7 +311,7 @@ jobs:
             const values = chartValues.map(injectChartValue).flat();
 
             // Separate value that start with "deploy"
-            core.setOutput('values', JSON.stringify(values.filter((value) => !value.path.startsWith('deploy.'))));
+            core.setOutput('chart-values', JSON.stringify(values.filter((value) => !value.path.startsWith('deploy.'))));
 
             const deployValues = values.filter((value) => value.path.startsWith('deploy.')).map((value) => {
               // Remove the "deploy." prefix

@@ -13,6 +13,14 @@ inputs:
     description: "The repository where the deployment was made"
     required: false
     default: "${{ github.event.repository.name }}"
+  github-token:
+    description: |
+      GitHub Token to get the deployment information.
+      Permissions:
+        - deployments: read
+      See https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#get-a-deployment.
+    required: false
+    default: ${{ github.token }}
 
 outputs:
   environment:
@@ -28,6 +36,7 @@ runs:
     - id: get-deployment
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
+        github-token: ${{ inputs.github-token }}
         script: |
           const repository = `${{ inputs.repository }}`.trim();           
 

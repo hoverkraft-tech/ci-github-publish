@@ -60,20 +60,27 @@ runs:
 
     - id: get-workflow-failure
       uses: ./self-deploy-report-action/workflow/get-workflow-failure
+      with:
+        github-token: ${{ inputs.github-token }}
 
     - id: get-deployment
       if: inputs.environment == '' && inputs.repository && inputs.deployment-id
       uses: ./self-deploy-report-action/deployment/read
       with:
+        github-token: ${{ inputs.github-token }}
         repository: ${{ inputs.repository }}
         deployment-id: ${{ inputs.deployment-id }}
 
     - id: get-deployment-result
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
+        github-token: ${{ inputs.github-token }}
         script: |
           const environment = `${{ steps.get-deployment.outputs.environment || inputs.environment }}`.trim();
+
           const url = `${{ inputs.url }}` ?? null;
+          core.setOutput("url", url);
+
           const isIssueComment = `${{ github.event_name }}` === "issue_comment";
           if (isIssueComment) {
             core.setOutput("is-issue-comment", isIssueComment);
@@ -179,10 +186,10 @@ runs:
       with:
         deployment-id: ${{ inputs.deployment-id }}
         repository: ${{ inputs.repository }}
-        url: ${{ inputs.url }}
+        url: ${{ steps.get-deployment-result.outputs.url }}
         state: ${{ steps.get-deployment-result.outputs.state }}
         description: ${{ steps.get-deployment-result.outputs.message }}
-        update-log-url: ${{ inputs.repository == github.event.repository.name && "true" || "false" }}
+        update-log-url: ${{ inputs.repository == github.event.repository.name && 'true' || 'false' }}
         github-token: ${{ inputs.github-token }}
 
     - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@1c379f7f6e0fc850fe5a7111f74d54e159b4dcd2 # 0.26.0
@@ -196,6 +203,7 @@ runs:
     - if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
+        github-token: ${{ inputs.github-token }}
         script: |
           const repository = `${{ inputs.repository }}` || context.repo.repo;
 

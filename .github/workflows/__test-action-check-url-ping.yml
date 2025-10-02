@@ -6,27 +6,405 @@ on:
 permissions:
   contents: read
 
+env:
+  MOCK_URL_BASE: "http://localhost:1080"
+  DEFAULT_TIMEOUT: "10"
+  DEFAULT_RETRIES: "1"
+
 jobs:
   tests:
     name: Tests for "check/url-ping" action
     runs-on: ubuntu-latest
+    services:
+      mock-server:
+        image: wiremock/wiremock:3.13.1@sha256:d61e7720f89483fdef5366843b58d1dfd06bcce5828179c9f2f54de5c28354b0
+        ports:
+          - 1080:8080
     steps:
       - name: Arrange - Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - name: Act - Check URL ping
-        id: check-url-ping
+      - name: Setup - Configure mock server
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const http = require('http');
+
+            const makeWireMockRequest = (method, path, data = null) => {
+              return new Promise((resolve, reject) => {
+                const req = http.request({
+                  hostname: 'localhost',
+                  port: 1080,
+                  path,
+                  method,
+                  headers: data
+                    ? {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(data)
+                      }
+                    : {}
+                }, (res) => {
+                  const chunks = [];
+                  res.on('data', (chunk) => chunks.push(chunk));
+                  res.on('end', () => {
+                    const body = Buffer.concat(chunks).toString();
+                    console.log(`WireMock admin request ${method} ${path}: ${res.statusCode}`);
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                      resolve(body);
+                    } else {
+                      reject(new Error(`WireMock admin request failed with status ${res.statusCode}: ${body}`));
+                    }
+                  });
+                });
+
+                req.on('error', reject);
+                if (data) req.write(data);
+                req.end();
+              });
+            };
+
+            const setupMockEndpoint = async (path, statusCode, delay = 0, responseOverrides = {}) => {
+              const response = { status: statusCode, ...responseOverrides };
+              if (delay > 0) {
+                response.fixedDelayMilliseconds = delay;
+              }
+
+              const payload = JSON.stringify({
+                request: {
+                  urlPath: path
+                },
+                response
+              });
+
+              await makeWireMockRequest('POST', '/__admin/mappings', payload);
+            };
+
+            // Setup various test endpoints
+            await setupMockEndpoint('/success', 200);
+            await setupMockEndpoint('/not-found', 404);
+            await setupMockEndpoint('/server-error', 500);
+            await setupMockEndpoint('/redirect', 301, 0, {
+              headers: {
+                Location: 'https://example.com'
+              }
+            });
+            await setupMockEndpoint('/slow-response', 200, 2000);
+            await setupMockEndpoint('/very-slow', 200, 65000);
+            await setupMockEndpoint('/intermittent-fail', 500);
+
+      # Test 1: Successful URL check
+      - name: Test 1 - Successful URL check
+        id: test-success
+        uses: ./actions/check/url-ping
+        with:
+          url: "${{ env.MOCK_URL_BASE }}/success"
+          expected-statuses: "200"
+          timeout: "${{ env.DEFAULT_TIMEOUT }}"
+          retries: "${{ env.DEFAULT_RETRIES }}"
+
+      - name: Assert - Test 1 success
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          STEP_ID: test-success
+          EXPECTED_STATUS: "200"
+          TEST_NAME: "Test 1 - Successful URL check"
+        with:
+          script: |
+            const assert = require("assert");
+            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS}, got: ${statusCode}`);
+            console.log(`✅ ${process.env.TEST_NAME} passed`);
+
+      # Test 2: Multiple expected status codes
+      - name: Test 2 - Multiple expected status codes (404 allowed)
+        id: test-multiple-status
+        uses: ./actions/check/url-ping
+        with:
+          url: "${{ env.MOCK_URL_BASE }}/not-found"
+          expected-statuses: "200,404,301"
+          timeout: "${{ env.DEFAULT_TIMEOUT }}"
+          retries: "${{ env.DEFAULT_RETRIES }}"
+
+      - name: Assert - Test 2 multiple status codes
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          STEP_ID: test-multiple-status
+          EXPECTED_STATUS: "404"
+          TEST_NAME: "Test 2 - Multiple expected status codes"
+        with:
+          script: |
+            const assert = require("assert");
+            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS}, got: ${statusCode}`);
+            console.log(`✅ ${process.env.TEST_NAME} passed`);
+
+      # Test 3: Timeout handling
+      - name: Test 3 - Timeout handling
+        id: test-timeout
+        continue-on-error: true
+        uses: ./actions/check/url-ping
+        with:
+          url: "${{ env.MOCK_URL_BASE }}/very-slow"
+          expected-statuses: "200"
+          timeout: "1"
+          retries: "${{ env.DEFAULT_RETRIES }}"
+
+      - name: Assert - Test 3 timeout
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          STEP_ID: test-timeout
+          TEST_NAME: "Test 3 - Timeout handling"
+        with:
+          script: |
+            const outcome = `${{ steps[env.STEP_ID].outcome }}`;
+            if (outcome !== 'failure') {
+              throw new Error(`Expected ${process.env.TEST_NAME} to fail, but outcome was: ${outcome}`);
+            }
+            console.log(`✅ ${process.env.TEST_NAME} passed: Correctly failed as expected`);
+
+      # Test 4: Retry with exponential backoff
+      - name: Setup - Configure intermittent failure endpoint for retry test
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          # jscpd:ignore-start
+          script: |
+            const http = require('http');
+
+            const makeWireMockRequest = (data) => {
+              return new Promise((resolve, reject) => {
+                const req = http.request({
+                  hostname: 'localhost',
+                  port: 1080,
+                  path: '/__admin/mappings',
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(data)
+                  }
+                }, (res) => {
+                  const chunks = [];
+                  res.on('data', (chunk) => chunks.push(chunk));
+                  res.on('end', () => {
+                    const body = Buffer.concat(chunks).toString();
+                    console.log(`WireMock scenario stub creation: ${res.statusCode}`);
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                      resolve(body);
+                    } else {
+                      reject(new Error(`Failed to create WireMock stub: ${body}`));
+                    }
+                  });
+                });
+
+                req.on('error', reject);
+                req.write(data);
+                req.end();
+              });
+            };
+
+            // First call returns 500, second call returns 200
+            const expectations = [
+              {
+                name: 'Retry test - initial failure',
+                request: {
+                  urlPath: '/retry-test'
+                },
+                response: {
+                  status: 500
+                },
+                scenarioName: 'retry-test',
+                requiredScenarioState: 'Started',
+                newScenarioState: 'failed-once'
+              },
+              {
+                name: 'Retry test - subsequent success',
+                request: {
+                  urlPath: '/retry-test'
+                },
+                response: {
+                  status: 200
+                },
+                scenarioName: 'retry-test',
+                requiredScenarioState: 'failed-once',
+                newScenarioState: 'succeeded'
+              }
+            ];
+
+            for (const expectation of expectations) {
+              await makeWireMockRequest(JSON.stringify(expectation));
+            }
+          # jscpd:ignore-end
+
+      - name: Test 4 - Retry with exponential backoff
+        id: test-retry
+        uses: ./actions/check/url-ping
+        with:
+          url: "${{ env.MOCK_URL_BASE }}/retry-test"
+          expected-statuses: "200"
+          timeout: "${{ env.DEFAULT_TIMEOUT }}"
+          retries: "3"
+
+      - name: Assert - Test 4 retry success
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          STEP_ID: test-retry
+          EXPECTED_STATUS: "200"
+          TEST_NAME: "Test 4 - Retry with exponential backoff"
+        with:
+          script: |
+            const assert = require("assert");
+            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS} after retry, got: ${statusCode}`);
+            console.log(`✅ ${process.env.TEST_NAME} passed`);
+
+      # Test 5: Follow redirects disabled
+      - name: Test 5 - Redirect handling (follow disabled)
+        id: test-redirect-disabled
+        uses: ./actions/check/url-ping
+        with:
+          url: "${{ env.MOCK_URL_BASE }}/redirect"
+          expected-statuses: "301"
+          follow-redirect: "false"
+          timeout: "${{ env.DEFAULT_TIMEOUT }}"
+          retries: "${{ env.DEFAULT_RETRIES }}"
+
+      - name: Assert - Test 5 redirect disabled
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          STEP_ID: test-redirect-disabled
+          EXPECTED_STATUS: "301"
+          TEST_NAME: "Test 5 - Redirect handling"
+        with:
+          script: |
+            const assert = require("assert");
+            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS}, got: ${statusCode}`);
+            console.log(`✅ ${process.env.TEST_NAME} passed`);
+
+      # Test 6: Invalid URL handling
+      - name: Test 6 - Invalid URL handling
+        id: test-invalid-url
+        continue-on-error: true
+        uses: ./actions/check/url-ping
+        with:
+          url: "not-a-valid-url"
+          expected-statuses: "200"
+          timeout: "${{ env.DEFAULT_TIMEOUT }}"
+          retries: "${{ env.DEFAULT_RETRIES }}"
+
+      - name: Assert - Test 6 invalid URL
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          STEP_ID: test-invalid-url
+          TEST_NAME: "Test 6 - Invalid URL handling"
+        with:
+          script: |
+            const outcome = `${{ steps[env.STEP_ID].outcome }}`;
+            if (outcome !== 'failure') {
+              throw new Error(`Expected ${process.env.TEST_NAME} to fail, but outcome was: ${outcome}`);
+            }
+            console.log(`✅ ${process.env.TEST_NAME} passed: Correctly failed as expected`);
+
+      # Test 7: Real-world endpoint test
+      - name: Test 7 - Real-world endpoint
+        id: test-real-world
         uses: ./actions/check/url-ping
         with:
           url: "https://hoverkraft-tech.github.io/ci-github-publish/"
           expected-statuses: "200"
+          timeout: "30"
+          retries: "2"
 
-      - name: Assert - Check outputs
+      - name: Assert - Test 7 real-world
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          STEP_ID: test-real-world
+          EXPECTED_STATUS: "200"
+          TEST_NAME: "Test 7 - Real-world endpoint check"
         with:
           script: |
             const assert = require("assert");
-            const { existsSync } = require("fs");
+            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS}, got: ${statusCode}`);
+            console.log(`✅ ${process.env.TEST_NAME} passed`);
 
-            const statusCodeOutput = ${{ toJSON(steps.check-url-ping.outputs.status-code) }};
-            assert.equal(statusCodeOutput, 200, `"status-code" output is not 200, got: ${statusCodeOutput}`);
+      # Test 8: Max retries exhausted
+      - name: Setup - Configure persistent failure endpoint
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const http = require('http');
+            const data = JSON.stringify({
+              request: {
+                urlPath: '/always-fail'
+              },
+              response: {
+                status: 500
+              }
+            });
+
+            await new Promise((resolve, reject) => {
+              const req = http.request({
+                hostname: 'localhost',
+                port: 1080,
+                path: '/__admin/mappings',
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Content-Length': Buffer.byteLength(data)
+                }
+              }, (res) => {
+                const chunks = [];
+                res.on('data', (chunk) => chunks.push(chunk));
+                res.on('end', () => {
+                  const body = Buffer.concat(chunks).toString();
+                  console.log(`WireMock persistent failure stub creation: ${res.statusCode}`);
+                  if (res.statusCode >= 200 && res.statusCode < 300) {
+                    resolve(res.statusCode);
+                  } else {
+                    reject(new Error(`Failed to create WireMock stub: ${body}`));
+                  }
+                });
+              });
+              
+              req.on('error', reject);
+              req.write(data);
+              req.end();
+            });
+
+      - name: Test 8 - Max retries exhausted
+        id: test-max-retries
+        continue-on-error: true
+        uses: ./actions/check/url-ping
+        with:
+          url: "${{ env.MOCK_URL_BASE }}/always-fail"
+          expected-statuses: "200"
+          timeout: "5"
+          retries: "2"
+
+      - name: Assert - Test 8 max retries
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          STEP_ID: test-max-retries
+          TEST_NAME: "Test 8 - Max retries exhausted"
+        with:
+          script: |
+            const outcome = `${{ steps[env.STEP_ID].outcome }}`;
+            if (outcome !== 'failure') {
+              throw new Error(`Expected ${process.env.TEST_NAME} to fail, but outcome was: ${outcome}`);
+            }
+            console.log(`✅ ${process.env.TEST_NAME} passed: Correctly failed as expected`);
+
+      - name: Summary - All tests completed
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            console.log("🎉 All URL ping action tests completed successfully!");
+            console.log("Test coverage includes:");
+            console.log("  ✅ Successful responses");
+            console.log("  ✅ Multiple expected status codes");
+            console.log("  ✅ Timeout handling");
+            console.log("  ✅ Retry with exponential backoff");
+            console.log("  ✅ Redirect handling");
+            console.log("  ✅ Invalid URL handling");
+            console.log("  ✅ Real-world endpoint testing");
+            console.log("  ✅ Max retries exhausted");

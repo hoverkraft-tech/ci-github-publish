@@ -16,7 +16,7 @@ inputs:
   timeout:
     description: "Timeout in seconds for the URL check."
     required: false
-    default: "10"
+    default: "60"
   retries:
     description: "Number of retries if the URL check fails."
     required: false
@@ -73,7 +73,7 @@ runs:
             return core.setFailed("Expected statuses input cannot be empty.");
           }
 
-          const getStatusCode = async () => {
+          const makeRequest = async () => {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -81,7 +81,7 @@ runs:
               const res = await fetch(url, {
                 method: 'HEAD',
                 redirect: followRedirect ? 'follow' : 'manual',
-                signal: controller.signal, // abort on timeout
+                signal: controller.signal,
               });
               return res.status;
             } catch (err) {
@@ -94,13 +94,18 @@ runs:
             }
           };
 
-          // Start the URL check
+          const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+          // Retry with exponential backoff
           let attempts = 0;
           let lastError = null;
+
           while (attempts < retries) {
             try {
               attempts++;
-              const statusCode = await getStatusCode();
+              core.info(`Attempt ${attempts}/${retries} - Checking URL: ${url}`);
+              
+              const statusCode = await makeRequest();
               core.setOutput("status-code", statusCode);
 
               if (!expectedStatuses.includes(statusCode.toString())) {
@@ -111,6 +116,13 @@ runs:
             } catch (error) {
               core.warning(`Attempt ${attempts}/${retries} failed: ${error.message}`);
               lastError = error;
+              
+              // Apply exponential backoff delay before next retry (if any)
+              if (attempts < retries) {
+                const backoffDelay = Math.min(1000 * Math.pow(2, attempts - 1), 30000); // Start at 1s, cap at 30s
+                core.info(`Retrying in ${backoffDelay}ms (exponential backoff)...`);
+                await sleep(backoffDelay);
+              }
             }
           }
 

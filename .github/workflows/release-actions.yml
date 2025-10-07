@@ -3,6 +3,7 @@
 # and publishes the resulting documentation changes back to the repository.
 #
 # Key behaviors:
+#
 # - Detect changed actions and workflows (or optionally update all).
 # - Generate documentation files for each changed Action/workflow
 # - Commit and push documentation updates (via a pull request.
@@ -194,7 +195,7 @@ jobs:
 
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          pattern: changed-files
+          artifact-ids: ${{ needs.generate-documentation.outputs.artifact-id }}
           path: /
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659

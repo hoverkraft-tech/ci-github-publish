@@ -45,7 +45,15 @@ the default `GITHUB_TOKEN` already has read access to Actions in typical workflo
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
+- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+  with:
+    # GitHub Token to get workflow information.
+    # Permissions:
+    # - actions: read
+    # See https://docs.github.com/en/rest/actions/workflows#list-jobs-for-a-workflow-run.
+    #
+    # Default: `${{ github.token }}`
+    github-token: ${{ github.token }}
 ```
 
 <!-- usage:end -->
@@ -54,8 +62,12 @@ the default `GITHUB_TOKEN` already has read access to Actions in typical workflo
 
 ## Inputs
 
-| **Input** | **Description** | **Required** | **Default** |
-| --------- | --------------- | ------------ | ----------- |
+| **Input**          | **Description**                                                                       | **Required** | **Default**           |
+| ------------------ | ------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`github-token`** | GitHub Token to get workflow information.                                             | **false**    | `${{ github.token }}` |
+|                    | Permissions:                                                                          |              |                       |
+|                    | - actions: read                                                                       |              |                       |
+|                    | See <https://docs.github.com/en/rest/actions/workflows#list-jobs-for-a-workflow-run>. |              |                       |
 
 <!-- inputs:end -->
 

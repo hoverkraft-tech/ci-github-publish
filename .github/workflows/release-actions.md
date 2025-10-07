@@ -32,7 +32,6 @@ generates or updates their readme documentation (including version updates),
 and publishes the resulting documentation changes back to the repository.
 
 Key behaviors:
-
 - Detect changed actions and workflows (or optionally update all).
 - Generate documentation files for each changed Action/workflow
 - Commit and push documentation updates (via a pull request.
@@ -58,7 +57,7 @@ permissions:
   contents: read
 jobs:
   release-actions:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@6d9e5d48da1a80c085e8ed867d680a5e99b28217 # 0.8.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
     secrets:
       # GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
       # See https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md.
@@ -94,7 +93,7 @@ jobs:
 | ------------------- | ---------------------------------------------------------------------------------- | ------------ | ----------- | ------------------- |
 | **`runs-on`**       | JSON array of runner(s) to use.                                                    | **false**    | **string**  | `["ubuntu-latest"]` |
 |                     | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |             |                     |
-| **`update-all`**    | Update all actions and workflows, regardless of changes.                           | **false**    | **boolean** | -                   |
+| **`update-all`**    | Update all actions and workflows, regardless of changes.                           | **false**    | **boolean** | `false`             |
 | **`github-app-id`** | GitHub App ID to generate GitHub token in place of github-token.                   | **false**    | **string**  | -                   |
 |                     | See <https://github.com/actions/create-github-app-token>.                          |              |             |                     |
 

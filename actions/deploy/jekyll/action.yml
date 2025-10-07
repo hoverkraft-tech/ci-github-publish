@@ -27,74 +27,18 @@ runs:
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
         script: |
-          const { randomUUID } = require('crypto');
-          const { join, relative, basename, extname, dirname } = require('path');
-          const { existsSync, readFileSync, writeFileSync } = require('fs');
-
-          // Prepare paths
-          const workspacePath = "${{ github.workspace }}";
-          const sitePath = join(workspacePath, "_site");
-          const buildPath = join(sitePath, "build");
-          core.setOutput("build-path", buildPath);
-
-          core.setOutput("jekyll-source", relative(workspacePath, sitePath));
-          core.setOutput("jekyll-destination", relative(workspacePath, buildPath));
-
-          // Prepare site pages
-          await io.mkdirP(sitePath);
-
-          // Set config
-          const configPath = join(sitePath, "_config.yml");
-          if (!existsSync(configPath)) {
-            const theme = "${{ inputs.theme }}";
-            if (!theme) {
-              throw new Error("Theme input is required.");
+          const prepareSite = require('./actions/deploy/jekyll/prepare-site.js');
+          await prepareSite({
+            core,
+            io,
+            glob,
+            inputs: {
+              theme: ${{ toJson(inputs.theme) }},
+              pages: ${{ toJson(inputs.pages) }}
             }
-            const isGitHubSupportedTheme = theme.startsWith("jekyll-theme-");
+          });
 
-            const configContent = isGitHubSupportedTheme
-              ? `theme: ${theme}`
-              : `remote_theme: ${theme}\nplugins:\n  - jekyll-remote-theme`;
-
-            writeFileSync(configPath, configContent);
-          }
-
-          function getPageSection(pageFile) {
-            const sectionDir = basename(pageFile, extname(pageFile))
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/^-|-$/g, '');
-
-            return join(sitePath, sectionDir, "index.md");
-          }
-
-          function getPageTitle(pageFile) {
-            return getPageSection(pageFile)
-              .split('-')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
-          }
-
-          async function createSitePage(pageFile, pageTitle = null, pagePath = null) {
-            pageTitle = pageTitle || getPageTitle(pageFile);
-            pagePath = pagePath || getPageSection(pageFile);
-            await io.mkdirP(dirname(pagePath));
-
-            const pageContent = `---\nlayout: default\ntitle: ${pageTitle}\n---\n\n${readFileSync(pageFile, 'utf8')}`;
-            return writeFileSync(pagePath, pageContent);
-          }
-
-          const indexPath = join(sitePath, "index.md");
-          if (!existsSync(indexPath)) {
-            await createSitePage("./README.md", "Home", indexPath);
-          }
-
-          const pages = "${{ inputs.pages }}";
-          const pageFilePatterns = pages.split([" ", "\n"]).map(p => p.trim()).filter(Boolean);
-          const globber = await glob.create(pageFilePatterns.join('\n'));
-          for await (const pageFile of globber.globGenerator()) {
-            await createSitePage(pageFile);
-          }
+    - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
     - name: Build Jekyll site
       uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1.0.13

@@ -198,6 +198,38 @@ jobs:
           artifact-ids: ${{ needs.generate-documentation.outputs.artifact-id }}
           path: /
 
+      - id: get-documentation-paths
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const documentationPaths = [];
+
+            // Retrieve action manifests
+            const globber = await glob.create('./actions/**/README.md');
+            for await (const file of globber.globGenerator()) {
+              core.debug(`Found action documentation: ${file}`);
+              documentationPaths.push(file);
+            }
+
+            // Retrieve workflow manifests
+            const workflowGlobber = await glob.create('./.github/workflows/*.md');
+            for await (const file of workflowGlobber.globGenerator()) {
+              core.debug(`Found workflow documentation: ${file}`);
+              // Ignore internal workflows
+              if (file.match(/\/\.github\/workflows\/__.*\.md$/)) {
+                core.debug(`Ignoring internal workflow documentation: ${file}`);
+                continue;
+              }
+              core.debug(`Including workflow documentation: ${file}`);
+              documentationPaths.push(file);
+            }
+
+            core.setOutput(
+              'documentation-paths',
+              documentationPaths
+                .join('\n')
+            );
+
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
         uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
@@ -215,6 +247,8 @@ jobs:
 
       - id: build-jekyll
         uses: ./self-workflow/actions/deploy/jekyll
+        with:
+          pages: ${{ steps.get-documentation-paths.outputs.documentation-paths }}
 
       - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
         if: inputs.github-app-id

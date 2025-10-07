@@ -16,19 +16,57 @@ jobs:
       - name: Arrange - Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
+      - name: Arrange - Create linked test pages
+        run: |
+          mkdir -p docs/tests
+          cat <<'EOF' > docs/tests/source.md
+          # Source Page
+
+          Link to [Target](docs/tests/target.md).
+          EOF
+          cat <<'EOF' > docs/tests/target.md
+          # Target Page
+
+          Target content for link rewriting validation.
+          EOF
+          printf '\n- [Docs Source](docs/tests/source.md)\n' >> README.md
+
       - name: Act - Deploy Jekyll
         id: deploy-jekyll
         uses: ./actions/deploy/jekyll
+        with:
+          pages: |
+            .github/workflows/release-actions.md
+            actions/deploy/jekyll/README.md
+            docs/tests/source.md
+            docs/tests/target.md
 
       - name: Assert - Check outputs
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const assert = require("assert");
-            const { existsSync } = require("fs");
+            const { existsSync, readFileSync } = require("fs");
+            const path = require("path");
 
             const buildPathOutput = ${{ toJSON(steps.deploy-jekyll.outputs.build-path) }};
             assert(buildPathOutput, `"build-path" output is empty`);
+
+            const workspacePath = process.env.GITHUB_WORKSPACE;
+            assert(workspacePath, "GITHUB_WORKSPACE environment variable is missing");
+
+            const jekyllSourcePath = path.join(workspacePath, "_site");
+            const indexMarkdownPath = path.join(jekyllSourcePath, "index.md");
+            assert(existsSync(indexMarkdownPath), `Index markdown does not exist at: ${indexMarkdownPath}`);
+
+            const sourceMarkdownPath = path.join(
+              jekyllSourcePath,
+              "docs/tests/source/index.md"
+            );
+            assert(
+              existsSync(sourceMarkdownPath),
+              `Generated source page markdown does not exist at: ${sourceMarkdownPath}`
+            );
 
             // Check if the build path exists
             assert(existsSync(buildPathOutput), `Build path does not exist: ${buildPathOutput}`);
@@ -40,6 +78,33 @@ jobs:
             // Check if the CSS file exists in the build path
             const cssFilePath = `${buildPathOutput}/assets/css/style.css`;
             assert(existsSync(cssFilePath), `Jekyll site CSS file does not exist in the build path: ${cssFilePath}`);
+
+            // Check if the custom page files exist in the build path
+            const customPage1Path = `${buildPathOutput}/github/workflows/release-actions/index.html`;
+            assert(existsSync(customPage1Path), `Custom page 1 does not exist in the build path: ${customPage1Path}`);
+            const customPage2Path = `${buildPathOutput}/actions/deploy/jekyll/index.html`;
+            assert(existsSync(customPage2Path), `Custom page 2 does not exist in the build path: ${customPage2Path}`);
+
+            const copiedAssetPath = `${buildPathOutput}/assets/github/logo.svg`;
+            assert(existsSync(copiedAssetPath), `Expected local asset to be copied to: ${copiedAssetPath}`);
+
+            const customPage2Content = readFileSync(customPage2Path, "utf8");
+            assert(
+              customPage2Content.includes("/assets/github/logo.svg"),
+              `Generated page should reference the copied asset using the /assets prefix`
+            );
+
+            const indexMarkdownContent = readFileSync(indexMarkdownPath, "utf8");
+            assert(
+              indexMarkdownContent.includes("](docs/tests/source)"),
+              "Index markdown should rewrite links to created site pages"
+            );
+
+            const sourceMarkdownContent = readFileSync(sourceMarkdownPath, "utf8");
+            assert(
+              sourceMarkdownContent.includes("](../target)"),
+              "Created site page should rewrite links to sibling pages"
+            );
 
       - name: Act - Run Jampack
         uses: ./actions/deploy/jampack
@@ -67,6 +132,9 @@ jobs:
             // Check if the CSS file exists in the build path
             const cssFilePath = `${buildPathOutput}/assets/css/style.css`;
             assert(existsSync(cssFilePath), `Jekyll site CSS file does not exist in the build path: ${cssFilePath}`);
+
+            const copiedAssetPath = `${buildPathOutput}/assets/github/logo.svg`;
+            assert(existsSync(copiedAssetPath), `Expected local asset to remain after packing: ${copiedAssetPath}`);
 
             // Assert that there is no "_jampack" directory in the build path
             const jampackDir = `${buildPathOutput}/_jampack`;

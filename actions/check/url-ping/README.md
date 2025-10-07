@@ -44,8 +44,8 @@ Action to run ping check on given URL.
     follow-redirect: "false"
 
     # Timeout in seconds for the URL check.
-    # Default: `10`
-    timeout: "10"
+    # Default: `60`
+    timeout: "60"
 
     # Number of retries if the URL check fails.
     # Default: `3`
@@ -70,7 +70,7 @@ Action to run ping check on given URL.
 | ----------------------- | ------------------------------------------------- | ------------ | ----------- |
 | **`url`**               | The URL to check.                                 | **true**     | -           |
 | **`follow-redirect`**   | Whether to follow redirects.                      | **false**    | `false`     |
-| **`timeout`**           | Timeout in seconds for the URL check.             | **false**    | `10`        |
+| **`timeout`**           | Timeout in seconds for the URL check.             | **false**    | `60`        |
 | **`retries`**           | Number of retries if the URL check fails.         | **false**    | `3`         |
 | **`expected-statuses`** | Expected HTTP status codes. Comma separated list. | **false**    | `200`       |
 

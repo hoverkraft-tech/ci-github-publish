@@ -50,6 +50,7 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     outputs:
       changed-documentations: ${{ steps.generate-documentation.outputs.destination }}
+      artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
 
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -121,16 +122,21 @@ jobs:
         with:
           source: ${{ steps.get-changed-manifests.outputs.changed-manifests }}
 
+      # FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the absolute path
       - id: generated-documentation
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
-            // FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the absolute path
+            const { join } = require('path');
             const destinations = ${{ toJson(steps.generate-documentation.outputs.destination) }};
-            const artifactPaths = destinations.map(d => d.replace(/\/([^/]+)/, '/*$1'));
+            const artifactPaths = destinations
+              .split('\n')
+              .map(destination => join(${{ toJson(github.workspace) }},destination).replace(/\/([^/]+)/, '/*$1'))
+              .join('\n');
             core.setOutput('artifact-paths', artifactPaths);
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - id: upload-artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: changed-files
           path: ${{ steps.generated-documentation.outputs.artifact-paths }}
@@ -147,7 +153,7 @@ jobs:
 
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          pattern: changed-files
+          artifact-ids: ${{ needs.generate-documentation.outputs.artifact-id }}
           path: /
 
       # jscpd:ignore-start

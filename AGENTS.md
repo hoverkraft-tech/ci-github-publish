@@ -1,5 +1,7 @@
 # CI GitHub Publish - Agent Instructions
 
+> **Organization-wide guidelines (required):** Follow the prioritized shared instructions in [hoverkraft-tech/.github/AGENTS.md](https://github.com/hoverkraft-tech/.github/blob/main/AGENTS.md) before working in this repository.
+
 ## Quick Start
 
 This project is a collection of **opinionated GitHub Actions** for streamlined CI/CD workflows. For comprehensive documentation, see the main [README.md](README.md).

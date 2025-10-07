@@ -110,6 +110,19 @@ jobs:
       clean-deploy-parameters: ""
 ````
 
+**Tips:**
+
+Trigger the workflow on `pull_request_target` to clean a _review-app_ deployment on closed pull-requests.
+Trigger the workflow on `issue_comment` to clean a deployment on demand with a comment (e.g. `/undeploy`).
+
+```yml
+on:
+  pull_request_target:
+    types: [closed]
+  issue_comment:
+    types: [created]
+```
+
 <!-- usage:end -->
 
 <!-- inputs:start -->
@@ -152,6 +165,40 @@ jobs:
 <!-- outputs:end -->
 
 <!-- examples:start -->
+
+## Examples
+
+### Clean ArgoCD review-app deployment on closed pull-request (or on demand with `/undeploy` comment) using GitHub App token
+
+```yaml
+---
+name: "Clean deploy"
+on:
+  pull_request_target:
+    types: [closed]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  packages: write
+  pull-requests: write
+  actions: read
+  deployments: write
+  id-token: write
+
+jobs:
+  clean-deploy:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+    with:
+      clean-deploy-parameters: |
+        { "repository": "${{ github.repository_owner }}/argocd-app-of-apps" }
+      github-app-id: ${{ vars.CI_BOT_APP_ID }}
+    secrets:
+      github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
+```
+
 <!-- examples:end -->
 
 <!-- contributing:start -->

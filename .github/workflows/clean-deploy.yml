@@ -2,6 +2,7 @@
 #
 # Deletes one or more deployments and runs a follow-up "clean" action
 # (for example a repository-dispatch) to perform any repository-specific cleanup required after deployment removal.
+# The workflow can be triggered on-demand via a given comment trigger (e.g. `/undeploy`).
 #
 # Behavior / outputs:
 #
@@ -47,6 +48,13 @@ on:
           }
           ```
         type: string
+      trigger-on-comment:
+        description: |
+          Comment trigger to start the workflow.
+          See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment.
+        type: string
+        default: "/undeploy"
+        required: false
     secrets:
       github-token:
         description: |
@@ -69,9 +77,46 @@ permissions:
   id-token: write
 
 jobs:
+  prepare-clean-deploy:
+    name: Check if should clean deploy
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    outputs:
+      trigger: ${{ steps.trigger.outputs.trigger }}
+    steps:
+      # jscpd:ignore-start
+      - id: not-created-issue-comment
+        if: github.event_name != 'issue_comment'
+        run: echo "result=true" >> "$GITHUB_OUTPUT"
+
+      - uses: shanegenschaw/pull-request-comment-trigger@de309e4a2e83bb08877cada483e3e2b13b8d8e4b # v3.0.0
+        id: trigger-on-comment
+        if: ${{ steps.not-created-issue-comment.outputs.result != 'true' && inputs.trigger-on-comment }}
+        with:
+          trigger: ${{ inputs.trigger-on-comment }}
+          prefix_only: true
+          reaction: eyes
+        env:
+          GITHUB_TOKEN: "${{ github.token }}"
+
+      - id: trigger
+        if: ${{ steps.not-created-issue-comment.outputs.result == 'true' || steps.trigger-on-comment.outputs.triggered == 'true' }}
+        run: |
+          if [ "${{ steps.not-created-issue-comment.outputs.result }}" = "true" ]; then
+            echo "trigger=${{ github.event_name }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ steps.trigger-on-comment.outputs.triggered }}" = "true" ]; then
+            echo "trigger=${{ github.event_name }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+      # jscpd:ignore-end
+
   clean-deploy:
     name: Clean deploy
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    needs: prepare-clean-deploy
+    if: needs.prepare-clean-deploy.outputs.trigger
     steps:
       # jscpd:ignore-start
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659

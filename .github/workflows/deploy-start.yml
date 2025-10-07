@@ -64,7 +64,7 @@ permissions:
 jobs:
   prepare-deploy:
     name: Check if should deploy
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJson(inputs.runs-on) }}
     outputs:
       trigger: ${{ steps.trigger.outputs.trigger }}
       environment: ${{ steps.get-environment.outputs.environment }}

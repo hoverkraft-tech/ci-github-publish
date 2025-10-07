@@ -54,6 +54,25 @@ Key features:
 
 <!-- overview:end -->
 
+**Tips:**
+
+Trigger the workflow on `issue_comment` to deploy to a _review-app_ environment on demand with a comment (e.g. `/deploy`).
+Trigger the workflow on `workflow_call` to deploy via other workflows.
+
+```yml
+on:
+  issue_comment:
+    types: [created]
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+```
+
 <!-- usage:start -->
 
 ## Usage
@@ -243,6 +262,72 @@ jobs:
 <!-- outputs:end -->
 
 <!-- examples:start -->
+
+## Examples
+
+### Deploy to environment on demand to ArgoCD using GitHub App token
+
+- Using comment trigger (e.g. `/deploy`) on an issue or pull-request.
+- Using `workflow_call` to deploy via other workflows.
+
+```yml
+---
+name: Deploy
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  packages: write
+  pull-requests: write
+  deployments: write
+  actions: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+    secrets:
+      oci-registry-password: ${{ secrets.GITHUB_TOKEN }}
+      github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
+    with:
+      url: ${{ (inputs.environment == 'uat' && vars.UAT_URL) || (inputs.environment == 'production' && vars.PRODUCTION_URL) || vars.REVIEW_APPS_URL }}
+      tag: ${{ inputs.tag }}
+      environment: ${{ inputs.environment }}
+      github-app-id: ${{ vars.CI_BOT_APP_ID }}
+      deploy-parameters: |
+        { "repository": "${{ github.repository_owner }}/argocd-app-of-apps" }
+      images: |
+        [
+           {
+            "name": "application",
+            "context": ".",
+            "dockerfile": "./docker/application/Dockerfile",
+            "build-args": { "APP_PATH": "./application/" },
+            "target": "prod",
+            "platforms": ["linux/amd64"]
+          }
+        ]
+      chart-values: |
+        [
+          { "path": ".image", "image": "application" },
+          { "path": ".application.version", "value": "{{ tag }}" },
+          { "path": "deploy.ingress.hosts[0].host", "value": "{{ url }}" }
+        ]
+```
+
 <!-- examples:end -->
 
 <!-- contributing:start -->

@@ -119,12 +119,14 @@ jobs:
 
       - name: 📖 Generate documentation
         id: generate-documentation
+        if: steps.get-changed-manifests.outputs.changed-manifests
         uses: hoverkraft-tech/ci-dokumentor@c46a1a108957237cf485103a80b060c35c7dba33 # 0.2.2
         with:
           source: ${{ steps.get-changed-manifests.outputs.changed-manifests }}
 
       # FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the absolute path
       - id: generated-documentation
+        if: steps.generate-documentation.outputs.destination
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
@@ -137,6 +139,7 @@ jobs:
             core.setOutput('artifact-paths', artifactPaths);
 
       - id: upload-artifact
+        if: steps.generated-documentation.outputs.artifact-paths
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: changed-files
@@ -147,7 +150,7 @@ jobs:
   update-documentation:
     name: Update Documentation
     needs: [generate-documentation]
-    if: needs.generate-documentation.outputs.changed-documentations != '[]'
+    if: needs.generate-documentation.outputs.changed-documentations
     runs-on: ${{ fromJson(inputs.runs-on) }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0

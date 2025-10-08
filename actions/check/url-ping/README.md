@@ -33,7 +33,7 @@ Action to run ping check on given URL.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/check/url-ping@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+- uses: hoverkraft-tech/ci-github-publish/actions/check/url-ping@6309c4a9240c68133b73f2135bf0314d768ccea3 # 0.11.0
   with:
     # The URL to check.
     # This input is required.
@@ -47,8 +47,7 @@ Action to run ping check on given URL.
     # Default: `60`
     timeout: "60"
 
-    # Maximum number of attempts scheduled for the URL check process.
-    # Attempts are evenly spaced across the timeout budget.
+    # Total number of attempts allowed for the URL check process.
     # Default: `3`
     retries: "3"
 
@@ -67,13 +66,13 @@ Action to run ping check on given URL.
 
 ## Inputs
 
-| **Input**               | **Description**                                                                                             | **Required** | **Default** |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
-| **`url`**               | The URL to check.                                                                                           | **true**     | -           |
-| **`follow-redirect`**   | Whether to follow redirects.                                                                                | **false**    | `false`     |
-| **`timeout`**           | Timeout in seconds for the full URL check process.                                                          | **false**    | `60`        |
-| **`retries`**           | Maximum number of attempts scheduled for the process. Attempts are evenly spaced across the timeout budget. | **false**    | `3`         |
-| **`expected-statuses`** | Expected HTTP status codes. Comma separated list.                                                           | **false**    | `200`       |
+| **Input**               | **Description**                                             | **Required** | **Default** |
+| ----------------------- | ----------------------------------------------------------- | ------------ | ----------- |
+| **`url`**               | The URL to check.                                           | **true**     | -           |
+| **`follow-redirect`**   | Whether to follow redirects.                                | **false**    | `false`     |
+| **`timeout`**           | Timeout in seconds for the full URL check process.          | **false**    | `60`        |
+| **`retries`**           | Total number of attempts allowed for the URL check process. | **false**    | `3`         |
+| **`expected-statuses`** | Expected HTTP status codes. Comma separated list.           | **false**    | `200`       |
 
 <!-- inputs:end -->
 

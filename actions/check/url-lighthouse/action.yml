@@ -13,6 +13,13 @@ inputs:
     description: "The path to the performance budget file. See https://web.dev/articles/use-lighthouse-for-performance-budgets."
     required: false
     default: "./budget.json"
+outputs:
+  report-url:
+    description: "The URL to the Lighthouse report artifact."
+    value: ${{ steps.summary.outputs.report-url }}
+  report-summary:
+    description: "Summary of the Lighthouse report."
+    value: ${{ steps.summary.outputs.report-summary }}
 
 runs:
   using: composite
@@ -28,9 +35,54 @@ runs:
           const artifactName = `${{ github.run_id }}-${{ github.run_number }}-lighthouse-results-${timestamp}-${uniquid}`;
           core.setOutput("artifact-name", artifactName);
 
-    - uses: treosh/lighthouse-ci-action@fcd65974f7c4c2bf0ee9d09b84d2489183c29726 # 12.6.1
+    - id: lighthouse
+      uses: treosh/lighthouse-ci-action@fcd65974f7c4c2bf0ee9d09b84d2489183c29726 # 12.6.1
       with:
         urls: ${{ inputs.url }}
         budgetPath: ${{ inputs.budget-path }}
         uploadArtifacts: true
         artifactName: ${{ steps.prepare-variables.outputs.artifact-name }}
+
+    - id: summary
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      with:
+        script: |
+          const linksOutput = ${{ toJSON(steps.lighthouse.outputs.artifactLinks) }};
+          let links = null;
+          if (linksOutput) {
+            // Check if is valid JSON
+            try {
+              links = JSON.parse(linksOutput);
+            } catch (error) {
+              return core.setFailed(`"links" input is not a valid JSON: ${error}`);
+            }
+
+            if (!links || typeof links !== 'object') {
+              return core.setFailed(`"links" input is not a valid JSON object.`);
+            }
+            const reportUrl = Object.values(links)[0] || null;
+            core.setOutput("report-url", reportUrl);
+          }
+
+          const manifestOutput = ${{ toJSON(steps.lighthouse.outputs.manifest) }};
+          let manifest = null;
+          if (manifestOutput) {
+            // Check if is valid JSON
+            try {
+              manifest = JSON.parse(manifestOutput);
+            } catch (error) {
+              return core.setFailed(`"manifest" input is not a valid JSON: ${error}`);
+            }
+            if (!manifest || !Array.isArray(manifest)) {
+              return core.setFailed(`"manifest" input is not a valid JSON array.`);
+            }
+
+            const manifestEntry = manifest[0] || null;
+            if (!manifestEntry || typeof manifestEntry !== 'object') {
+              return core.setFailed(`"manifest" input does not contain a valid entry.`);
+            }
+
+            if (manifestEntry.summary) {
+              core.setOutput("report-summary", JSON.stringify(manifestEntry.summary));
+            }
+          }

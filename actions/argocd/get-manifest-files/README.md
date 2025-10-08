@@ -36,7 +36,7 @@ Determine all the manifest files needed to deploy the application using ArgoCD f
 - uses: hoverkraft-tech/ci-github-publish/actions/argocd/get-manifest-files@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
   with:
     # Environment name (e.g. production, review-apps:pr-1234).
-    # This is used to determine the application directory and manifest directory.
+    # This is used to determine the application directory and extra manifest directory.
     # The environment name can be suffixed with a colon and a suffix (e.g. review-apps:pr-1234).
     #
     # This input is required.
@@ -60,7 +60,7 @@ Determine all the manifest files needed to deploy the application using ArgoCD f
 | **Input**         | **Description**                                                                            | **Required** | **Default** |
 | ----------------- | ------------------------------------------------------------------------------------------ | ------------ | ----------- |
 | **`environment`** | Environment name (e.g. production, review-apps:pr-1234).                                   | **true**     | -           |
-|                   | This is used to determine the application directory and manifest directory.                |              |             |
+|                   | This is used to determine the application directory and extra manifest directory.          |              |             |
 |                   | The environment name can be suffixed with a colon and a suffix (e.g. review-apps:pr-1234). |              |             |
 | **`repository`**  | repository name (e.g. my-repository)                                                       | **true**     | -           |
 

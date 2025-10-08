@@ -68,7 +68,7 @@ permissions:
   id-token: write
 jobs:
   deploy-finish:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@6309c4a9240c68133b73f2135bf0314d768ccea3 # 0.11.0
     with:
       # JSON array of runner(s) to use.
       # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.

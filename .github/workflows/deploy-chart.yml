@@ -120,6 +120,11 @@ on:
       oci-registry-password:
         description: "OCI registry password."
         required: true
+      build-secrets:
+        description: |
+          List of secrets to expose to the build.
+          See https://docs.docker.com/build/ci/github-actions/secrets/.
+        required: false
       github-token:
         description: |
           GitHub token for deploying.
@@ -229,6 +234,7 @@ jobs:
       images: ${{ needs.prepare-deploy.outputs.images }}
     secrets:
       oci-registry-password: ${{ secrets.oci-registry-password }}
+      build-secrets: ${{ secrets.build-secrets }}
 
   release-chart:
     name: Release chart

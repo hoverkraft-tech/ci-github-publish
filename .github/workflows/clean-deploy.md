@@ -31,6 +31,7 @@ Reusable workflow to clean some deployment.
 
 Deletes one or more deployments and runs a follow-up "clean" action
 (for example a repository-dispatch) to perform any repository-specific cleanup required after deployment removal.
+The workflow can be triggered on-demand via a given comment trigger (e.g. `/undeploy`).
 
 Behavior / outputs:
 
@@ -108,20 +109,13 @@ jobs:
       # }
       # ```
       clean-deploy-parameters: ""
+
+      # Comment trigger to start the workflow.
+      # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment.
+      #
+      # Default: `/undeploy`
+      trigger-on-comment: /undeploy
 ````
-
-**Tips:**
-
-Trigger the workflow on `pull_request_target` to clean a _review-app_ deployment on closed pull-requests.
-Trigger the workflow on `issue_comment` to clean a deployment on demand with a comment (e.g. `/undeploy`).
-
-```yml
-on:
-  pull_request_target:
-    types: [closed]
-  issue_comment:
-    types: [created]
-```
 
 <!-- usage:end -->
 
@@ -144,6 +138,8 @@ on:
 |                               | JSON object, depending on the clean-deploy-type.                                                                    |              |            |                       |
 |                               | For example, for `repository-dispatch`:                                                                             |              |            |                       |
 |                               | <!-- textlint-disable --><pre lang="json">{&#13; "repository": "my-org/my-repo"&#13;}</pre><!-- textlint-enable --> |              |            |                       |
+| **`trigger-on-comment`**      | Comment trigger to start the workflow.                                                                              | **false**    | **string** | `/undeploy`           |
+|                               | See <https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment>.               |              |            |                       |
 
 <!-- inputs:end -->
 

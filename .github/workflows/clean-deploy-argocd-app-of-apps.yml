@@ -108,9 +108,9 @@ jobs:
               hasChanges = true;
             }
 
-            const namespaceFile = ${{ toJSON(steps.get-manifest-files.outputs.namespace-file) }};
-            if (fs.existsSync(namespaceFile)) {
-              fs.unlinkSync(namespaceFile);
+            const manifestFile = ${{ toJSON(steps.get-manifest-files.outputs.manifest-file) }};
+            if (fs.existsSync(manifestFile)) {
+              fs.unlinkSync(manifestFile);
               hasChanges = true;
             }
 

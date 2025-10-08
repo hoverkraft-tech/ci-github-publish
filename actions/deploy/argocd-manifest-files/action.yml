@@ -67,12 +67,13 @@ description: |
                 version: 1.2.3
   ```
 
-  2. The namespace manifest file (input `namespace-file`) is updated with:
+  2. The extra manifest file (input `manifest-file`) is updated with:
 
   - Metadata:
-    - Name: set to the target namespace
+    - Name: set to the target namespace (if the `metadata.name` field exists)
     - Annotations:
-      - "app.kubernetes.io/instance": set to the target namespace
+      - "app.kubernetes.io/instance": set to the target namespace (if the annotation exists)
+    - Namespace: set to the target namespace (if the `metadata.namespace` field exists)
 
   Example:
 
@@ -115,8 +116,8 @@ inputs:
   application-file:
     description: "Path to the application manifest file"
     required: true
-  namespace-file:
-    description: "Path to the namespace manifest file"
+  manifest-file:
+    description: "Path to the extra manifest file"
     required: true
 
 runs:
@@ -190,11 +191,12 @@ runs:
             )
           ' ${{ inputs.application-file }}
 
-    - id: update-namespace-file
+    - id: update-manifest-file
       uses: mikefarah/yq@6251e95af8df3505def48c71f3119836701495d6 # v4.47.2
       with:
         cmd: |
           yq -i '
-            .metadata.name = "${{ inputs.namespace }}" |
-            .metadata.annotations["app.kubernetes.io/instance"] = "${{ inputs.namespace }}"
-          ' ${{ inputs.namespace-file }}
+            (select(has("metadata") and .metadata | has("name")) | .metadata.name) = "${{ inputs.namespace }}" |
+            (select(has("metadata") and .metadata | has("namespace")) | .metadata.namespace) = "${{ inputs.namespace }}" |
+            (select(has("metadata") and .metadata | has("annotations") and .metadata.annotations | has("app.kubernetes.io/instance")) | .metadata.annotations["app.kubernetes.io/instance"]) = "${{ inputs.namespace }}"
+          ' ${{ inputs.manifest-file }}

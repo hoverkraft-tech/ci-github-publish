@@ -70,10 +70,10 @@ Determine all the manifest files needed to deploy the application using ArgoCD f
 
 ## Outputs
 
-| **Output**             | **Description**                    |
-| ---------------------- | ---------------------------------- |
-| **`application-file`** | The file to be used for deployment |
-| **`namespace-file`**   | The file to be used for namespace  |
+| **Output**             | **Description**                        |
+| ---------------------- | -------------------------------------- |
+| **`application-file`** | The file to be used for deployment     |
+| **`manifest-file`**    | The file to be used for extra manifest |
 
 <!-- outputs:end -->
 

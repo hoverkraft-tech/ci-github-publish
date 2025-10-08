@@ -31,7 +31,7 @@
 #
 # - Validates and extracts deployment parameters from the dispatch payload.
 # - Parses Helm chart URI for chart name, repository, and version.
-# - Supports templated manifest files for both Application and Namespace resources.
+# - Supports templated manifest files for both Application and extra manifest resources.
 # - Updates manifest files with deployment-specific values and chart configuration.
 # - Creates and merges a pull request for the deployment manifest changes.
 ---
@@ -191,9 +191,9 @@ jobs:
               return core.setFailed(`Application file is not defined`);
             }
 
-            const namespaceFile = ${{ toJSON(steps.get-manifest-files.outputs.namespace-file) }};
-            if (!namespaceFile) {
-              return core.setFailed(`Namespace file is not defined`);
+            const manifestFile = ${{ toJSON(steps.get-manifest-files.outputs.manifest-file) }};
+            if (!manifestFile) {
+              return core.setFailed(`Manifest file is not defined`);
             }
 
             const applicationTemplateFile = `${path.dirname(applicationFile)}/${templateFilename}`;
@@ -204,19 +204,19 @@ jobs:
 
             await io.cp(applicationTemplateFile, applicationFile, { force: true });
 
-            const namespaceTemplateFile = `${path.dirname(namespaceFile)}/${templateFilename}`;
-            if (!fs.existsSync(namespaceTemplateFile)) {
-              return core.setFailed(`No template file found in "${namespaceTemplateFile}"`);
+            const manifestTemplateFile = `${path.dirname(manifestFile)}/${templateFilename}`;
+            if (!fs.existsSync(manifestTemplateFile)) {
+              return core.setFailed(`No template file found in "${manifestTemplateFile}"`);
             }
 
-            await io.cp(namespaceTemplateFile, namespaceFile, { force: true });
+            await io.cp(manifestTemplateFile, manifestFile, { force: true });
 
       - uses: ./self-workflow/actions/deploy/argocd-manifest-files
         with:
           deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
           application-repository: ${{ steps.check-client-payload.outputs.repository }}
           application-file: ${{ steps.get-manifest-files.outputs.application-file }}
-          namespace-file: ${{ steps.get-manifest-files.outputs.namespace-file }}
+          manifest-file: ${{ steps.get-manifest-files.outputs.manifest-file }}
           namespace: ${{ steps.slugify-namespace.outputs.result }}
           chart-name: ${{ steps.chart-variables.outputs.name }}
           chart-repository: ${{ steps.chart-variables.outputs.repository }}

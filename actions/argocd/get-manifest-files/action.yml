@@ -9,7 +9,7 @@ inputs:
   environment:
     description: |
       Environment name (e.g. production, review-apps:pr-1234).
-      This is used to determine the application directory and manifest directory.
+      This is used to determine the application directory and extra manifest directory.
       The environment name can be suffixed with a colon and a suffix (e.g. review-apps:pr-1234).
     required: true
   repository:
@@ -20,9 +20,9 @@ outputs:
   application-file:
     description: "The file to be used for deployment"
     value: ${{ steps.get-files.outputs.application-file }}
-  namespace-file:
-    description: "The file to be used for namespace"
-    value: ${{ steps.get-files.outputs.namespace-file }}
+  manifest-file:
+    description: "The file to be used for extra manifest"
+    value: ${{ steps.get-files.outputs.manifest-file }}
 
 runs:
   using: "composite"
@@ -104,8 +104,8 @@ runs:
             const applicationFile = `${applicationDir}/${environmentSuffix}.yml`;
             core.setOutput("application-file", path.relative(${{ toJSON(github.workspace) }}, applicationFile));
 
-            const namespaceFile = `${manifestDir}/${environmentSuffix}.yml`;
-            core.setOutput("namespace-file", path.relative(${{ toJSON(github.workspace) }}, namespaceFile));
+            const manifestFile = `${manifestDir}/${environmentSuffix}.yml`;
+            core.setOutput("manifest-file", path.relative(${{ toJSON(github.workspace) }}, manifestFile));
 
             return;
           }
@@ -116,8 +116,8 @@ runs:
           }
           core.setOutput("application-file", path.relative(${{ toJSON(github.workspace) }}, applicationFile));
 
-          const namespaceFile = `${manifestDir}/${repository}.yml`;
-          if(!fs.existsSync(namespaceFile)) {
-            return core.setFailed(`No manifest file found in "${namespaceFile}"`);
+          const manifestFile = `${manifestDir}/${repository}.yml`;
+          if(!fs.existsSync(manifestFile)) {
+            return core.setFailed(`No manifest file found in "${manifestFile}"`);
           }
-          core.setOutput("namespace-file", path.relative(${{ toJSON(github.workspace) }}, namespaceFile));
+          core.setOutput("manifest-file", path.relative(${{ toJSON(github.workspace) }}, manifestFile));

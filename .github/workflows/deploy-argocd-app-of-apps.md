@@ -60,7 +60,7 @@ Key Features:
 
 - Validates and extracts deployment parameters from the dispatch payload.
 - Parses Helm chart URI for chart name, repository, and version.
-- Supports templated manifest files for both Application and Namespace resources.
+- Supports templated manifest files for both Application and extra manifest resources.
 - Updates manifest files with deployment-specific values and chart configuration.
 - Creates and merges a pull request for the deployment manifest changes.
 

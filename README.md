@@ -85,29 +85,29 @@ _Actions for managing workflows._
 
 ## Cleaning deploy
 
-### - [Clean deploy argocd app of apps](.github/workflows/clean-deploy-argocd-app-of-apps.yml)
+### - [Clean deploy argocd app of apps](.github/workflows/clean-deploy-argocd-app-of-apps.md)
 
-### - [Clean deploy](.github/workflows/clean-deploy.yml)
+### - [Clean deploy](.github/workflows/clean-deploy.md)
 
 ### Performs deploy
 
-### - [Deploy argocd app of apps](.github/workflows/deploy-argocd-app-of-apps.yml)
+### - [Deploy argocd app of apps](.github/workflows/deploy-argocd-app-of-apps.md)
 
-### - [Deploy chart](.github/workflows/deploy-chart.yml)
+### - [Deploy chart](.github/workflows/deploy-chart.md)
 
-### - [Deploy finish](.github/workflows/deploy-finish.yml)
+### - [Deploy finish](.github/workflows/deploy-finish.md)
 
-### - [Deploy start](.github/workflows/deploy-start.yml)
+### - [Deploy start](.github/workflows/deploy-start.md)
 
-### - [Finish deploy argocd app of apps](.github/workflows/finish-deploy-argocd-app-of-apps.yml)
+### - [Finish deploy argocd app of apps](.github/workflows/finish-deploy-argocd-app-of-apps.md)
 
 ### Releases
 
 _Reusable workflows for managing release process._
 
-### - [Prepare release](.github/workflows/prepare-release.yml)
+### - [Prepare release](.github/workflows/prepare-release.md)
 
-### - [Release actions](.github/workflows/release-actions.yml)
+### - [Release actions](.github/workflows/release-actions.md)
 
 ## Contributing
 

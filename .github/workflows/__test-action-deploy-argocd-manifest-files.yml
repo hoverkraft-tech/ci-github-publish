@@ -15,16 +15,16 @@ jobs:
       TEST_APPLICATION_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/test-app/test-app.yml
       TEST_EXPECTED_APPLICATION_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/test-app/expected.yml
 
-      TEST_NAMESPACE_TEMPLATE_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/test-app/template.yml.tpl
-      TEST_NAMESPACE_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/test-app/test-app.yml
-      TEST_EXPECTED_NAMESPACE_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/test-app/expected.yml
+      TEST_MANIFEST_TEMPLATE_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/test-app/template.yml.tpl
+      TEST_MANIFEST_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/test-app/test-app.yml
+      TEST_EXPECTED_MANIFEST_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/test-app/expected.yml
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Arrange - Create test manifest files
         run: |
           cp "$TEST_APPLICATION_TEMPLATE_FILE" "$TEST_APPLICATION_FILE"
-          cp "$TEST_NAMESPACE_TEMPLATE_FILE" "$TEST_NAMESPACE_FILE"
+          cp "$TEST_MANIFEST_TEMPLATE_FILE" "$TEST_MANIFEST_FILE"
 
       - name: Act - Deploy Argocd Application Manifest
         id: argocd-application-manifest
@@ -33,7 +33,7 @@ jobs:
           deployment-id: 999
           application-file: $TEST_APPLICATION_FILE
           application-repository: test-app
-          namespace-file: $TEST_NAMESPACE_FILE
+          manifest-file: $TEST_MANIFEST_FILE
           namespace: test-app-pr-100
           chart-name: test-app
           chart-repository: ghcr.io/my-org/test-app/charts
@@ -50,13 +50,13 @@ jobs:
             echo "Check application file"
             yq "$TEST_APPLICATION_FILE" >/dev/null
 
-            echo "Check namespace file"
-            yq "$TEST_NAMESPACE_FILE" >/dev/null
+            echo "Check extra manifest file"
+            yq "$TEST_MANIFEST_FILE" >/dev/null
 
       - name: Assert - Check generated files are as expected
         run: |
           echo "Check application file"
           diff -u "$TEST_EXPECTED_APPLICATION_FILE" "$TEST_APPLICATION_FILE"
 
-          echo "Check namespace file"
-          diff -u "$TEST_EXPECTED_NAMESPACE_FILE" "$TEST_NAMESPACE_FILE"
+          echo "Check manifest file"
+          diff -u "$TEST_EXPECTED_MANIFEST_FILE" "$TEST_MANIFEST_FILE"

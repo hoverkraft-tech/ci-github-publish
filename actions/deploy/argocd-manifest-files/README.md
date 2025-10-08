@@ -87,7 +87,7 @@ spec:
               version: 1.2.3
 ```
 
-2. The namespace manifest file (input `namespace-file`) is updated with:
+2. The namespace manifest file (input `manifest-file`) is updated with:
 
 - Metadata:
   - Name: set to the target namespace
@@ -151,7 +151,7 @@ metadata:
 
     # Path to the namespace manifest file
     # This input is required.
-    namespace-file: ""
+    manifest-file: ""
 ````
 
 <!-- usage:end -->
@@ -176,7 +176,7 @@ metadata:
 |                              | <!-- textlint-disable --><pre lang="json">[&#13; { "path": "application.appUri", "value": "https://my-app-review-app-1234.my-org.com" }&#13;]</pre><!-- textlint-enable --> |              |             |
 | **`application-repository`** | Repository of the application                                                                                                                                               | **true**     | -           |
 | **`application-file`**       | Path to the application manifest file                                                                                                                                       | **true**     | -           |
-| **`namespace-file`**         | Path to the namespace manifest file                                                                                                                                         | **true**     | -           |
+| **`manifest-file`**          | Path to the namespace manifest file                                                                                                                                         | **true**     | -           |
 
 <!-- inputs:end -->
 

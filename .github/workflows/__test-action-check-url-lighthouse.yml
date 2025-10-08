@@ -19,3 +19,20 @@ jobs:
         uses: ./actions/check/url-lighthouse
         with:
           url: "https://hoverkraft-tech.github.io/ci-github-publish/"
+
+      - name: Assert - Check report summary output
+        env:
+          REPORT_SUMMARY: ${{ steps.check-url-lighthouse.outputs.report-summary }}
+        run: |
+          if [ -z "$REPORT_SUMMARY" ]; then
+            echo "The report summary is empty."
+            exit 1
+          fi
+
+          echo "Report Summary:"
+          echo -e "$REPORT_SUMMARY"
+
+          if [[ "$REPORT_SUMMARY" != *"performance"* ]]; then
+            echo "The report summary does not contain 'performance'."
+            exit 1
+          fi

@@ -73,113 +73,30 @@ runs:
 
     - id: get-deployment-result
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        STEP_DEPLOYMENT_ENVIRONMENT: ${{ steps.get-deployment.outputs.environment }}
+        INPUT_URL: ${{ inputs.url }}
+        EVENT_NAME: ${{ github.event_name }}
+        STEP_HAS_FAILED: ${{ steps.get-workflow-failure.outputs.has-failed }}
+        STEP_FAILED_JOBS: ${{ steps.get-workflow-failure.outputs.failed-jobs }}
+        INPUT_EXTRA: ${{ inputs.extra }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const environment = `${{ steps.get-deployment.outputs.environment || inputs.environment }}`.trim();
-
-          const url = `${{ inputs.url }}` ?? null;
-          core.setOutput("url", url);
-
-          const isIssueComment = `${{ github.event_name }}` === "issue_comment";
-          if (isIssueComment) {
-            core.setOutput("is-issue-comment", isIssueComment);
-          }
-
-          const { data: { html_url } } = await github.rest.actions.getWorkflowRun({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            run_id: context.runId,
+          const run = require('./self-deploy-report-action/deploy/report/scripts/get-deployment-result.js');
+          await run({
+            github,
+            context,
+            core,
+            environment: process.env.INPUT_ENVIRONMENT,
+            deploymentEnvironment: process.env.STEP_DEPLOYMENT_ENVIRONMENT,
+            url: process.env.INPUT_URL,
+            eventName: process.env.EVENT_NAME,
+            hasFailed: process.env.STEP_HAS_FAILED,
+            failedJobs: process.env.STEP_FAILED_JOBS,
+            extra: process.env.INPUT_EXTRA,
           });
-
-          const hasFailed = ${{ toJSON(steps.get-workflow-failure.outputs.has-failed) }} === 'true';
-
-          let state, title, message, reaction;
-
-          if (hasFailed) {
-            state = "failure";
-            title = `Failed to deploy${environment?` to <strong>${environment}</strong>`:``} :confused: !`;
-            message = `The deployment has failed. Please check the <a href="${html_url}">logs</a> and try again.`;
-
-            const failedJobsOutput = ${{ toJSON(steps.get-workflow-failure.outputs.failed-jobs) }};
-            if (failedJobsOutput) {
-              // Check if is valid JSON
-              let failedJobs = null;
-              try {
-                failedJobs = JSON.parse(failedJobsOutput);
-              } catch (error) {
-                core.setFailed(`"failed-jobs" output is not a valid JSON: ${error}`);
-              }
-
-              if (!Array.isArray(failedJobs)) {
-                core.setFailed(`Output "failed-jobs" expected to be a JSON array.`);
-              }
-
-              message += "\n\n\n### The following jobs have failed:\n";
-
-              for (const { name, conclusion, html_url } of failedJobs) {
-                message += `- **${name}**: [${conclusion}](${html_url})\n`;
-              }
-            }
-
-            reaction = "confused";
-          } else {
-            state = "success";
-            title = `Successful deployment${environment?` to <strong>${environment}</strong>`:``} :sparkles: !`;
-
-            message = "";
-            if (url) {
-              message += `Here it is: <a href="${url}">${url}</a>\n\n\`\`\`\n${url}\n\`\`\`\n\n`;
-            }
-
-            if (isIssueComment) {
-              message += `Once the Pull Request gets merged or closed, the review app will automatically be deleted.\n\n`;
-            }
-
-            reaction = "rocket";
-          }
-
-          core.setOutput("state", state);
-          core.setOutput("title", title);
-          core.setOutput("message", message);
-          core.setOutput("reaction", reaction);
-
-          const summaryList = [
-              `Logs: <a href="${html_url}">${context.workflow}</a>`,
-          ];
-
-          if (environment) {
-            summaryList.unshift(`Environment: ${environment}`);
-          }
-
-          const extraInput = ${{ toJSON(inputs.extra) }};
-          if (extraInput) {
-            // Check if is valid JSON
-            let extra = null;
-            try {
-              extra = JSON.parse(extraInput);
-            } catch (error) {
-              core.setFailed(`"extra" input is not a valid JSON: ${error}`);
-            }
-
-            if (extra && typeof extra === 'object') {
-              for (const [key, value] of Object.entries(extra)) {
-                const itemName = key.charAt(0).toUpperCase() + key.slice(1);
-                summaryList.push(`${itemName}: ${value}`);
-              }
-            } else {
-              core.warning(`"extra" input is not a valid JSON object.`);
-            }
-          }
-
-          core.summary
-            .addHeading(`Deployment summary${environment?` - ${environment}`:``}`, 2)
-            .addRaw(title, true)
-            .addBreak().addBreak()
-            .addRaw(message, false)
-            .addSeparator()
-            .addList(summaryList)
-            .write();
 
     - uses: ./self-deploy-report-action/deployment/update
       if: inputs.deployment-id && inputs.repository

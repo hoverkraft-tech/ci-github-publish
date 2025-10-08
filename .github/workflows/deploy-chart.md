@@ -54,7 +54,7 @@ Key features:
 
 <!-- overview:end -->
 
-**Tips:**
+**ProTip:**
 
 Trigger the workflow on `issue_comment` to deploy to a _review-app_ environment on demand with a comment (e.g. `/deploy`).
 Trigger the workflow on `workflow_call` to deploy via other workflows.

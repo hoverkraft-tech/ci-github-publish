@@ -115,7 +115,7 @@ jobs:
 
 <!-- usage:end -->
 
-**Tips:** Recommanded trigger event is `repository_dispatch`.
+**ProTip:** Recommanded trigger event is `repository_dispatch`.
 
 ```yaml
 name: "Deploy ArgoCD App of Apps"

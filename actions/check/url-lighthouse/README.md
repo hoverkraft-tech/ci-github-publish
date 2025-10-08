@@ -62,6 +62,14 @@ Action to run Lighthouse audits on given URL.
 <!-- inputs:end -->
 
 <!-- outputs:start -->
+
+## Outputs
+
+| **Output**           | **Description**                            |
+| -------------------- | ------------------------------------------ |
+| **`report-url`**     | The URL to the Lighthouse report artifact. |
+| **`report-summary`** | Summary of the Lighthouse report.          |
+
 <!-- outputs:end -->
 
 <!-- secrets:start -->

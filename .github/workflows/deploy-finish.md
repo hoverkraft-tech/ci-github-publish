@@ -35,7 +35,10 @@ What this workflow does:
   - URL ping check. See [Ping check](../../actions/check/url-ping/README.md).
   - Lighthouse audit. See [Lighthouse check](../../actions/check/url-lighthouse/README.md).
 - Update the GitHub deployment status (success or failure).
-- Publish a human-readable deployment summary using the deploy/report action. See [report](../../actions/deploy/report/README.md).
+- Publish a human-readable deployment summary using the deploy/report action.
+  See [report](../../actions/deploy/report/README.md).
+  - Lighthouse report URL if available.
+  - Extra information if provided.
 
 ### Permissions
 

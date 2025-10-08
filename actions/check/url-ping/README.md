@@ -43,11 +43,12 @@ Action to run ping check on given URL.
     # Default: `false`
     follow-redirect: "false"
 
-    # Timeout in seconds for the URL check.
+    # Timeout in seconds for the full URL check process.
     # Default: `60`
     timeout: "60"
 
-    # Number of retries if the URL check fails.
+    # Maximum number of attempts scheduled for the URL check process.
+    # Attempts are evenly spaced across the timeout budget.
     # Default: `3`
     retries: "3"
 
@@ -66,13 +67,13 @@ Action to run ping check on given URL.
 
 ## Inputs
 
-| **Input**               | **Description**                                   | **Required** | **Default** |
-| ----------------------- | ------------------------------------------------- | ------------ | ----------- |
-| **`url`**               | The URL to check.                                 | **true**     | -           |
-| **`follow-redirect`**   | Whether to follow redirects.                      | **false**    | `false`     |
-| **`timeout`**           | Timeout in seconds for the URL check.             | **false**    | `60`        |
-| **`retries`**           | Number of retries if the URL check fails.         | **false**    | `3`         |
-| **`expected-statuses`** | Expected HTTP status codes. Comma separated list. | **false**    | `200`       |
+| **Input**               | **Description**                                                                                             | **Required** | **Default** |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
+| **`url`**               | The URL to check.                                                                                           | **true**     | -           |
+| **`follow-redirect`**   | Whether to follow redirects.                                                                                | **false**    | `false`     |
+| **`timeout`**           | Timeout in seconds for the full URL check process.                                                          | **false**    | `60`        |
+| **`retries`**           | Maximum number of attempts scheduled for the process. Attempts are evenly spaced across the timeout budget. | **false**    | `3`         |
+| **`expected-statuses`** | Expected HTTP status codes. Comma separated list.                                                           | **false**    | `200`       |
 
 <!-- inputs:end -->
 
@@ -80,9 +81,10 @@ Action to run ping check on given URL.
 
 ## Outputs
 
-| **Output**        | **Description**                                 |
-| ----------------- | ----------------------------------------------- |
-| **`status-code`** | The HTTP status code returned by the URL check. |
+| **Output**          | **Description**                                       |
+| ------------------- | ----------------------------------------------------- |
+| **`status-code`**   | The HTTP status code returned by the URL check.       |
+| **`attempt-count`** | Total number of attempts performed before completion. |
 
 <!-- outputs:end -->
 

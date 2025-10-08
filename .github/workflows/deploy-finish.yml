@@ -170,7 +170,7 @@ jobs:
             const lighthouseReportSummary = ${{ toJson(steps.lighthouse.outputs.report-summary) }};
             if (lighthouseReportSummary) {
               extra = extra || {};
-              extra["Lighthouse report"] = lighthouseReportSummary;
+              extra["Lighthouse report"] = JSON.parse(lighthouseReportSummary);
             }
 
             return core.setOutput("extra", JSON.stringify(extra));

@@ -14,11 +14,11 @@ inputs:
     required: false
     default: "false"
   timeout:
-    description: "Timeout in seconds for the URL check."
+    description: "Timeout in seconds for the full URL check process."
     required: false
     default: "60"
   retries:
-    description: "Number of retries if the URL check fails."
+    description: "Total number of attempts allowed for the URL check process."
     required: false
     default: "3"
   expected-statuses:
@@ -30,6 +30,9 @@ outputs:
   status-code:
     description: "The HTTP status code returned by the URL check."
     value: ${{ steps.check-url.outputs.status-code }}
+  attempt-count:
+    description: "Total number of attempts performed before completion."
+    value: ${{ steps.check-url.outputs.attempt-count }}
 
 runs:
   using: composite
@@ -38,92 +41,16 @@ runs:
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
         script: |
-          const urlInput = ${{ toJson(inputs.url ) }};
-          if (!urlInput) {
-            return core.setFailed("URL input is required.");
-          }
+          const path = require('path');
+          const { run } = require(path.join(process.env.GITHUB_ACTION_PATH, 'index.js'));
 
-          const url = new URL(urlInput.trim());
-          if (!url.protocol || !url.host) {
-            return core.setFailed("Invalid URL input. Please provide a valid URL.");
-          }
-
-          const followRedirectInput = ${{ toJson(inputs['follow-redirect']) }};
-          const followRedirect = followRedirectInput ? followRedirectInput.toLowerCase() === 'true' : false;
-
-          const timeoutInput = ${{ toJson(inputs.timeout) }};
-          const timeout = parseInt(timeoutInput, 10);
-          if (isNaN(timeout) || timeout <= 0) {
-            return core.setFailed("Invalid timeout input. Please provide a positive integer.");
-          }
-          const timeoutMs = timeout * 1000;
-
-          const retriesInput = ${{ toJson(inputs.retries) }};
-          const retries = parseInt(retriesInput, 10);
-          if (isNaN(retries) || retries < 0) {
-            return core.setFailed("Invalid retries input. Please provide a non-negative integer.");
-          }
-
-          const expectedStatusesInput = ${{ toJson(inputs.expected-statuses) }};
-          if (!expectedStatusesInput) {
-            return core.setFailed("Expected statuses input is required.");
-          }
-          const expectedStatuses = expectedStatusesInput.split(",").map(s => s.trim());
-          if(!expectedStatuses.length) {
-            return core.setFailed("Expected statuses input cannot be empty.");
-          }
-
-          const makeRequest = async () => {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-            try {
-              const res = await fetch(url, {
-                method: 'HEAD',
-                redirect: followRedirect ? 'follow' : 'manual',
-                signal: controller.signal,
-              });
-              return res.status;
-            } catch (err) {
-              if (err.name === 'AbortError') {
-                throw new Error(`Request to ${url} timed out after ${timeout} seconds`);
-              }
-              throw err;
-            } finally {
-              clearTimeout(timer);
-            }
-          };
-
-          const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-          // Retry with exponential backoff
-          let attempts = 0;
-          let lastError = null;
-
-          while (attempts < retries) {
-            try {
-              attempts++;
-              core.info(`Attempt ${attempts}/${retries} - Checking URL: ${url}`);
-              
-              const statusCode = await makeRequest();
-              core.setOutput("status-code", statusCode);
-
-              if (!expectedStatuses.includes(statusCode.toString())) {
-                throw new Error(`Unexpected status code: ${statusCode}. Expected one of: ${expectedStatuses.join(", ")}`);
-              }
-
-              return core.info(`URL check succeeded with status code: ${statusCode} after ${attempts} attempt(s).`);
-            } catch (error) {
-              core.warning(`Attempt ${attempts}/${retries} failed: ${error.message}`);
-              lastError = error;
-              
-              // Apply exponential backoff delay before next retry (if any)
-              if (attempts < retries) {
-                const backoffDelay = Math.min(1000 * Math.pow(2, attempts - 1), 30000); // Start at 1s, cap at 30s
-                core.info(`Retrying in ${backoffDelay}ms (exponential backoff)...`);
-                await sleep(backoffDelay);
-              }
-            }
-          }
-
-          return core.setFailed(lastError || `URL check failed after ${retries} attempts for unknown reasons.`);
+          await run({
+            core,
+            inputs: {
+              url: ${{ toJson(inputs.url ) }},
+              followRedirect: ${{ toJson(inputs['follow-redirect']) }},
+              timeout: ${{ toJson(inputs.timeout) }},
+              retries: ${{ toJson(inputs.retries) }},
+              expectedStatuses: ${{ toJson(inputs['expected-statuses']) }},
+            },
+          });

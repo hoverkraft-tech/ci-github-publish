@@ -99,6 +99,10 @@ jobs:
       # This input is required.
       oci-registry-password: ""
 
+      # List of secrets to expose to the build.
+      # See https://docs.docker.com/build/ci/github-actions/secrets/.
+      build-secrets: ""
+
       # GitHub token for deploying.
       # Permissions:
       # - contents: write
@@ -250,6 +254,8 @@ jobs:
 | **Secret**                  | **Description**                                                           | **Required** |
 | --------------------------- | ------------------------------------------------------------------------- | ------------ |
 | **`oci-registry-password`** | OCI registry password.                                                    | **true**     |
+| **`build-secrets`**         | List of secrets to expose to the build.                                   | **false**    |
+|                             | See <https://docs.docker.com/build/ci/github-actions/secrets/>.           |              |
 | **`github-token`**          | GitHub token for deploying.                                               | **false**    |
 |                             | Permissions:                                                              |              |
 |                             | - contents: write                                                         |              |
@@ -268,6 +274,7 @@ jobs:
 ### Deploy to environment on demand to ArgoCD using GitHub App token
 
 - Using comment trigger (e.g. `/deploy`) on an issue or pull-request.
+
 - Using `workflow_call` to deploy via other workflows.
 
 ```yml

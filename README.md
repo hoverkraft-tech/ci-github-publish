@@ -111,7 +111,7 @@ _Reusable workflows for managing release process._
 
 ## Contributing
 
-👍 If you wish to contribute to this project, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file, PRs are Welcome !
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
 
 ### Action Structure Pattern
 
@@ -220,5 +220,10 @@ tests/                               # Expected vs actual comparisons
 
 ## License
 
-📝 Copyright © 2023 [Hoverkraft <contact@hoverkraft.cloud>](https://hoverkraft.cloud).<br />
-This project is [MIT](LICENSE) licensed.
+This project is licensed under the MIT License.
+
+SPDX-License-Identifier: MIT
+
+Copyright © 2025 hoverkraft-tech
+
+For more details, see the [license](http://choosealicense.com/licenses/mit/).

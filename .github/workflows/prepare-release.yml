@@ -129,7 +129,7 @@ jobs:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@1c379f7f6e0fc850fe5a7111f74d54e159b4dcd2 # 0.26.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@b7dd413209df265bef8d7eb0efb117eaabc684c4 # 0.27.0
         if: steps.get-config.outputs.config
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}

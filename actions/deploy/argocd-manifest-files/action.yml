@@ -172,7 +172,7 @@ runs:
           core.setOutput('cmd', yqUpdates);
 
     - id: update-application-file
-      uses: mikefarah/yq@6251e95af8df3505def48c71f3119836701495d6 # v4.47.2
+      uses: mikefarah/yq@0ecdce24e83f0fa127940334be98c86b07b0c488 # v4.48.1
       with:
         cmd: |
           yq -i '
@@ -192,7 +192,7 @@ runs:
           ' ${{ inputs.application-file }}
 
     - id: update-manifest-file
-      uses: mikefarah/yq@6251e95af8df3505def48c71f3119836701495d6 # v4.47.2
+      uses: mikefarah/yq@0ecdce24e83f0fa127940334be98c86b07b0c488 # v4.48.1
       with:
         cmd: |
           yq -i '

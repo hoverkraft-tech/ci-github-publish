@@ -62,7 +62,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/report@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/report@42d50a3461a177557ca3f83b1d927d7c0783c894 # 0.11.2
   with:
     # The repository where the deployment was made
     # Default: `${{ github.event.repository.name }}`

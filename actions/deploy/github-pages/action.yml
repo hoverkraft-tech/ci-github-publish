@@ -12,7 +12,9 @@ inputs:
       Can be absolute or relative $GITHUB_WORKSPACE.
     required: false
   build-artifact-name:
-    description: 'The name of the "build" artifact to download.'
+    description: |
+      The name of the "build" artifact to download.
+      If not set, the action will use the local workspace files.
     required: false
     default: ""
   budget-path:

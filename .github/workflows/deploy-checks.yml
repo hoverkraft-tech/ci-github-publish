@@ -1,0 +1,188 @@
+# Reusable workflow that performs deployment checks.
+# It runs quick health and performance checks.
+#
+# What this workflow does:
+#   - URL ping check. See [Ping check](../../actions/check/url-ping/README.md).
+#   - Lighthouse audit. See [Lighthouse check](../../actions/check/url-lighthouse/README.md).
+
+---
+name: Deploy - Checks
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          JSON array of runner(s) to use.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      url:
+        description: "The URL to check."
+        type: string
+        required: true
+      budget-path:
+        description: |
+          Path to the budget file to use for the Lighthouse check.
+          See [`url-lighthouse`](../../actions/check/url-lighthouse/README.md).
+        type: string
+        required: false
+        default: "./budget.json"
+      print-summary:
+        description: "Whether to print a summary of the checks."
+        type: boolean
+        required: false
+        default: true
+    outputs:
+      summary:
+        description: |
+          Summary of the checks.
+          This will include the results of the URL ping and Lighthouse checks.
+          Example:
+
+          ```json
+          {
+            "ping": {
+              "statusCode": 200,
+              "attemptCount": 3
+            },
+            "lighthouse": {
+              "reportUrl": "https://example.com/lighthouse-report.html",
+              "reportSummary": {
+                "performance": 0.9,
+                "accessibility": 0.95
+              }
+            }
+          }
+          ```
+        value: ${{ jobs.deploy-checks.outputs.summary }}
+
+permissions:
+  contents: read
+  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+  id-token: write
+
+jobs:
+  deploy-checks:
+    name: Deploy checks
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    outputs:
+      summary: ${{ steps.generate-summary.outputs.summary }}
+    steps:
+      # jscpd:ignore-start
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
+          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
+      - uses: ./self-workflow/actions/check/url-ping
+        id: ping
+        with:
+          url: ${{ inputs.url }}
+
+      - id: lighthouse
+        uses: ./self-workflow/actions/check/url-lighthouse
+        with:
+          url: ${{ inputs.url }}
+          budget-path: ${{ inputs.budget-path }}
+
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+        with:
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+
+      # jscpd:ignore-start
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        id: generate-summary
+        env:
+          PRINT_SUMMARY: ${{ inputs.print-summary }}
+          PING_STATUS_CODE: ${{ steps.ping.outputs.status-code }}
+          PING_ATTEMPT_COUNT: ${{ steps.ping.outputs.attempt-count }}
+          LIGHTHOUSE_REPORT_URL: ${{ steps.lighthouse.outputs.report-url }}
+          LIGHTHOUSE_REPORT_SUMMARY: ${{ steps.lighthouse.outputs.report-summary }}
+        with:
+          script: |
+            const summary = {
+              ping: {
+                statusCode: process.env.PING_STATUS_CODE,
+                attemptCount: process.env.PING_ATTEMPT_COUNT,
+              },
+              lighthouse: {
+                reportUrl: process.env.LIGHTHOUSE_REPORT_URL,
+                reportSummary: process.env.LIGHTHOUSE_REPORT_SUMMARY,
+              },
+            };
+
+            core.setOutput('summary', JSON.stringify(summary));
+
+            const shouldPrintSummary = (process.env.PRINT_SUMMARY || '').toLowerCase() === 'true';
+
+            if (!shouldPrintSummary) {
+                return;
+            }
+            const pingTable = [
+              [{ data: 'Metric', header: true }, { data: 'Value', header: true }],
+              ['Status Code', summary.ping.statusCode ?? 'n/a'],
+              ['Attempt Count', summary.ping.attemptCount ?? 'n/a'],
+            ];
+
+            const builder = core.summary
+              .addHeading('Deployment Checks Summary')
+              .addSeparator()
+              .addHeading('Ping Check', 2)
+              .addTable(pingTable)
+              .addHeading('Lighthouse Check', 2);
+
+            if (summary.lighthouse.reportUrl) {
+              builder.addLink('View Lighthouse Report', summary.lighthouse.reportUrl).addBreak();
+            }
+
+            const lighthouseTable = [
+              [{ data: 'Metric', header: true }, { data: 'Value', header: true }],
+            ];
+            let hasLighthouseRows = false;
+
+            if (summary.lighthouse.reportSummary) {
+              const toSentence = (str) => {
+                return str
+                  .replace(/([A-Z-])/g, ' $1') // Insert space before capital letters
+                  .replace(/-([a-z])/gi, (match, letter) => ` ${letter.toUpperCase()}`) // Replace hyphens with spaces and Uppercase next letter
+                  .replace(/^./, function(char) { return char.toUpperCase(); }) // Capitalize the first letter
+                  .trim();
+              };
+
+              try {
+                const reportSummary = JSON.parse(summary.lighthouse.reportSummary);
+                for (const [key, value] of Object.entries(reportSummary)) {
+                  lighthouseTable.push([toSentence(key), String(value)]);
+                  hasLighthouseRows = true;
+                }
+              } catch (error) {
+                core.warning(`Failed to parse Lighthouse report summary: ${error.message}`);
+              }
+            }
+
+            if (hasLighthouseRows) {
+              builder.addTable(lighthouseTable);
+            } else {
+              builder.addList(['No Lighthouse summary data available.']);
+            }
+
+            await builder.write();
+            core.info('Deployment checks summary written to the job summary.');
+      # jscpd:ignore-end

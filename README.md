@@ -95,6 +95,8 @@ _Actions for managing workflows._
 
 ### - [Deploy chart](.github/workflows/deploy-chart.md)
 
+### - [Deploy checks](.github/workflows/deploy-checks.md)
+
 ### - [Deploy finish](.github/workflows/deploy-finish.md)
 
 ### - [Deploy start](.github/workflows/deploy-start.md)

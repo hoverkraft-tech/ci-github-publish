@@ -31,9 +31,7 @@ Reusable workflow that performs the end of a deployment.
 
 What this workflow does:
 
-- If the deployment exposes a URL, run quick health and performance checks:
-  - URL ping check. See [Ping check](../../actions/check/url-ping/README.md).
-  - Lighthouse audit. See [Lighthouse check](../../actions/check/url-lighthouse/README.md).
+- If the deployment exposes a URL, run [deploy checks](./deploy-checks.yml):
 - Update the GitHub deployment status (success or failure).
 - Publish a human-readable deployment summary using the deploy/report action.
   See [report](../../actions/deploy/report/README.md).
@@ -68,7 +66,7 @@ permissions:
   id-token: write
 jobs:
   deploy-finish:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@6309c4a9240c68133b73f2135bf0314d768ccea3 # 0.11.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@42d50a3461a177557ca3f83b1d927d7c0783c894 # 0.11.2
     with:
       # JSON array of runner(s) to use.
       # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.

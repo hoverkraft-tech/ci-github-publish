@@ -27,8 +27,9 @@ Reusable workflow that performs deployment checks.
 It runs quick health and performance checks.
 
 What this workflow does:
-  - URL ping check. See [Ping check](../../actions/check/url-ping/README.md).
-  - Lighthouse audit. See [Lighthouse check](../../actions/check/url-lighthouse/README.md).
+
+- URL ping check. See [Ping check](../../actions/check/url-ping/README.md).
+- Lighthouse audit. See [Lighthouse check](../../actions/check/url-lighthouse/README.md).
 
 ### Permissions
 

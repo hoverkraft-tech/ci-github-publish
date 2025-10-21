@@ -53,7 +53,7 @@ permissions:
   id-token: write
 jobs:
   deploy-checks:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-checks.yml@42d50a3461a177557ca3f83b1d927d7c0783c894 # 0.11.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-checks.yml@444e9ffa1cb512752953c411181e68880dee2d70 # 0.12.0
     with:
       # JSON array of runner(s) to use.
       # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.

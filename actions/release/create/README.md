@@ -33,7 +33,7 @@ Action to create a new release
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@42d50a3461a177557ca3f83b1d927d7c0783c894 # 0.11.2
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # Whether the release is a prerelease
     # Default: `false`
@@ -57,12 +57,12 @@ Action to create a new release
 
 ## Inputs
 
-| **Input**          | **Description**                        | **Required** | **Default**           |
-| ------------------ | -------------------------------------- | ------------ | --------------------- |
-| **`prerelease`**   | Whether the release is a prerelease    | **false**    | `false`               |
-| **`github-token`** | GitHub Token for creating the release. | **false**    | `${{ github.token }}` |
-|                    | Permissions:                           |              |                       |
-|                    | - contents: write                      |              |                       |
+| **Input**          | **Description**                        | **Required** | **Default**             |
+| ------------------ | -------------------------------------- | ------------ | ----------------------- |
+| **`prerelease`**   | Whether the release is a prerelease    | **false**    | `false`                 |
+| **`github-token`** | GitHub Token for creating the release. | **false**    | `$\{\{ github.token }}` |
+|                    | Permissions:                           |              |                         |
+|                    | - contents: write                      |              |                         |
 
 <!-- inputs:end -->
 

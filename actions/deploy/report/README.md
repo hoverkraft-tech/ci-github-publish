@@ -62,7 +62,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/report@42d50a3461a177557ca3f83b1d927d7c0783c894 # 0.11.2
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/report@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # The repository where the deployment was made
     # Default: `${{ github.event.repository.name }}`
@@ -95,17 +95,17 @@ permissions:
 
 ## Inputs
 
-| **Input**           | **Description**                                                                                              | **Required** | **Default**                           |
-| ------------------- | ------------------------------------------------------------------------------------------------------------ | ------------ | ------------------------------------- |
-| **`repository`**    | The repository where the deployment was made                                                                 | **false**    | `${{ github.event.repository.name }}` |
-| **`deployment-id`** | Deployment ID to report.                                                                                     | **false**    | -                                     |
-| **`environment`**   | Environment where the deployment was made.                                                                   | **false**    | -                                     |
-| **`url`**           | URL where the deployment is available.                                                                       | **false**    | -                                     |
-| **`extra`**         | Extra outputs to be included in the summary. JSON object with key-value pairs.                               | **false**    | -                                     |
-| **`github-token`**  | GitHub Token to update the deployment.                                                                       | **false**    | `${{ github.token }}`                 |
-|                     | Permissions:                                                                                                 |              |                                       |
-|                     | - deployments: write                                                                                         |              |                                       |
-|                     | See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. |              |                                       |
+| **Input**           | **Description**                                                                                              | **Required** | **Default**                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ | ------------ | --------------------------------------- |
+| **`repository`**    | The repository where the deployment was made                                                                 | **false**    | `$\{\{ github.event.repository.name }}` |
+| **`deployment-id`** | Deployment ID to report.                                                                                     | **false**    | -                                       |
+| **`environment`**   | Environment where the deployment was made.                                                                   | **false**    | -                                       |
+| **`url`**           | URL where the deployment is available.                                                                       | **false**    | -                                       |
+| **`extra`**         | Extra outputs to be included in the summary. JSON object with key-value pairs.                               | **false**    | -                                       |
+| **`github-token`**  | GitHub Token to update the deployment.                                                                       | **false**    | `$\{\{ github.token }}`                 |
+|                     | Permissions:                                                                                                 |              |                                         |
+|                     | - deployments: write                                                                                         |              |                                         |
+|                     | See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. |              |                                         |
 
 <!-- inputs:end -->
 

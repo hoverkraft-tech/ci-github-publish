@@ -37,7 +37,7 @@ This action builds a Jekyll site from the source files.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jekyll@40488258265a24cbf54ec301c874867ebb1c31d9 # 0.11.1
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jekyll@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # The Jekyll theme to use for the site.
     # Default: `jekyll-theme-cayman`

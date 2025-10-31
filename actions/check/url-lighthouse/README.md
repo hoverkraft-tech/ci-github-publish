@@ -33,7 +33,7 @@ Action to run Lighthouse audits on given URL.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/check/url-lighthouse@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+- uses: hoverkraft-tech/ci-github-publish/actions/check/url-lighthouse@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # The URL to audit using Lighthouse.
     # This input is required.

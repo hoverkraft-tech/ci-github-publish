@@ -58,7 +58,7 @@ permissions:
   contents: read
 jobs:
   release-actions:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@b5b9f9278423f286fa2e14ca86f932475493828a # 0.12.1
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
     secrets:
       # GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
       # See https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md.
@@ -114,6 +114,13 @@ jobs:
 <!-- secrets:end -->
 
 <!-- outputs:start -->
+
+## Outputs
+
+| **Output**        | **Description**                                                 |
+| ----------------- | --------------------------------------------------------------- |
+| **`artifact-id`** | ID of the uploaded artifact containing generated documentation. |
+
 <!-- outputs:end -->
 
 <!-- examples:start -->

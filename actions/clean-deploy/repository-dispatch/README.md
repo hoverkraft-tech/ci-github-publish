@@ -38,7 +38,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/clean-deploy/repository-dispatch@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+- uses: hoverkraft-tech/ci-github-publish/actions/clean-deploy/repository-dispatch@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # GitHub Token for dispatch an event to a remote repository.
     # Permissions:
@@ -67,14 +67,14 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 
 ## Inputs
 
-| **Input**          | **Description**                                                 | **Required** | **Default**           |
-| ------------------ | --------------------------------------------------------------- | ------------ | --------------------- |
-| **`github-token`** | GitHub Token for dispatch an event to a remote repository.      | **false**    | `${{ github.token }}` |
-|                    | Permissions:                                                    |              |                       |
-|                    | - contents: write                                               |              |                       |
-|                    | See <https://github.com/peter-evans/repository-dispatch#usage>. |              |                       |
-| **`repository`**   | Target repository where the deployment should be cleaned.       | **true**     | -                     |
-| **`environment`**  | Environment where to clean the deployment.                      | **true**     | -                     |
+| **Input**          | **Description**                                                 | **Required** | **Default**             |
+| ------------------ | --------------------------------------------------------------- | ------------ | ----------------------- |
+| **`github-token`** | GitHub Token for dispatch an event to a remote repository.      | **false**    | `$\{\{ github.token }}` |
+|                    | Permissions:                                                    |              |                         |
+|                    | - contents: write                                               |              |                         |
+|                    | See <https://github.com/peter-evans/repository-dispatch#usage>. |              |                         |
+| **`repository`**   | Target repository where the deployment should be cleaned.       | **true**     | -                       |
+| **`environment`**  | Environment where to clean the deployment.                      | **true**     | -                       |
 
 <!-- inputs:end -->
 

@@ -45,7 +45,7 @@ the default `GITHUB_TOKEN` already has read access to Actions in typical workflo
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # GitHub Token to get workflow information.
     # Permissions:
@@ -62,12 +62,12 @@ the default `GITHUB_TOKEN` already has read access to Actions in typical workflo
 
 ## Inputs
 
-| **Input**          | **Description**                                                                       | **Required** | **Default**           |
-| ------------------ | ------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`github-token`** | GitHub Token to get workflow information.                                             | **false**    | `${{ github.token }}` |
-|                    | Permissions:                                                                          |              |                       |
-|                    | - actions: read                                                                       |              |                       |
-|                    | See <https://docs.github.com/en/rest/actions/workflows#list-jobs-for-a-workflow-run>. |              |                       |
+| **Input**          | **Description**                                                                       | **Required** | **Default**             |
+| ------------------ | ------------------------------------------------------------------------------------- | ------------ | ----------------------- |
+| **`github-token`** | GitHub Token to get workflow information.                                             | **false**    | `$\{\{ github.token }}` |
+|                    | Permissions:                                                                          |              |                         |
+|                    | - actions: read                                                                       |              |                         |
+|                    | See <https://docs.github.com/en/rest/actions/workflows#list-jobs-for-a-workflow-run>. |              |                         |
 
 <!-- inputs:end -->
 

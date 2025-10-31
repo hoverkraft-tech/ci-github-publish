@@ -40,6 +40,7 @@ What this workflow does:
 
 ### Permissions
 
+- **`contents`**: `read`
 - **`issues`**: `read`
 - **`pull-requests`**: `write`
 - **`actions`**: `read`
@@ -59,6 +60,7 @@ on:
     branches:
       - main
 permissions:
+  contents: read
   issues: read
   pull-requests: write
   actions: read
@@ -66,7 +68,7 @@ permissions:
   id-token: write
 jobs:
   deploy-finish:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@42d50a3461a177557ca3f83b1d927d7c0783c894 # 0.11.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
     with:
       # JSON array of runner(s) to use.
       # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.

@@ -42,7 +42,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/helm-repository-dispatch@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/helm-repository-dispatch@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # Deployment ID to be used in the ArgoCD application manifest
     # This input is required.
@@ -88,19 +88,19 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 
 ## Inputs
 
-| **Input**           | **Description**                                                                                                                     | **Required** | **Default**           |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`deployment-id`** | Deployment ID to be used in the ArgoCD application manifest                                                                         | **true**     | -                     |
-| **`chart`**         | Chart to deploy. Example: `ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0`.                                           | **true**     | -                     |
-| **`chart-values`**  | Chart values to be sent to deployment. JSON array. Example:                                                                         | **false**    | -                     |
-|                     | <!-- textlint-disable --><pre lang="json">[&#13; { "path": ".application.test", "value": "ok" }&#13;]</pre><!-- textlint-enable --> |              |                       |
-| **`repository`**    | Target repository where to deploy given chart.                                                                                      | **true**     | -                     |
-| **`environment`**   | Environment where to deploy given chart.                                                                                            | **true**     | -                     |
-| **`url`**           | The URL which respond to deployed application.                                                                                      | **true**     | -                     |
-| **`github-token`**  | GitHub Token for dispatch an event to a remote repository.                                                                          | **false**    | `${{ github.token }}` |
-|                     | Permissions:                                                                                                                        |              |                       |
-|                     | - contents: write                                                                                                                   |              |                       |
-|                     | See <https://github.com/peter-evans/repository-dispatch#usage>.                                                                     |              |                       |
+| **Input**           | **Description**                                                                                                                     | **Required** | **Default**             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------- |
+| **`deployment-id`** | Deployment ID to be used in the ArgoCD application manifest                                                                         | **true**     | -                       |
+| **`chart`**         | Chart to deploy. Example: `ghcr.io/my-org/my-repo/charts/application/my-repo:0.1.0-rc.0`.                                           | **true**     | -                       |
+| **`chart-values`**  | Chart values to be sent to deployment. JSON array. Example:                                                                         | **false**    | -                       |
+|                     | <!-- textlint-disable --><pre lang="json">[&#13; { "path": ".application.test", "value": "ok" }&#13;]</pre><!-- textlint-enable --> |              |                         |
+| **`repository`**    | Target repository where to deploy given chart.                                                                                      | **true**     | -                       |
+| **`environment`**   | Environment where to deploy given chart.                                                                                            | **true**     | -                       |
+| **`url`**           | The URL which respond to deployed application.                                                                                      | **true**     | -                       |
+| **`github-token`**  | GitHub Token for dispatch an event to a remote repository.                                                                          | **false**    | `$\{\{ github.token }}` |
+|                     | Permissions:                                                                                                                        |              |                         |
+|                     | - contents: write                                                                                                                   |              |                         |
+|                     | See <https://github.com/peter-evans/repository-dispatch#usage>.                                                                     |              |                         |
 
 <!-- inputs:end -->
 

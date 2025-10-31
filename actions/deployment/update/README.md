@@ -47,7 +47,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/update@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/update@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # The ID of the deployment to update
     # This input is required.
@@ -86,18 +86,18 @@ permissions:
 
 ## Inputs
 
-| **Input**            | **Description**                                                                                              | **Required** | **Default**                           |
-| -------------------- | ------------------------------------------------------------------------------------------------------------ | ------------ | ------------------------------------- |
-| **`deployment-id`**  | The ID of the deployment to update                                                                           | **true**     | -                                     |
-| **`repository`**     | The repository where the deployment was made                                                                 | **false**    | `${{ github.event.repository.name }}` |
-| **`state`**          | The state of the deployment                                                                                  | **true**     | -                                     |
-| **`description`**    | The description of the deployment                                                                            | **false**    | -                                     |
-| **`url`**            | The URL of the deployment                                                                                    | **false**    | -                                     |
-| **`update-log-url`** | Update the log URL of the deployment                                                                         | **false**    | `true`                                |
-| **`github-token`**   | GitHub Token to update the deployment.                                                                       | **false**    | `${{ github.token }}`                 |
-|                      | Permissions:                                                                                                 |              |                                       |
-|                      | - deployments: write                                                                                         |              |                                       |
-|                      | See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. |              |                                       |
+| **Input**            | **Description**                                                                                              | **Required** | **Default**                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ | ------------ | --------------------------------------- |
+| **`deployment-id`**  | The ID of the deployment to update                                                                           | **true**     | -                                       |
+| **`repository`**     | The repository where the deployment was made                                                                 | **false**    | `$\{\{ github.event.repository.name }}` |
+| **`state`**          | The state of the deployment                                                                                  | **true**     | -                                       |
+| **`description`**    | The description of the deployment                                                                            | **false**    | -                                       |
+| **`url`**            | The URL of the deployment                                                                                    | **false**    | -                                       |
+| **`update-log-url`** | Update the log URL of the deployment                                                                         | **false**    | `true`                                  |
+| **`github-token`**   | GitHub Token to update the deployment.                                                                       | **false**    | `$\{\{ github.token }}`                 |
+|                      | Permissions:                                                                                                 |              |                                         |
+|                      | - deployments: write                                                                                         |              |                                         |
+|                      | See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. |              |                                         |
 
 <!-- inputs:end -->
 

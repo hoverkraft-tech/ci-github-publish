@@ -47,7 +47,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@b5b9f9278423f286fa2e14ca86f932475493828a # 0.12.1
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # The path to the assets to deploy.
     # Can be absolute or relative $GITHUB_WORKSPACE.

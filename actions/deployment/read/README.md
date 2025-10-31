@@ -37,7 +37,7 @@ Action to retrieve some deployment information.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/read@00adc3757296add499b60fd72a124b06974a100e # 0.10.1
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/read@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
   with:
     # The ID of the deployment to update
     # This input is required.
@@ -62,14 +62,14 @@ Action to retrieve some deployment information.
 
 ## Inputs
 
-| **Input**           | **Description**                                                                                       | **Required** | **Default**                           |
-| ------------------- | ----------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------- |
-| **`deployment-id`** | The ID of the deployment to update                                                                    | **true**     | -                                     |
-| **`repository`**    | The repository where the deployment was made                                                          | **false**    | `${{ github.event.repository.name }}` |
-| **`github-token`**  | GitHub Token to get the deployment information.                                                       | **false**    | `${{ github.token }}`                 |
-|                     | Permissions:                                                                                          |              |                                       |
-|                     | - deployments: read                                                                                   |              |                                       |
-|                     | See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#get-a-deployment>. |              |                                       |
+| **Input**           | **Description**                                                                                       | **Required** | **Default**                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------- |
+| **`deployment-id`** | The ID of the deployment to update                                                                    | **true**     | -                                       |
+| **`repository`**    | The repository where the deployment was made                                                          | **false**    | `$\{\{ github.event.repository.name }}` |
+| **`github-token`**  | GitHub Token to get the deployment information.                                                       | **false**    | `$\{\{ github.token }}`                 |
+|                     | Permissions:                                                                                          |              |                                         |
+|                     | - deployments: read                                                                                   |              |                                         |
+|                     | See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#get-a-deployment>. |              |                                         |
 
 <!-- inputs:end -->
 

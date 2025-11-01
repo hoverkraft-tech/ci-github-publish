@@ -39,3 +39,13 @@ jobs:
       github-app-id: ${{ vars.CI_BOT_APP_ID }}
     secrets:
       github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
+
+  sync-docs:
+    needs: release
+    if: github.event_name != 'schedule' && github.ref == 'refs/heads/main' && needs.release.outputs.artifact-id
+    uses: hoverkraft-tech/public-docs/.github/workflows/sync-docs-dispatcher.yml@cd3f060f4c823de3294a7498b8a8617723b8cf53 # 0.2.0
+    with:
+      github-app-id: ${{ vars.PUBLIC_DOCS_APP_ID }}
+      artifact-id: ${{ needs.release.outputs.artifact-id }}
+    secrets:
+      github-app-key: ${{ secrets.PUBLIC_DOCS_APP_PRIVATE_KEY }}

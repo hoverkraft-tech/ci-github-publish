@@ -111,6 +111,12 @@ _Reusable workflows for managing release process._
 
 ### - [Release actions](.github/workflows/release-actions.md)
 
+### Documentation
+
+_Reusable workflows for documentation synchronization._
+
+### - [Sync docs dispatcher](.github/workflows/sync-docs-dispatcher.md)
+
 ## Contributing
 
 Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.

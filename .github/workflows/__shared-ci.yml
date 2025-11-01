@@ -18,6 +18,7 @@ jobs:
   test-action-check-url-lighthouse:
     needs: linter
     uses: ./.github/workflows/__test-action-check-url-lighthouse.yml
+
   test-action-check-url-ping:
     needs: linter
     uses: ./.github/workflows/__test-action-check-url-ping.yml

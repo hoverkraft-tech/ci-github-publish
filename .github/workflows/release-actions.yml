@@ -294,7 +294,7 @@ jobs:
   upload-documentation-artifact:
     name: Upload Documentation Artifact
     needs: [get-documentation-changes, generate-documentation]
-    if: needs.generate-documentation.outputs.artifact-id || needs.get-documentation-changes.outputs.documentation-files
+    if: always() && (needs.generate-documentation.outputs.artifact-id || needs.get-documentation-changes.outputs.documentation-files)
     runs-on: ${{ fromJson(inputs.runs-on) }}
     outputs:
       artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}

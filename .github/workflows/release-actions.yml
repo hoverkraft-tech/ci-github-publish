@@ -66,6 +66,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
+            const path = require('node:path');
             const manifestFiles = [];
 
             // Retrieve action manifests
@@ -96,6 +97,7 @@ jobs:
             core.setOutput(
               'paths',
               manifestFiles
+                .map(manifestPath => path.relative(process.env.GITHUB_WORKSPACE, manifestPath))
                 .join('\n')
             );
 
@@ -141,6 +143,7 @@ jobs:
             core.setOutput(
               'paths',
               allFiles
+                .map(filePath => path.relative(process.env.GITHUB_WORKSPACE, filePath))
                 .join('\n')
             );
 
@@ -152,7 +155,6 @@ jobs:
             ${{ steps.get-documentation-files.outputs.paths }}
             ${{ steps.get-manifest-files.outputs.paths }}
           dir_names_exclude_current_dir: true
-          json: true
 
       - id: get-changed-files
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -164,39 +166,49 @@ jobs:
         with:
           script: |
             const { join, relative } = require('path');
-            const changedFilesOutputs = process.env.CHANGED_FILES;
-            const changedFiles = JSON.parse(changedFilesOutputs).map(f => f.trim()).filter(Boolean).map(f => join(process.env.GITHUB_WORKSPACE, f));
-
-            const currentWorkflow = process.env.GITHUB_WORKFLOW_REF.replace(`${process.env.GITHUB_REPOSITORY}/`, '').replace(/@.*/, '');
-            const currentWorkflowHasChanged = changedFiles.includes(currentWorkflow);
-
-            const updateAll = process.env.UPDATE_ALL.toLowerCase() === 'true';
-            const forceUpdate = currentWorkflowHasChanged || updateAll;
-
-            const documentationFiles = process.env.DOCUMENTATION_FILES
+            const changedFiles = process.env.CHANGED_FILES
               .split('\n')
               .map(f => f.trim())
               .filter(Boolean);
 
+            core.debug(`Changed files: ${changedFiles.join(', ')}`);
+            const currentWorkflow = process.env.GITHUB_WORKFLOW_REF.replace(`${process.env.GITHUB_REPOSITORY}/`, '').replace(/@.*/, '');
+            const currentWorkflowHasChanged = changedFiles.includes(currentWorkflow);
+            core.debug(`Current workflow: ${currentWorkflow} - has changed: ${currentWorkflowHasChanged}`);
+
+            const updateAll = process.env.UPDATE_ALL.toLowerCase() === 'true';
+            const forceUpdate = currentWorkflowHasChanged || updateAll;
+            core.debug(`Force update: ${forceUpdate}`);
+
+            const documentationFiles = process.env.DOCUMENTATION_FILES
+              .split('\n')
+              .map(file => file.trim())
+              .filter(Boolean);
+
+            core.debug(`Documentation files: ${documentationFiles.join(', ')}`);
+
             const changedDocumentationFiles = new Set();
-            for(const docPath of documentationFiles) {
+            for (const docPath of documentationFiles) {
               if (forceUpdate || changedFiles.includes(docPath)) {
                 core.debug(`Including documentation file: ${docPath}`);
                 changedDocumentationFiles.add(docPath);
               }
             }
 
+            core.debug(`Changed documentation files: ${Array.from(changedDocumentationFiles).join(', ')}`);
+
             core.setOutput(
               'documentation-files',
                 Array.from(changedDocumentationFiles)
-                .map(filePath => relative(process.env.GITHUB_WORKSPACE, filePath))
                 .join('\n')
             );
 
             const manifestFiles = process.env.MANIFEST_FILES
               .split('\n')
-              .map(f => f.trim())
+              .map(file => file.trim())
               .filter(Boolean);
+
+            core.debug(`Manifest files: ${manifestFiles.join(', ')}`);
 
             const changedManifestFiles = new Set();
             for(const manifestPath of manifestFiles) {
@@ -206,10 +218,11 @@ jobs:
               }
             }
 
+            core.debug(`Changed manifest files: ${Array.from(changedManifestFiles).join(', ')}`);
+
             core.setOutput(
               'manifest-files',
                 Array.from(changedManifestFiles)
-                .map(filePath => relative(process.env.GITHUB_WORKSPACE, filePath))
                 .join('\n')
             );
 

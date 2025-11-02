@@ -42,7 +42,7 @@ jobs:
 
   sync-docs:
     needs: release
-    if: github.event_name != 'schedule' && github.ref_name != github.event.repository.default_branch && needs.release.outputs.artifact-id
+    if: github.event_name != 'schedule' && github.ref_name == github.event.repository.default_branch && needs.release.outputs.artifact-id
     uses: hoverkraft-tech/public-docs/.github/workflows/sync-docs-dispatcher.yml@c40c17f7d6a8090950b3ef4bfc70502707a6bb9f # 0.3.0
     permissions:
       contents: read

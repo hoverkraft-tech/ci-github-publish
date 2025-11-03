@@ -28,6 +28,7 @@ updates:
 
   - package-ecosystem: "devcontainers"
     open-pull-requests-limit: 20
+    directory: "/.devcontainer/"
     schedule:
       interval: weekly
       day: friday

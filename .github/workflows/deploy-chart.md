@@ -47,10 +47,10 @@ Key features:
 - **`actions`**: `read`
 - **`contents`**: `write`
 - **`deployments`**: `write`
+- **`id-token`**: `write`
 - **`issues`**: `write`
 - **`packages`**: `write`
 - **`pull-requests`**: `write`
-- **`id-token`**: `write`
 
 <!-- overview:end -->
 
@@ -93,7 +93,7 @@ permissions:
   id-token: write
 jobs:
   deploy-chart:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@0717eb404857b7e4a15dc0db5fbece52921e85fb # 0.13.1
     secrets:
       # OCI registry password.
       # This input is required.
@@ -305,7 +305,7 @@ permissions:
 jobs:
   deploy:
     name: Deploy
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@0717eb404857b7e4a15dc0db5fbece52921e85fb # 0.13.1
     secrets:
       oci-registry-password: ${{ secrets.GITHUB_TOKEN }}
       github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}

@@ -67,8 +67,8 @@ Key Features:
 ### Permissions
 
 - **`contents`**: `read`
-- **`pull-requests`**: `write`
 - **`id-token`**: `write`
+- **`pull-requests`**: `write`
 
 <!-- overview:end -->
 
@@ -88,7 +88,7 @@ permissions:
   id-token: write
 jobs:
   deploy-argocd-app-of-apps:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-argocd-app-of-apps.yml@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-argocd-app-of-apps.yml@0717eb404857b7e4a15dc0db5fbece52921e85fb # 0.13.1
     secrets:
       # GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
       # See https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md.

@@ -49,9 +49,9 @@ Environment:
 
 - **`actions`**: `read`
 - **`deployments`**: `write`
+- **`id-token`**: `write`
 - **`issues`**: `write`
 - **`pull-requests`**: `write`
-- **`id-token`**: `write`
 
 <!-- overview:end -->
 
@@ -73,7 +73,7 @@ permissions:
   id-token: write
 jobs:
   deploy-start:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-start.yml@b2a6d08d60e0adff6736caf6fdaa5fd3bcdd473a # 0.13.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-start.yml@0717eb404857b7e4a15dc0db5fbece52921e85fb # 0.13.1
     with:
       # JSON array of runner(s) to use.
       # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.

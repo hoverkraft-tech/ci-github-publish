@@ -2,7 +2,7 @@
 #
 # What this workflow does:
 #
-# - If the deployment exposes a URL, run [deploy checks](./deploy-checks.yml):
+# - If the deployment exposes a URL, run [deploy checks](./deploy-checks.md):
 # - Update the GitHub deployment status (success or failure).
 # - Publish a human-readable deployment summary using the deploy/report action.
 #   See [report](../../actions/deploy/report/README.md).

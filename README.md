@@ -83,33 +83,33 @@ _Actions for managing workflows._
 
 ## Reusable Workflows
 
-## Cleaning deploy
+### Cleaning deploy
 
-### - [Clean deploy argocd app of apps](.github/workflows/clean-deploy-argocd-app-of-apps.md)
+#### - [Clean deploy argocd app of apps](.github/workflows/clean-deploy-argocd-app-of-apps.md)
 
-### - [Clean deploy](.github/workflows/clean-deploy.md)
+#### - [Clean deploy](.github/workflows/clean-deploy.md)
 
 ### Performs deploy
 
-### - [Deploy argocd app of apps](.github/workflows/deploy-argocd-app-of-apps.md)
+#### - [Deploy argocd app of apps](.github/workflows/deploy-argocd-app-of-apps.md)
 
-### - [Deploy chart](.github/workflows/deploy-chart.md)
+#### - [Deploy chart](.github/workflows/deploy-chart.md)
 
-### - [Deploy checks](.github/workflows/deploy-checks.md)
+#### - [Deploy start](.github/workflows/deploy-start.md)
 
-### - [Deploy finish](.github/workflows/deploy-finish.md)
+#### - [Deploy checks](.github/workflows/deploy-checks.md)
 
-### - [Deploy start](.github/workflows/deploy-start.md)
+#### - [Deploy finish](.github/workflows/deploy-finish.md)
 
-### - [Finish deploy argocd app of apps](.github/workflows/finish-deploy-argocd-app-of-apps.md)
+#### - [Finish deploy argocd app of apps](.github/workflows/finish-deploy-argocd-app-of-apps.md)
 
 ### Releases
 
 _Reusable workflows for managing release process._
 
-### - [Prepare release](.github/workflows/prepare-release.md)
+#### - [Prepare release](.github/workflows/prepare-release.md)
 
-### - [Release actions](.github/workflows/release-actions.md)
+#### - [Release actions](.github/workflows/release-actions.md)
 
 ## Contributing
 

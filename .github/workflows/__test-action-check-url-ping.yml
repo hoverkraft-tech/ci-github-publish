@@ -355,7 +355,7 @@ jobs:
         id: test-real-world
         uses: ./actions/check/url-ping
         with:
-          url: "https://hoverkraft-tech.github.io/ci-github-publish/"
+          url: "https://hoverkraft.cloud"
           expected-statuses: "200"
           timeout: "30"
           retries: "2"

@@ -18,7 +18,7 @@ jobs:
         id: check-url-lighthouse
         uses: ./actions/check/url-lighthouse
         with:
-          url: "https://hoverkraft-tech.github.io/ci-github-publish/"
+          url: "https://hoverkraft.cloud"
 
       - name: Assert - Check report summary output
         env:

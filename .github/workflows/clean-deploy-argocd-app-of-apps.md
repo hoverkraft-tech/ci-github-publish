@@ -67,7 +67,7 @@ permissions:
   id-token: write
 jobs:
   clean-deploy-argocd-app-of-apps:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@38963f37ef5be0b6ae84147f542d96d9eb02802b # 0.14.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
     secrets:
       # GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
       # See https://github.com/hoverkraft-tech/ci-github-common/blob/main/actions/create-and-merge-pull-request/README.md.
@@ -146,7 +146,7 @@ concurrency:
 
 jobs:
   deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@38963f37ef5be0b6ae84147f542d96d9eb02802b # 0.14.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
       github-app-key: ${{ secrets.GITHUB_APP_KEY }}

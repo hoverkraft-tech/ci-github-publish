@@ -54,7 +54,7 @@ permissions:
   pull-requests: write
 jobs:
   prepare-release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@38963f37ef5be0b6ae84147f542d96d9eb02802b # 0.14.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
     secrets:
       # GitHub token with permissions `contents: write`, `pull-requests: write`.
       github-token: ""

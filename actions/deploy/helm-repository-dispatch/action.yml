@@ -45,6 +45,9 @@ inputs:
       See https://github.com/peter-evans/repository-dispatch#usage.
     required: false
     default: ${{ github.token }}
+  initiated-by:
+    description: "Username to record as having initiated the sync operation"
+    required: true
 
 outputs:
   url:
@@ -90,5 +93,6 @@ runs:
             "chart": "${{ inputs.chart }}",
             "environment": "${{ inputs.environment }}",
             "url": "${{ inputs.url }}",
-            "chart-values": ${{ toJSON(steps.set-chart-values.outputs.chart-values) }}
+            "chart-values": ${{ toJSON(steps.set-chart-values.outputs.chart-values) }},
+            "initiated-by": "${{ inputs.initiated-by }}"
           }

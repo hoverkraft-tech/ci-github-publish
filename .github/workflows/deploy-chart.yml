@@ -453,6 +453,7 @@ jobs:
           url: ${{ steps.prepare-deployment.outputs.url }}
           repository: ${{ steps.prepare-deployment.outputs.repository }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          initiated-by: ${{ github.actor }}
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0

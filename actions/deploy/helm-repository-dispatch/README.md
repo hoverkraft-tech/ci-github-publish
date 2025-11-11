@@ -80,6 +80,9 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
     #
     # Default: `${{ github.token }}`
     github-token: ${{ github.token }}
+
+    # Username to record as having initiated the sync operation
+    initiated-by: ${{ github.actor }}
 ````
 
 <!-- usage:end -->
@@ -101,6 +104,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 |                     | Permissions:                                                                                                                        |              |                         |
 |                     | - contents: write                                                                                                                   |              |                         |
 |                     | See <https://github.com/peter-evans/repository-dispatch#usage>.                                                                     |              |                         |
+| **`initiated-by`**  | Username to record as having initiated the sync operation                                                                           | **true**     | -                       |
 
 <!-- inputs:end -->
 

@@ -56,6 +56,9 @@ jobs:
       - name: Assert - Check generated files are as expected
         run: |
           echo "Check application file"
+          # Remove dynamic timestamp annotation before comparison
+          yq eval 'del(.metadata.annotations["argocd.argoproj.io/refresh-timestamp"])' "$TEST_APPLICATION_FILE" > "$TEST_APPLICATION_FILE.tmp"
+          mv "$TEST_APPLICATION_FILE.tmp" "$TEST_APPLICATION_FILE"
           diff -u "$TEST_EXPECTED_APPLICATION_FILE" "$TEST_APPLICATION_FILE"
 
           echo "Check manifest file"

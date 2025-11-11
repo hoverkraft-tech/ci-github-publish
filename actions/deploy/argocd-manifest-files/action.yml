@@ -30,6 +30,8 @@ description: |
     - Annotations:
       - "argocd.argoproj.io/application-repository": set to the application repository
       - "argocd.argoproj.io/deployment-id": set to the deployment ID
+      - "argocd.argoproj.io/refresh": set to "hard" to force ArgoCD to perform a hard refresh
+      - "argocd.argoproj.io/refresh-timestamp": set to the current UTC timestamp to ensure the annotation changes on every deployment, triggering ArgoCD sync
   - Spec:
     - Destination:
       - Namespace: set to the target namespace
@@ -50,6 +52,8 @@ description: |
     annotations:
       argocd.argoproj.io/application-repository: https://github.com/my-org/my-app
       argocd.argoproj.io/deployment-id: deploy-1234
+      argocd.argoproj.io/refresh: hard
+      argocd.argoproj.io/refresh-timestamp: 2025-11-11T10:30:00Z
   spec:
     destination:
       namespace: my-namespace
@@ -171,6 +175,11 @@ runs:
 
           core.setOutput('cmd', yqUpdates);
 
+    - id: generate-timestamp
+      shell: bash
+      run: |
+        echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+
     - id: update-application-file
       uses: mikefarah/yq@0ecdce24e83f0fa127940334be98c86b07b0c488 # v4.48.1
       with:
@@ -179,6 +188,8 @@ runs:
             .metadata.name = "${{ inputs.namespace }}" |
             .metadata.annotations["argocd.argoproj.io/application-repository"] = "${{ inputs.application-repository }}" |
             .metadata.annotations["argocd.argoproj.io/deployment-id"] = "${{ inputs.deployment-id }}" |
+            .metadata.annotations["argocd.argoproj.io/refresh"] = "hard" |
+            .metadata.annotations["argocd.argoproj.io/refresh-timestamp"] = "${{ steps.generate-timestamp.outputs.timestamp }}" |
             .spec.destination.namespace = "${{ inputs.namespace }}" |
             .spec.sources[0].chart = "${{ inputs.chart-name }}" |
             .spec.sources[0].repoURL = "${{ inputs.chart-repository }}" |

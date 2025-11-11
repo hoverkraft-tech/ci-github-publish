@@ -65,3 +65,12 @@ spec:
             primary:
               persistence:
                 enabled: false
+operation:
+  initiatedBy:
+    username: ci/test-user
+  info:
+    - name: deployment-id
+      value: "999"
+  sync:
+    syncStrategy:
+      hook: {}

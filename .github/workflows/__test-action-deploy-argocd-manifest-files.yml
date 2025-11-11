@@ -45,6 +45,7 @@ jobs:
             [
               { "path": ".ingress.hosts[0].host", "value": "https://pr-100-test-app.my-org.com" }
             ]
+          initiated-by: ci/test-user
 
       - name: Assert - Check generated files are valid YAML
         uses: mikefarah/yq@45be35c06387d692bb6bf689919919e0e32e796f # v4.49.1

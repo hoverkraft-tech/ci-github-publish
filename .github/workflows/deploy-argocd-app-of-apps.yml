@@ -134,6 +134,12 @@ jobs:
               core.setOutput("chart-values", chartValues);
             }
 
+            const initiatedBy = ${{ toJSON(github.event.client_payload['initiated-by']) }};
+            if (!initiatedBy) {
+              return core.setFailed("Initiated-by is not defined in the client payload");
+            }
+            core.setOutput("initiated-by", initiatedBy);
+
       - id: chart-variables
         uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@0d92511a38c93e30ae0f8b82346116946987a9ca # 0.30.0
         with:
@@ -226,6 +232,7 @@ jobs:
           chart-repository: ${{ steps.chart-variables.outputs.repository }}
           chart-version: ${{ steps.chart-variables.outputs.version }}
           chart-values: ${{ steps.check-client-payload.outputs.chart-values }}
+          initiated-by: ${{ steps.check-client-payload.outputs.initiated-by }}
 
       # jscpd:ignore-start
       - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0

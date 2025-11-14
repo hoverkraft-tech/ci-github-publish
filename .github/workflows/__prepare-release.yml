@@ -7,17 +7,18 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
-permissions:
-  contents: read
-  pull-requests: write
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   release:
     uses: ./.github/workflows/prepare-release.yml
+    permissions:
+      contents: read
+      pull-requests: write
     with:
       github-app-id: ${{ vars.CI_BOT_APP_ID }}
     secrets:

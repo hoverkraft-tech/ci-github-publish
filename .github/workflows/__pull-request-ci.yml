@@ -6,17 +6,7 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  actions: read
-  contents: read
-  deployments: write
-  issues: read
-  packages: write
-  pull-requests: read
-  security-events: write
-  statuses: write
-  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-  id-token: write
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -25,4 +15,10 @@ concurrency:
 jobs:
   ci:
     uses: ./.github/workflows/__shared-ci.yml
+    permissions:
+      actions: read
+      contents: read
+      deployments: write
+      statuses: write
+      security-events: write
     secrets: inherit

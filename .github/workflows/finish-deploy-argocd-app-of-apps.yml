@@ -48,14 +48,15 @@ on:
           GitHub App private key to generate GitHub token in place of github-token.
           See <https://github.com/actions/create-github-app-token>.
 # jscpd:ignore-end
-permissions:
-  contents: read
-  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-  id-token: write
+permissions: {}
 
 jobs:
   finish-deploy:
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      contents: read
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      id-token: write
     outputs:
       repository: ${{ steps.check-client-payload.outputs.repository }}
       deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}

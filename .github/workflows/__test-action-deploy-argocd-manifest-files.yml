@@ -3,13 +3,14 @@ name: Internal - Tests for "deploy/argocd-manifest-files" action
 on:
   workflow_call:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   tests:
     name: Tests for deploy/argocd-manifest-files action
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       TEST_APPLICATION_TEMPLATE_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/test-app/template.yml.tpl
       TEST_APPLICATION_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/test-app/test-app.yml

@@ -3,13 +3,14 @@ name: Internal - Tests for "deploy/jekyll" and "deploy/jampack" actions
 on:
   workflow_call:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   tests:
     name: Tests for "deploy/jekyll" and "deploy/jampack" actions
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       build-path: ${{ steps.deploy-jekyll.outputs.build-path }}
     steps:

@@ -50,6 +50,8 @@ It updates the application manifest with the provided values and deploys it to t
   - Annotations:
     - "argocd.argoproj.io/application-repository": set to the application repository
     - "argocd.argoproj.io/deployment-id": set to the deployment ID
+    - "argocd.argoproj.io/refresh": set to "hard" to force ArgoCD to perform a hard refresh
+    - "argocd.argoproj.io/refresh-timestamp": set to the current UTC timestamp to ensure the annotation changes on every deployment, triggering ArgoCD sync
 - Spec:
   - Destination:
     - Namespace: set to the target namespace
@@ -70,6 +72,8 @@ metadata:
   annotations:
     argocd.argoproj.io/application-repository: https://github.com/my-org/my-app
     argocd.argoproj.io/deployment-id: deploy-1234
+    argocd.argoproj.io/refresh: hard
+    argocd.argoproj.io/refresh-timestamp: 2025-11-11T10:30:00Z
 spec:
   destination:
     namespace: my-namespace

@@ -53,9 +53,9 @@ permissions:
     # Can be absolute or relative $GITHUB_WORKSPACE.
     build-path: ""
 
-    # The name of the "build" artifact to download.
+    # The ID of the "build" artifact to download.
     # If not set, the action will use the local workspace files.
-    build-artifact-name: ""
+    build-artifact-id: ""
 
     # The path to the performance budget file. See action [Check - URL - Lighthouse](../../check/url-lighthouse/README.md).
     # Default: `./budget.json`
@@ -84,7 +84,7 @@ permissions:
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------- |
 | **`build-path`**            | The path to the assets to deploy.                                                                                     | **false**    | -                       |
 |                             | Can be absolute or relative $GITHUB_WORKSPACE.                                                                        |              |                         |
-| **`build-artifact-name`**   | The name of the "build" artifact to download.                                                                         | **false**    | -                       |
+| **`build-artifact-id`**     | The ID of the "build" artifact to download.                                                                           | **false**    | -                       |
 |                             | If not set, the action will use the local workspace files.                                                            |              |                         |
 | **`budget-path`**           | The path to the performance budget file. See action [Check - URL - Lighthouse](../../check/url-lighthouse/README.md). | **false**    | `./budget.json`         |
 | **`static-site-generator`** | The static site generator used to build the site. See <https://github.com/actions/configure-pages>.                   | **false**    | -                       |

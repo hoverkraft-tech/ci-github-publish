@@ -11,9 +11,9 @@ inputs:
       The path to the assets to deploy.
       Can be absolute or relative $GITHUB_WORKSPACE.
     required: false
-  build-artifact-name:
+  build-artifact-id:
     description: |
-      The name of the "build" artifact to download.
+      The ID of the "build" artifact to download.
       If not set, the action will use the local workspace files.
     required: false
     default: ""
@@ -44,10 +44,10 @@ runs:
   using: "composite"
   steps:
     - id: download-artifact
-      if: ${{ inputs.build-artifact-name != '' }}
+      if: ${{ inputs.build-artifact-id != '' }}
       uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
       with:
-        name: ${{ inputs.build-artifact-name }}
+        artifact-id: ${{ inputs.build-artifact-id }}
         path: "/"
 
     - id: prepare-variables

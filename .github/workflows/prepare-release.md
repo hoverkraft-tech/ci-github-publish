@@ -49,12 +49,13 @@ on:
   push:
     branches:
       - main
-permissions:
-  contents: read
-  pull-requests: write
+permissions: {}
 jobs:
   prepare-release:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
+    permissions:
+      contents: read
+      pull-requests: write
     secrets:
       # GitHub token with permissions `contents: write`, `pull-requests: write`.
       github-token: ""

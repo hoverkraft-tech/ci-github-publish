@@ -41,10 +41,8 @@ description: |
         - Chart values: custom values provided via the `chart-values` input, allowing dynamic configuration of the Helm chart (e.g., application URIs, feature flags).
         - Deployment ID: injected as a value to identify the deployment instance within the chart values.
         - Vendor-specific values: additional values set for integrations, such as updating `tags.datadoghq.com/version` for Datadog monitoring/versioning.
-  - Operation (forces ArgoCD to sync):
-    - InitiatedBy: records who triggered the deployment
-    - Info: includes deployment-id for tracking
-    - Sync: instructs ArgoCD to perform a sync using hook strategy
+    - Plugin (if exists):
+      - Environment variable `HOVERKRAFT_DEPLOYMENT_ID`: updated with the deployment ID to trigger sync detection
 
   Example:
 
@@ -69,15 +67,12 @@ description: |
             tags:
               datadoghq.com:
                 version: 1.2.3
-  operation:
-    initiatedBy:
-      username: github-actions
-    info:
-      - name: deployment-id
-        value: deploy-1234
-    sync:
-      syncStrategy:
-        hook: {}
+    # If using ArgoCD plugin (optional):
+    plugin:
+      name: hk-kustomized-helm
+      env:
+        - name: HOVERKRAFT_DEPLOYMENT_ID
+          value: deploy-1234
   ```
 
   2. The extra manifest file (input `manifest-file`) is updated with:
@@ -204,11 +199,15 @@ runs:
                 ${{ steps.common-chart-yq-updates.outputs.cmd }}
                 ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
                 to_yaml
-            ) |
-            .operation.initiatedBy.username = "${{ inputs.initiated-by }}" |
-            .operation.info = [{"name": "deployment-id", "value": "${{ inputs.deployment-id }}"}] |
-            .operation.sync.syncStrategy.hook = {}
+            )
           ' ${{ inputs.application-file }}
+
+          # Update plugin env if it exists (only if .spec.plugin is not null)
+          if [ "$(yq eval '.spec.plugin' ${{ inputs.application-file }})" != "null" ]; then
+            yq -i '
+              (.spec.plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
+            ' ${{ inputs.application-file }}
+          fi
 
     - id: update-manifest-file
       uses: mikefarah/yq@45be35c06387d692bb6bf689919919e0e32e796f # v4.49.1

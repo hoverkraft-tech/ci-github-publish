@@ -61,10 +61,8 @@ It updates the application manifest with the provided values and deploys it to t
       - Chart values: custom values provided via the `chart-values` input, allowing dynamic configuration of the Helm chart (e.g., application URIs, feature flags).
       - Deployment ID: injected as a value to identify the deployment instance within the chart values.
       - Vendor-specific values: additional values set for integrations, such as updating `tags.datadoghq.com/version` for Datadog monitoring/versioning.
-- Operation (forces ArgoCD to sync):
-  - InitiatedBy: records who triggered the deployment
-  - Info: includes deployment-id for tracking
-  - Sync: instructs ArgoCD to perform a sync using hook strategy
+  - Plugin (if exists):
+    - Environment variable `HOVERKRAFT_DEPLOYMENT_ID`: updated with the deployment ID to trigger sync detection
 
 Example:
 
@@ -89,15 +87,12 @@ spec:
           tags:
             datadoghq.com:
               version: 1.2.3
-operation:
-  initiatedBy:
-    username: github-actions
-  info:
-    - name: deployment-id
-      value: deploy-1234
-  sync:
-    syncStrategy:
-      hook: {}
+  # If using ArgoCD plugin (optional):
+  plugin:
+    name: hk-kustomized-helm
+    env:
+      - name: HOVERKRAFT_DEPLOYMENT_ID
+        value: deploy-1234
 ```
 
 2. The extra manifest file (input `manifest-file`) is updated with:

@@ -101,7 +101,7 @@ jobs:
         if: ${{ steps.trigger.outputs.trigger }}
         uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: ${{ steps.trigger.outputs.trigger }}
         with:
           path: ./self-workflow
@@ -120,7 +120,7 @@ jobs:
           environment: ${{ inputs.environment }}
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner && steps.trigger.outputs.trigger
         with:
           path: ./self-workflow
@@ -142,7 +142,7 @@ jobs:
       - id: oidc
         uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
@@ -165,7 +165,7 @@ jobs:
           description: "Starting deployment to ${{ needs.prepare-deploy.outputs.environment }}..."
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
         with:
           path: ./self-workflow

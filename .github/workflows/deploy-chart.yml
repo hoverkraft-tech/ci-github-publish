@@ -162,7 +162,7 @@ jobs:
       tag: ${{ steps.get-tag.outputs.tag }}
       images: ${{ steps.set-images-tag.outputs.images }}
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@753288393de1f3d92f687a6761d236ca800f5306 # 0.28.1
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@1127e708e4072515056a4b0d26bcb0653646cedc # 0.30.0
         if: ${{ inputs.tag == '' }}
         with:
           fetch-depth: 0
@@ -175,7 +175,7 @@ jobs:
 
       - id: get-issue-number
         if: ${{ inputs.tag == '' && github.event_name == 'issue_comment' }}
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@753288393de1f3d92f687a6761d236ca800f5306 # 0.28.1
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@1127e708e4072515056a4b0d26bcb0653646cedc # 0.30.0
 
       - id: get-tag
         run: |
@@ -347,7 +347,7 @@ jobs:
       - id: oidc
         uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
@@ -454,7 +454,7 @@ jobs:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
         with:
           path: ./self-workflow

@@ -64,12 +64,11 @@ on:
   push:
     branches:
       - main
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 jobs:
   finish-deploy-argocd-app-of-apps:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/finish-deploy-argocd-app-of-apps.yml@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
+    permissions: {}
     secrets:
       # GitHub Token to update the deployment.
       # Permissions:

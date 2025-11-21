@@ -83,17 +83,18 @@ on:
   push:
     branches:
       - main
-permissions:
-  actions: read
-  contents: write
-  deployments: write
-  issues: write
-  packages: write
-  pull-requests: write
-  id-token: write
+permissions: {}
 jobs:
   deploy-chart:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
+    permissions:
+      actions: read
+      contents: write
+      deployments: write
+      issues: write
+      packages: write
+      pull-requests: write
+      id-token: write
     secrets:
       # OCI registry password.
       # This input is required.

@@ -48,12 +48,13 @@ on:
   push:
     branches:
       - main
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 jobs:
   deploy-checks:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-checks.yml@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
+    permissions:
+      contents: read
+      id-token: write
     with:
       # JSON array of runner(s) to use.
       # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.

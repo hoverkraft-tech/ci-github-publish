@@ -62,17 +62,18 @@ on:
   push:
     branches:
       - main
-permissions:
-  contents: write
-  issues: write
-  packages: write
-  pull-requests: write
-  actions: read
-  deployments: write
-  id-token: write
+permissions: {}
 jobs:
   clean-deploy:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
+    permissions:
+      contents: write
+      issues: write
+      packages: write
+      pull-requests: write
+      actions: read
+      deployments: write
+      id-token: write
     secrets:
       # GitHub token for deploying.
       # Permissions:

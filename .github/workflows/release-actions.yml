@@ -157,13 +157,14 @@ jobs:
             ${{ steps.get-manifest-files.outputs.paths }}
           dir_names_exclude_current_dir: true
           separator: "\n"
+          json: true
+          escape_json: false
 
       - id: get-changed-files
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           UPDATE_ALL: ${{ inputs.update-all }}
-          CHANGED_FILES: |
-            ${{ steps.changed-files.outputs.all_changed_and_modified_files }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_and_modified_files }}
           DOCUMENTATION_FILES: |
             ${{ steps.get-documentation-files.outputs.paths }}
           MANIFEST_FILES: |
@@ -171,10 +172,7 @@ jobs:
         with:
           script: |
             const { join, relative } = require('path');
-            const changedFiles = process.env.CHANGED_FILES
-              .split('\n')
-              .map(f => f.trim())
-              .filter(Boolean);
+            const changedFiles = JSON.parse(process.env.CHANGED_FILES).map(f => f.trim()).filter(Boolean);
 
             core.debug(`Changed files: ${changedFiles.join(', ')}`);
             const currentWorkflow = process.env.GITHUB_WORKFLOW_REF.replace(`${process.env.GITHUB_REPOSITORY}/`, '').replace(/@.*/, '');
@@ -281,6 +279,8 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
 
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
@@ -318,6 +318,8 @@ jobs:
       artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
 
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         if: needs.generate-documentation.outputs.artifact-id

@@ -72,6 +72,8 @@ jobs:
             core.setOutput("repository", repository);
 
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
 
       # jscpd:ignore-start
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
@@ -80,6 +82,7 @@ jobs:
 
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
+          persist-credentials: false
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
           ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
@@ -142,6 +145,7 @@ jobs:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
         with:
+          persist-credentials: false
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
           ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}

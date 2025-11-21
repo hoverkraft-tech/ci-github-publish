@@ -104,6 +104,7 @@ jobs:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: ${{ steps.trigger.outputs.trigger }}
         with:
+          persist-credentials: false
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
           ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
@@ -123,6 +124,7 @@ jobs:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner && steps.trigger.outputs.trigger
         with:
+          persist-credentials: false
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
           ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
@@ -138,12 +140,14 @@ jobs:
     outputs:
       deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
     steps:
+      # jscpd:ignore-start
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
       - id: oidc
         uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
+          persist-credentials: false
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
           ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
@@ -152,7 +156,7 @@ jobs:
       - run: |
           if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
           if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
-
+      # jscpd:ignore-end
       - id: create-deployment
         uses: ./self-workflow/actions/deployment/create
         with:
@@ -168,6 +172,7 @@ jobs:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
         with:
+          persist-credentials: false
           path: ./self-workflow
           repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
           ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}

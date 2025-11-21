@@ -110,6 +110,7 @@ jobs:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: steps.get-config.outputs.config
         with:
+          persist-credentials: false
           ref: refs/heads/${{ github.event.repository.default_branch }}
           sparse-checkout: ${{ env.CONFIG_PATH }}
 

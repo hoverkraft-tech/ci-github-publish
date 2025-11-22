@@ -41,6 +41,8 @@ description: |
         - Chart values: custom values provided via the `chart-values` input, allowing dynamic configuration of the Helm chart (e.g., application URIs, feature flags).
         - Deployment ID: injected as a value to identify the deployment instance within the chart values.
         - Vendor-specific values: additional values set for integrations, such as updating `tags.datadoghq.com/version` for Datadog monitoring/versioning.
+    - Plugin (if exists):
+      - Environment variable `HOVERKRAFT_DEPLOYMENT_ID`: updated with the deployment ID to trigger sync detection
 
   Example:
 
@@ -65,6 +67,12 @@ description: |
             tags:
               datadoghq.com:
                 version: 1.2.3
+    # If using ArgoCD plugin (optional):
+    plugin:
+      name: hk-kustomized-helm
+      env:
+        - name: HOVERKRAFT_DEPLOYMENT_ID
+          value: deploy-1234
   ```
 
   2. The extra manifest file (input `manifest-file`) is updated with:
@@ -118,6 +126,9 @@ inputs:
     required: true
   manifest-file:
     description: "Path to the extra manifest file"
+    required: true
+  initiated-by:
+    description: "Username to record as having initiated the sync operation"
     required: true
 
 runs:
@@ -190,6 +201,13 @@ runs:
                 to_yaml
             )
           ' ${{ inputs.application-file }}
+
+          # Update plugin env if it exists (only if .spec.plugin is not null)
+          if [ "$(yq eval '.spec.plugin' ${{ inputs.application-file }})" != "null" ]; then
+            yq -i '
+              (.spec.plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
+            ' ${{ inputs.application-file }}
+          fi
 
     - id: update-manifest-file
       uses: mikefarah/yq@796317b885ae219215caa36e9bdacc87c9962c15 # v4.48.2

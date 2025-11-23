@@ -9,11 +9,6 @@ description: |
   4. **Asset Management**: Copies images and media files to `assets/` directory, rewrites references in both Markdown and HTML formats
   5. **Link Rewriting**: Updates internal page links to maintain correct navigation after Jekyll structure transformation
   6. **Jekyll Build**: Executes official Jekyll build process to generate the final static site
-
-  The action uses three specialized scripts:
-  - `prepare-site.js`: Orchestrates site preparation, page creation, and link rewriting
-  - `asset-manager.js`: Handles asset copying and reference rewriting for Markdown/HTML images and sources
-  - `page-files.js`: Creates Jekyll pages with front matter and manages page link transformations
 author: hoverkraft
 branding:
   icon: layers
@@ -25,7 +20,13 @@ inputs:
     required: false
     default: "jekyll-theme-cayman"
   pages:
-    description: "The Jekyll pages path to build."
+    description: |
+      The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line).
+      Examples:
+        pages: |
+          docs/**/*.md
+          .github/workflows/*.md
+          actions/*/README.md
     required: false
 
 outputs:

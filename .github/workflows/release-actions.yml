@@ -172,7 +172,7 @@ jobs:
         with:
           script: |
             const { join, relative } = require('path');
-            const changedFiles = JSON.parse(process.env.CHANGED_FILES).map(f => f.trim()).filter(Boolean);
+            const changedFiles = process.env.CHANGED_FILES ? JSON.parse(process.env.CHANGED_FILES).map(f => f.trim()).filter(Boolean) : [];
 
             core.debug(`Changed files: ${changedFiles.join(', ')}`);
             const currentWorkflow = process.env.GITHUB_WORKFLOW_REF.replace(`${process.env.GITHUB_REPOSITORY}/`, '').replace(/@.*/, '');

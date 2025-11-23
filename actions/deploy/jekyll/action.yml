@@ -1,6 +1,19 @@
 name: Build a Jekyll site
 description: |
-  This action builds a Jekyll site from the source files.
+  Builds a Jekyll site from source files with automatic asset management and link rewriting.
+
+  Main steps performed by this action:
+  1. **Site Preparation**: Creates `_site` directory structure and generates `_config.yml` with the specified theme
+  2. **Index Page Creation**: Converts README.md to index.md with Jekyll front matter if index doesn't exist
+  3. **Additional Pages Processing**: Processes pages matching the `pages` input pattern, creating Jekyll pages with proper structure
+  4. **Asset Management**: Copies images and media files to `assets/` directory, rewrites references in both Markdown and HTML formats
+  5. **Link Rewriting**: Updates internal page links to maintain correct navigation after Jekyll structure transformation
+  6. **Jekyll Build**: Executes official Jekyll build process to generate the final static site
+
+  The action uses three specialized scripts:
+  - `prepare-site.js`: Orchestrates site preparation, page creation, and link rewriting
+  - `asset-manager.js`: Handles asset copying and reference rewriting for Markdown/HTML images and sources
+  - `page-files.js`: Creates Jekyll pages with front matter and manages page link transformations
 author: hoverkraft
 branding:
   icon: layers

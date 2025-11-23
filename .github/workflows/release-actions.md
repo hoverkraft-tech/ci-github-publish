@@ -57,7 +57,7 @@ on:
 permissions: {}
 jobs:
   release-actions:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@667d05650cefbf57afe043737ba5948601d76ec8 # 0.15.1
     permissions:
       contents: read
     secrets:

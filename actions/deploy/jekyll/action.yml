@@ -22,11 +22,13 @@ inputs:
   pages:
     description: |
       The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line).
-      Examples:
+
+      ```yml
         pages: |
           docs/**/*.md
           .github/workflows/*.md
           actions/*/README.md
+      ```
     required: false
 
 outputs:

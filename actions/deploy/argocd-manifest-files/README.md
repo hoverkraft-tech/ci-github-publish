@@ -161,6 +161,10 @@ metadata:
     # Path to the extra manifest file
     # This input is required.
     manifest-file: ""
+
+    # Username to record as having initiated the sync operation
+    # This input is required.
+    initiated-by: ""
 ````
 
 <!-- usage:end -->
@@ -186,6 +190,7 @@ metadata:
 | **`application-repository`** | Repository of the application                                                                                                                                               | **true**     | -           |
 | **`application-file`**       | Path to the application manifest file                                                                                                                                       | **true**     | -           |
 | **`manifest-file`**          | Path to the extra manifest file                                                                                                                                             | **true**     | -           |
+| **`initiated-by`**           | Username to record as having initiated the sync operation                                                                                                                   | **true**     | -           |
 
 <!-- inputs:end -->
 

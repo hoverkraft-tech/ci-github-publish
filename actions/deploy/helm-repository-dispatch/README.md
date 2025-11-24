@@ -42,7 +42,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/helm-repository-dispatch@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/helm-repository-dispatch@dbdcce2870b33525ac1fa26069bf95b2dd586fda # 0.15.2
   with:
     # Deployment ID to be used in the ArgoCD application manifest
     # This input is required.
@@ -82,7 +82,8 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
     github-token: ${{ github.token }}
 
     # Username to record as having initiated the sync operation
-    initiated-by: ${{ github.actor }}
+    # This input is required.
+    initiated-by: ""
 ````
 
 <!-- usage:end -->

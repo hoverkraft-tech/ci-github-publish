@@ -26,7 +26,7 @@ spec:
       prune: false
       selfHeal: false
   plugin:
-    name: hk-kustomized-helm
+    name: hoverkraft-deployment
     env:
       - name: HOVERKRAFT_DEPLOYMENT_ID
         value: ""

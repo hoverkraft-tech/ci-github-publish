@@ -89,7 +89,7 @@ spec:
               version: 1.2.3
   # If using ArgoCD plugin (optional):
   plugin:
-    name: hk-kustomized-helm
+    name: hoverkraft-deployment
     env:
       - name: HOVERKRAFT_DEPLOYMENT_ID
         value: deploy-1234

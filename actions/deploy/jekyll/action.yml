@@ -3,6 +3,7 @@ description: |
   Builds a Jekyll site from source files with automatic asset management and link rewriting.
 
   Main steps performed by this action:
+
   1. **Site Preparation**: Creates `_site` directory structure and generates `_config.yml` with the specified theme
   2. **Index Page Creation**: Converts README.md to index.md with Jekyll front matter if index doesn't exist
   3. **Additional Pages Processing**: Processes pages matching the `pages` input pattern, creating Jekyll pages with proper structure

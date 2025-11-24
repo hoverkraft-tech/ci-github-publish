@@ -31,6 +31,7 @@
 Builds a Jekyll site from source files with automatic asset management and link rewriting.
 
 Main steps performed by this action:
+
 1. **Site Preparation**: Creates `_site` directory structure and generates `_config.yml` with the specified theme
 2. **Index Page Creation**: Converts README.md to index.md with Jekyll front matter if index doesn't exist
 3. **Additional Pages Processing**: Processes pages matching the `pages` input pattern, creating Jekyll pages with proper structure
@@ -68,12 +69,12 @@ Main steps performed by this action:
 
 ## Inputs
 
-| **Input**   | **Description**                                                                                                                                          | **Required** | **Default**           |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`theme`** | The Jekyll theme to use for the site.                                                                                                                    | **false**    | `jekyll-theme-cayman` |
-| **`pages`** | The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line).                                                                | **false**    | -                     |
-|             |                                                                                                                                                          |              |                       |
-|             | <!-- textlint-disable --><pre lang="yml"> pages: \|&#13; docs/**/*.md&#13; .github/workflows/*.md&#13; actions/*/README.md</pre><!-- textlint-enable --> |              |                       |
+| **Input**   | **Description**                                                                                                                                           | **Required** | **Default**           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`theme`** | The Jekyll theme to use for the site.                                                                                                                     | **false**    | `jekyll-theme-cayman` |
+| **`pages`** | The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line).                                                                 | **false**    | -                     |
+|             |                                                                                                                                                           |              |                       |
+|             | <!-- textlint-disable --><pre lang="yml"> pages: \|&#13; docs/\*_/_.md&#13; .github/workflows/_.md&#13; actions/_/README.md</pre><!-- textlint-enable --> |              |                       |
 
 <!-- inputs:end -->
 

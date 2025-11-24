@@ -289,7 +289,7 @@ jobs:
 
       # jscpd:ignore-start
 
-      - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+      - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         if: inputs.github-app-id
         id: generate-token
         with:
@@ -298,7 +298,7 @@ jobs:
 
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@c314229c3ca6914f7023ffca7afc26753ab99b41 # 0.30.1
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@5e8d0e6d1e76d8577a070db6d0128a91b1c9d5ad # 0.30.2
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: docs/actions-workflows-documentation-update

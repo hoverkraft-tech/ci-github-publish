@@ -69,7 +69,7 @@ description: |
                 version: 1.2.3
     # If using ArgoCD plugin (optional):
     plugin:
-      name: hk-kustomized-helm
+      name: hoverkraft-deployment
       env:
         - name: HOVERKRAFT_DEPLOYMENT_ID
           value: deploy-1234
@@ -202,8 +202,8 @@ runs:
             )
           ' ${{ inputs.application-file }}
 
-          # Update plugin env if it exists (only if .spec.plugin is not null)
-          if [ "$(yq eval '.spec.plugin' ${{ inputs.application-file }})" != "null" ]; then
+          # Update plugin env if it exists and plugin name is "hoverkraft-deployment"
+          if [ "$(yq eval '.spec.plugin.name' ${{ inputs.application-file }})" = "hoverkraft-deployment" ]; then
             yq -i '
               (.spec.plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
             ' ${{ inputs.application-file }}

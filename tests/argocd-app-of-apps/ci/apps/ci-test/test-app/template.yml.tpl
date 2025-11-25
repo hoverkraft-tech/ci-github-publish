@@ -25,15 +25,15 @@ spec:
     automated:
       prune: false
       selfHeal: false
-  plugin:
-    name: hoverkraft-deployment
-    env:
-      - name: HOVERKRAFT_DEPLOYMENT_ID
-        value: ""
   sources:
     - chart: test-app
       repoURL: ghcr.io/my-org/test-app/charts
       targetRevision: # Will be updated by deploy worklfow
+      plugin:
+        name: hoverkraft-deployment
+        env:
+          - name: HOVERKRAFT_DEPLOYMENT_ID
+            value: ""
       helm:
         values: |
           deploymentId: # Will be updated by deploy worklfow

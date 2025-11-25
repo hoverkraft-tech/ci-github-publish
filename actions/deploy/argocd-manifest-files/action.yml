@@ -37,12 +37,12 @@ description: |
       - Chart: set to the Helm chart name
       - RepoURL: set to the Helm chart repository URL
       - TargetRevision: set to the Helm chart version
+      - Plugin - hoverkraft-deployment (if exists):
+        - Environment variable `HOVERKRAFT_DEPLOYMENT_ID`: updated with the deployment ID to trigger sync detection
       - Helm Values:
         - Chart values: custom values provided via the `chart-values` input, allowing dynamic configuration of the Helm chart (e.g., application URIs, feature flags).
         - Deployment ID: injected as a value to identify the deployment instance within the chart values.
         - Vendor-specific values: additional values set for integrations, such as updating `tags.datadoghq.com/version` for Datadog monitoring/versioning.
-    - Plugin (if exists):
-      - Environment variable `HOVERKRAFT_DEPLOYMENT_ID`: updated with the deployment ID to trigger sync detection
 
   Example:
 
@@ -59,6 +59,12 @@ description: |
       - chart: my-chart
         repoURL: https://charts.example.com
         targetRevision: 1.2.3
+        # If using ArgoCD plugin (optional):
+        plugin:
+          name: hoverkraft-deployment
+          env:
+            - name: HOVERKRAFT_DEPLOYMENT_ID
+              value: deploy-1234
         helm:
           values:
             application:
@@ -67,12 +73,6 @@ description: |
             tags:
               datadoghq.com:
                 version: 1.2.3
-    # If using ArgoCD plugin (optional):
-    plugin:
-      name: hoverkraft-deployment
-      env:
-        - name: HOVERKRAFT_DEPLOYMENT_ID
-          value: deploy-1234
   ```
 
   2. The extra manifest file (input `manifest-file`) is updated with:
@@ -202,10 +202,10 @@ runs:
             )
           ' ${{ inputs.application-file }}
 
-          # Update plugin env if it exists and plugin name is "hoverkraft-deployment"
-          if [ "$(yq eval '.spec.plugin.name' ${{ inputs.application-file }})" = "hoverkraft-deployment" ]; then
+          # Update plugin env if it exists on the first source and plugin name is "hoverkraft-deployment"
+          if [ "$(yq eval '.spec.sources[0].plugin.name' ${{ inputs.application-file }})" = "hoverkraft-deployment" ]; then
             yq -i '
-              (.spec.plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
+              (.spec.sources[0].plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
             ' ${{ inputs.application-file }}
           fi
 

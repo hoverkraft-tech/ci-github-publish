@@ -68,19 +68,19 @@ jobs:
         with:
           script: |
             const workingDirectory = process.env.WORKING_DIRECTORY.trim();
-            if (!workingDirectory) {
-              core.setOutput("config-name", 'release-config.yml');
-              return;
-            }
-            // Convert path to slug: handle slashes, spaces, and special characters
-            const slug = workingDirectory
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
-              .replace(/^-+|-+$/g, '');      // Remove leading/trailing dashes
+            let configName = 'release-config.yml';
+            if (workingDirectory) {
+              // Convert path to slug: handle slashes, spaces, and special characters
+              const slug = workingDirectory
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
+                .replace(/^-+|-+$/g, '');      // Remove leading/trailing dashes
 
-            core.setOutput("config-slug", slug);
-            core.setOutput("config-name", `release-configs/${slug}.yml`);
-            core.setOutput("config-path", `.github/release-configs/${slug}.yml`);
+              core.setOutput("config-slug", slug);
+              configName = `release-configs/${slug}.yml`;
+            }
+            core.setOutput("config-name", configName);
+            core.setOutput("config-path", `.github/${configName}`);
 
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: steps.get-config.outputs.config-path

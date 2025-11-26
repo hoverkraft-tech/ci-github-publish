@@ -26,6 +26,10 @@ on:
         required: false
         default: false
         type: boolean
+      documentation-files:
+        description: "List of extra documentation files to update (if any)."
+        required: false
+        type: string
       github-app-id:
         description: |
           GitHub App ID to generate GitHub token in place of github-token.
@@ -104,23 +108,42 @@ jobs:
 
       - id: get-documentation-files
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          EXTRA_DOCUMENTATION_FILES: ${{ inputs.documentation-files }}
         with:
           script: |
             const path = require('node:path');
             const fs = require('fs');
 
-            const allFiles = [
-              './README.md',
-              './CONTRIBUTING.md',
-              './.github/logo.svg',
-            ].filter(documentationPath => fs.existsSync(documentationPath))
-            .map(documentationPath => path.resolve(documentationPath));
+            const allFiles = new Set(
+              [
+                './README.md',
+                './CONTRIBUTING.md',
+                './.github/logo.svg',
+              ].filter(documentationPath => fs.existsSync(documentationPath))
+              .map(documentationPath => path.resolve(documentationPath))
+            );
+
+            // Retrieve extra documentation files
+            const extraDocumentationFiles = process.env.EXTRA_DOCUMENTATION_FILES
+              ? process.env.EXTRA_DOCUMENTATION_FILES
+                  .split('\n')
+                  .map(filePath => filePath.trim())
+                  .filter(Boolean)
+              : [];
+            if(extraDocumentationFiles.length > 0){
+              const extraGlobber = await glob.create(extraDocumentationFiles.join('\n'));
+              for await (const file of extraGlobber.globGenerator()) {
+                core.debug(`Found extra documentation file: ${file}`);
+                allFiles.add(file);
+              }
+            }
 
             // Retrieve action manifests
             const actionsGlobber = await glob.create('./actions/**/README.md');
             for await (const file of actionsGlobber.globGenerator()) {
               core.debug(`Found action documentation: ${file}`);
-              allFiles.push(file);
+              allFiles.add(file);
             }
 
             // Retrieve workflow manifests
@@ -133,17 +156,17 @@ jobs:
                 continue;
               }
               core.debug(`Including workflow documentation: ${file}`);
-              allFiles.push(file);
+              allFiles.add(file);
             }
 
-            if (allFiles.length === 0) {
+            if (allFiles.size === 0) {
               core.warning('No documentation files found.');
               return;
             }
 
             core.setOutput(
               'paths',
-              allFiles
+              Array.from(allFiles)
                 .map(filePath => path.relative(process.env.GITHUB_WORKSPACE, filePath))
                 .join('\n')
             );

@@ -60,9 +60,11 @@ jobs:
     steps:
       - id: config-name
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          WORKING_DIRECTORY: ${{ inputs.working-directory }}
         with:
           script: |
-            const workingDirectory = `${{ inputs.working-directory }}`.trim();
+            const workingDirectory = process.env.WORKING_DIRECTORY.trim();
             if (!workingDirectory) {
               return 'release-drafter.yml';
             }

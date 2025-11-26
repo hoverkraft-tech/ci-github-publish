@@ -57,7 +57,7 @@ on:
 permissions: {}
 jobs:
   release-actions:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@dbdcce2870b33525ac1fa26069bf95b2dd586fda # 0.15.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@ed864a88ec8610dc2a1b9aab1dbde2864bf75df4 # 0.16.0
     permissions:
       contents: read
     secrets:
@@ -78,6 +78,9 @@ jobs:
       # Update all actions and workflows, regardless of changes.
       update-all: false
 
+      # List of extra documentation files to update (if any).
+      documentation-files: ""
+
       # GitHub App ID to generate GitHub token in place of github-token.
       # See https://github.com/actions/create-github-app-token.
       github-app-id: ""
@@ -91,13 +94,14 @@ jobs:
 
 ### Workflow Call Inputs
 
-| **Input**           | **Description**                                                                    | **Required** | **Type**    | **Default**         |
-| ------------------- | ---------------------------------------------------------------------------------- | ------------ | ----------- | ------------------- |
-| **`runs-on`**       | JSON array of runner(s) to use.                                                    | **false**    | **string**  | `["ubuntu-latest"]` |
-|                     | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |             |                     |
-| **`update-all`**    | Update all actions and workflows, regardless of changes.                           | **false**    | **boolean** | `false`             |
-| **`github-app-id`** | GitHub App ID to generate GitHub token in place of github-token.                   | **false**    | **string**  | -                   |
-|                     | See <https://github.com/actions/create-github-app-token>.                          |              |             |                     |
+| **Input**                 | **Description**                                                                    | **Required** | **Type**    | **Default**         |
+| ------------------------- | ---------------------------------------------------------------------------------- | ------------ | ----------- | ------------------- |
+| **`runs-on`**             | JSON array of runner(s) to use.                                                    | **false**    | **string**  | `["ubuntu-latest"]` |
+|                           | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |             |                     |
+| **`update-all`**          | Update all actions and workflows, regardless of changes.                           | **false**    | **boolean** | `false`             |
+| **`documentation-files`** | List of extra documentation files to update (if any).                              | **false**    | **string**  | -                   |
+| **`github-app-id`**       | GitHub App ID to generate GitHub token in place of github-token.                   | **false**    | **string**  | -                   |
+|                           | See <https://github.com/actions/create-github-app-token>.                          |              |             |                     |
 
 <!-- inputs:end -->
 

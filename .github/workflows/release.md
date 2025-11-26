@@ -43,7 +43,7 @@ on:
 permissions: {}
 jobs:
   release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release.yml@ec556bdcd3116da8384c97fe9897b3957ee03d37 # copilot/support-monorepo-architecture
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release.yml@418e2c3d36cd1ccabf8c15a5c5c3c4c7b146227f # main
     permissions: {}
     with:
       # JSON array of runner(s) to use.

@@ -56,7 +56,8 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
     outputs:
-      config-name: ${{ steps.config-name.outputs.result }}
+      config-slug: ${{ steps.config-name.outputs.config-slug }}
+      config-name: ${{ steps.config-name.outputs.config-name }}
     steps:
       - id: config-name
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -66,15 +67,17 @@ jobs:
           script: |
             const workingDirectory = process.env.WORKING_DIRECTORY.trim();
             if (!workingDirectory) {
-              return 'release-drafter.yml';
+              core.setOutput("config-name", 'release-config.yml');
+              return;
             }
             // Convert path to slug: handle slashes, spaces, and special characters
             const slug = workingDirectory
               .toLowerCase()
               .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
               .replace(/^-+|-+$/g, '');      // Remove leading/trailing dashes
-            return `release-configs/${slug}.yml`;
-          result-encoding: string
+
+            core.setOutput("config-slug", slug);
+            core.setOutput("config-name", `release-configs/${slug}.yml`);
 
   pull-request-labeler:
     needs: prepare
@@ -86,7 +89,7 @@ jobs:
     steps:
       - uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5 # v6.1.0
         env:
-          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          GITHUB_TOKEN: ${{ secrets.github-token || secrets.GITHUB_TOKEN || github.token }}
         with:
           disable-releaser: true
           # config-name is relative to .github/ directory
@@ -205,29 +208,46 @@ jobs:
               }
             }
 
-            core.setOutput('config', config);
+            core.setOutput('config-content', config);
             core.setOutput('config-path', configPath);
 
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        if: steps.get-config.outputs.config
+        if: steps.get-config.outputs.config-path
         with:
           persist-credentials: false
           ref: refs/heads/${{ github.event.repository.default_branch }}
           sparse-checkout: ${{ steps.get-config.outputs.config-path }}
 
       - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        if: steps.get-config.outputs.config
+        if: steps.get-config.outputs.config-content
+        id: prepare-pull-request
         env:
+          CONFIG_CONTENT: ${{ steps.get-config.outputs.config-content }}
           CONFIG_PATH: ${{ steps.get-config.outputs.config-path }}
+          CONFIG_SLUG: ${{ needs.prepare.outputs.config-slug }}
+          WORKING_DIRECTORY: ${{ inputs.working-directory }}
         with:
           script: |
             const fs = require('node:fs');
             const path = require('node:path');
-            const configContent = ${{ toJSON(steps.get-config.outputs.config) }};
+            const configContent = process.env.CONFIG_CONTENT;
             const configPath = process.env.CONFIG_PATH;
             const configDir = path.dirname(configPath);
             fs.mkdirSync(configDir, { recursive: true });
             fs.writeFileSync(configPath, configContent, 'utf8');
+
+            core.setOutput('branch', `ci/prepare-release-config${
+              process.env.CONFIG_SLUG ? `/${process.env.CONFIG_SLUG}` : ''
+            }`);
+            core.setOutput('title', `ci: prepare release configuration${
+              process.env.CONFIG_SLUG ? ` for "${process.env.CONFIG_SLUG}"` : ''
+            }`);
+            core.setOutput('body', `Prepare release configuration${
+              process.env.WORKING_DIRECTORY ? ` for "${process.env.WORKING_DIRECTORY}" working directory` : ''
+            }.`);
+            core.setOutput('commit-message', `ci: prepare release configuration${
+              process.env.CONFIG_SLUG ? ` for "${process.env.CONFIG_SLUG}"` : ''
+            }\n\n[skip ci]`);
 
       - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         if: ${{ steps.get-config.outputs.config && inputs.github-app-id }}
@@ -240,10 +260,8 @@ jobs:
         if: steps.get-config.outputs.config
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
-          branch: ci/prepare-release-config
-          title: "ci: prepare release configuration"
-          body: "Prepare release configuration"
+          branch: ${{ steps.prepare-pull-request.outputs.branch }}
+          title: ${{ steps.prepare-pull-request.outputs.title }}
+          body: ${{ steps.prepare-pull-request.outputs.body }}
           commit-message: |
-            ci: prepare release configuration
-
-            [skip ci]
+            ${{ steps.prepare-pull-request.outputs.commit-message }}

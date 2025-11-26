@@ -59,6 +59,7 @@ jobs:
       config-slug: ${{ steps.get-config.outputs.config-slug }}
       config-name: ${{ steps.get-config.outputs.config-name }}
       config-path: ${{ steps.get-config.outputs.config-path }}
+      working-directory: ${{ steps.get-config.outputs.working-directory }}
       config-exists: ${{ steps.config-file-exists.outputs.exists }}
     steps:
       - id: get-config
@@ -67,14 +68,29 @@ jobs:
           WORKING_DIRECTORY: ${{ inputs.working-directory }}
         with:
           script: |
+            const path = require('node:path');
+            const fs = require('node:fs');
+
             const workingDirectory = process.env.WORKING_DIRECTORY.trim();
             let configName = 'release-config.yml';
+
             if (workingDirectory) {
+              // Get working directory absolute path
+              const workingDirectoryFullPath = path.isAbsolute(workingDirectory)
+                ? workingDirectory
+                : path.join(process.env.GITHUB_WORKSPACE || '', workingDirectory);
+
+              if (!fs.existsSync(workingDirectoryFullPath)){
+                return core.setFailed(`Working directory "${workingDirectory}" does not exist.`);
+              }
+
+              core.setOutput("working-directory", path.relative(process.env.GITHUB_WORKSPACE, workingDirectoryFullPath));
+
               // Convert path to slug: handle slashes, spaces, and special characters
-              const slug = workingDirectory
+              const slug = path.basename(workingDirectoryFullPath)
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
-                .replace(/^-+|-+$/g, '');      // Remove leading/trailing dashes
+                .replace(/^-+|-+$/g, '');     // Remove leading/trailing dashes
 
               core.setOutput("config-slug", slug);
               configName = `release-configs/${slug}.yml`;
@@ -126,8 +142,8 @@ jobs:
       contents: read
       pull-requests: write
     env:
-      WORKING_DIRECTORY: ${{ inputs.working-directory }}
       INCLUDE_PATHS: ${{ inputs.include-paths }}
+      WORKING_DIRECTORY: ${{ needs.prepare.outputs.working-directory }}
       CONFIG_NAME: ${{ needs.prepare.outputs.config-name }}
       CONFIG_PATH: ${{ needs.prepare.outputs.config-path }}
       CONFIG_SLUG: ${{ needs.prepare.outputs.config-slug }}
@@ -261,7 +277,7 @@ jobs:
           CONFIG_CONTENT: ${{ steps.get-config.outputs.config-content }}
           CONFIG_PATH: ${{ needs.prepare.outputs.config-path }}
           CONFIG_SLUG: ${{ needs.prepare.outputs.config-slug }}
-          WORKING_DIRECTORY: ${{ inputs.working-directory }}
+          WORKING_DIRECTORY: ${{ needs.prepare.outputs.working-directory }}
         with:
           script: |
             const fs = require('node:fs');

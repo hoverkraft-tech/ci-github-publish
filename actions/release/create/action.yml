@@ -9,6 +9,14 @@ inputs:
   prerelease:
     description: "Whether the release is a prerelease"
     default: "false"
+  working-directory:
+    description: |
+      Working directory for monorepo support.
+      If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path.
+      The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.
+    type: string
+    required: false
+    default: ""
   github-token:
     description: |
       GitHub Token for creating the release.
@@ -30,12 +38,32 @@ runs:
         persist-credentials: false
         fetch-depth: "0"
 
+    - id: config-name
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      with:
+        script: |
+          const workingDirectory = process.env.WORKING_DIRECTORY.trim();
+          if (!workingDirectory) {
+            return 'release-drafter.yml';
+          }
+          // Convert path to slug: handle slashes, spaces, and special characters
+          const slug = workingDirectory
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
+            .replace(/^-+|-+$/g, '');      // Remove leading/trailing dashes
+          return `release-configs/${slug}.yml`;
+        result-encoding: string
+
     - id: release
       uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5 # v6.1.0
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
         publish: true
+        # config-name is relative to .github/ directory
+        config-name: ${{ steps.config-name.outputs.result }}
         prerelease: ${{ inputs.pre-release }}
         disable-autolabeler: true
 

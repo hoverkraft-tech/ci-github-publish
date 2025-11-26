@@ -130,6 +130,7 @@ jobs:
       INCLUDE_PATHS: ${{ inputs.include-paths }}
       CONFIG_NAME: ${{ needs.prepare.outputs.config-name }}
       CONFIG_PATH: ${{ needs.prepare.outputs.config-path }}
+      CONFIG_SLUG: ${{ needs.prepare.outputs.config-slug }}
     steps:
       - id: get-config
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -182,13 +183,24 @@ jobs:
               includePathsSection += `include-paths:\n${pathsYaml}\n`;
             }
 
+            const nameTemplate = workingDirectory
+              ? `Version ${process.env.CONFIG_SLUG} - \${RESOLVED_VERSION}`
+              : `Version \${RESOLVED_VERSION}`;
+
+            const tagPrefix = workingDirectory
+              ? `${process.env.CONFIG_SLUG}-`
+              : '';
+
+            const tagTemplate = `${tagPrefix}\${RESOLVED_VERSION}`;
+
             const config = `---
             ${includePathsSection}template: |
               # What's Changed
               \$CHANGES
-              **Full Changelog**: https://github.com/\$OWNER/\$REPOSITORY/compare/\$PREVIOUS_TAG...\$RESOLVED_VERSION
-            name-template: "Version \$RESOLVED_VERSION"
-            tag-template: "\$RESOLVED_VERSION"
+              **Full Changelog**: https://github.com/\$OWNER/\$REPOSITORY/compare/\$PREVIOUS_TAG...${tagTemplate}
+            name-template: "${nameTemplate}"
+            tag-template: "${tagTemplate}"
+            tag-prefix: "${tagPrefix}"
             prerelease-identifier: "rc"
             version-resolver:
               major:

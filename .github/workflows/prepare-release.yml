@@ -56,10 +56,12 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
     outputs:
-      config-slug: ${{ steps.config-name.outputs.config-slug }}
-      config-name: ${{ steps.config-name.outputs.config-name }}
+      config-slug: ${{ steps.get-config.outputs.config-slug }}
+      config-name: ${{ steps.get-config.outputs.config-name }}
+      config-path: ${{ steps.get-config.outputs.config-path }}
+      config-exists: ${{ steps.config-file-exists.outputs.exists }}
     steps:
-      - id: config-name
+      - id: get-config
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           WORKING_DIRECTORY: ${{ inputs.working-directory }}
@@ -78,6 +80,27 @@ jobs:
 
             core.setOutput("config-slug", slug);
             core.setOutput("config-name", `release-configs/${slug}.yml`);
+            core.setOutput("config-path", `.github/release-configs/${slug}.yml`);
+
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        if: steps.get-config.outputs.config-path
+        with:
+          persist-credentials: false
+          ref: refs/heads/${{ github.event.repository.default_branch }}
+          sparse-checkout: ${{ steps.get-config.outputs.config-path }}
+
+      - id: config-file-exists
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          CONFIG_PATH: ${{ steps.get-config.outputs.config-path }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const configPath = process.env.CONFIG_PATH;
+            if (!configPath || !fs.existsSync(configPath)) {
+              return core.warn(`Release configuration file "${configPath}" does not exist.`);
+            }
+            core.setOutput('exists', true);
 
   pull-request-labeler:
     needs: prepare
@@ -85,7 +108,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && needs.prepare.outputs.config-exists
     steps:
       - uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5 # v6.1.0
         env:
@@ -106,6 +129,7 @@ jobs:
       WORKING_DIRECTORY: ${{ inputs.working-directory }}
       INCLUDE_PATHS: ${{ inputs.include-paths }}
       CONFIG_NAME: ${{ needs.prepare.outputs.config-name }}
+      CONFIG_PATH: ${{ needs.prepare.outputs.config-path }}
     steps:
       - id: get-config
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -113,7 +137,7 @@ jobs:
           script: |
             const workingDirectory = process.env.WORKING_DIRECTORY;
             const configName = process.env.CONFIG_NAME;
-            const configPath = `.github/${configName}`;
+            const configPath = process.env.CONFIG_PATH;
 
             // Parse additional include paths
             const includePaths = new Set();
@@ -212,18 +236,18 @@ jobs:
             core.setOutput('config-path', configPath);
 
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        if: steps.get-config.outputs.config-path
+        if: steps.get-config.outputs.config-content
         with:
           persist-credentials: false
           ref: refs/heads/${{ github.event.repository.default_branch }}
-          sparse-checkout: ${{ steps.get-config.outputs.config-path }}
+          sparse-checkout: ${{ needs.prepare.outputs.config-path }}
 
       - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         if: steps.get-config.outputs.config-content
         id: prepare-pull-request
         env:
           CONFIG_CONTENT: ${{ steps.get-config.outputs.config-content }}
-          CONFIG_PATH: ${{ steps.get-config.outputs.config-path }}
+          CONFIG_PATH: ${{ needs.prepare.outputs.config-path }}
           CONFIG_SLUG: ${{ needs.prepare.outputs.config-slug }}
           WORKING_DIRECTORY: ${{ inputs.working-directory }}
         with:
@@ -250,14 +274,14 @@ jobs:
             }\n\n[skip ci]`);
 
       - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
-        if: ${{ steps.get-config.outputs.config && inputs.github-app-id }}
+        if: ${{ steps.get-config.outputs.config-content && inputs.github-app-id }}
         id: generate-token
         with:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
 
       - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@5e8d0e6d1e76d8577a070db6d0128a91b1c9d5ad # 0.30.2
-        if: steps.get-config.outputs.config
+        if: steps.get-config.outputs.config-content
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: ${{ steps.prepare-pull-request.outputs.branch }}

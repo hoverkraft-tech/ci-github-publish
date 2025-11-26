@@ -45,9 +45,11 @@ on:
           GitHub App private key to generate GitHub token in place of github-token.
           See https://github.com/actions/create-github-app-token.
 
-permissions:
-  contents: read
-  pull-requests: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
 
 jobs:
   prepare:
@@ -75,6 +77,9 @@ jobs:
   pull-request-labeler:
     needs: prepare
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      contents: read
+      pull-requests: write
     if: github.event_name == 'pull_request'
     steps:
       - uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5 # v6.1.0
@@ -89,6 +94,9 @@ jobs:
     needs: prepare
     if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      contents: read
+      pull-requests: write
     env:
       WORKING_DIRECTORY: ${{ inputs.working-directory }}
       INCLUDE_PATHS: ${{ inputs.include-paths }}

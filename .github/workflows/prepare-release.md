@@ -124,6 +124,34 @@ jobs:
 <!-- outputs:end -->
 
 <!-- examples:start -->
+
+## Examples
+
+### Basic usage
+
+```yaml
+name: Prepare Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  prepare-release:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@main
+    permissions:
+      contents: read
+      pull-requests: write
+    with:
+      github-app-id: ${{ vars.CI_BOT_APP_ID }}
+    secrets:
+      github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
+```
+
 <!-- examples:end -->
 
 <!-- contributing:start -->

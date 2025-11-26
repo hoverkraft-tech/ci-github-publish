@@ -46,7 +46,7 @@ on:
           See https://github.com/actions/create-github-app-token.
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  group: ${{ github.workflow }}-${{ inputs.working-directory }}-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 
 permissions: {}

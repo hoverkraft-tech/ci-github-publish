@@ -21,6 +21,8 @@ autolabeler:
   - label: "release-major"
     title:
       - "/^BREAKING CHANGE:/"
+      - "/^\\w+!:/"
+      - "/^\\w+\\(.+\\)!:/"
   - label: "release-minor"
     title:
       - "/^feat:/"

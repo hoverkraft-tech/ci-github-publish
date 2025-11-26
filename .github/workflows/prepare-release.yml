@@ -98,7 +98,7 @@ jobs:
             const fs = require('node:fs');
             const configPath = process.env.CONFIG_PATH;
             if (!configPath || !fs.existsSync(configPath)) {
-              return core.warn(`Release configuration file "${configPath}" does not exist.`);
+              return core.warning(`Release configuration file "${configPath}" does not exist.`);
             }
             core.setOutput('exists', true);
 

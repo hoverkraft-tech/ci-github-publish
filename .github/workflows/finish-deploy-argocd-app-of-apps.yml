@@ -142,6 +142,7 @@ jobs:
             core.setFailed(`Status "${status}" is not valid. Valid statuses are: ${JSON.stringify(statesStatuses)}`);
 
       # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      # jscpd:ignore-start
       - id: oidc
         uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
 
@@ -156,7 +157,7 @@ jobs:
       - run: |
           if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
           if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
-
+      # jscpd:ignore-end
       - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         if: inputs.github-app-id
         id: generate-token

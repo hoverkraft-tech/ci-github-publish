@@ -15,6 +15,21 @@ on:
         type: string
         default: '["ubuntu-latest"]'
         required: false
+      working-directory:
+        description: |
+          Working directory for monorepo support.
+          If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path.
+          The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.
+        type: string
+        required: false
+        default: ""
+      include-paths:
+        description: |
+          Additional paths to include in the release notes filtering (JSON array).
+          These paths are added to the `include-paths` configuration of release-drafter.
+        type: string
+        required: false
+        default: "[]"
       github-app-id:
         description: |
           GitHub App ID to generate GitHub token in place of github-token.
@@ -35,30 +50,103 @@ permissions:
   pull-requests: write
 
 jobs:
-  pull-request-labeler:
+  prepare:
     runs-on: ${{ fromJson(inputs.runs-on) }}
-    if: ${{ github.event_name == 'pull_request' }}
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
+    outputs:
+      config-name: ${{ steps.config-name.outputs.result }}
+    steps:
+      - id: config-name
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const workingDirectory = `${{ inputs.working-directory }}`.trim();
+            if (!workingDirectory) {
+              return 'release-drafter.yml';
+            }
+            // Convert path to slug: handle slashes, spaces, and special characters
+            const slug = workingDirectory
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
+              .replace(/^-+|-+$/g, '');      // Remove leading/trailing dashes
+            return `release-configs/${slug}.yml`;
+          result-encoding: string
+
+  pull-request-labeler:
+    needs: prepare
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    if: github.event_name == 'pull_request'
     steps:
       - uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5 # v6.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
         with:
           disable-releaser: true
+          # config-name is relative to .github/ directory
+          config-name: ${{ needs.prepare.outputs.config-name }}
 
   release-configuration:
+    needs: prepare
     if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
     runs-on: ${{ fromJson(inputs.runs-on) }}
     env:
-      CONFIG_PATH: .github/release-drafter.yml
+      WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      INCLUDE_PATHS: ${{ inputs.include-paths }}
+      CONFIG_NAME: ${{ needs.prepare.outputs.config-name }}
     steps:
       - id: get-config
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
-            const configPath = process.env.CONFIG_PATH;
+            const workingDirectory = process.env.WORKING_DIRECTORY;
+            const configName = process.env.CONFIG_NAME;
+            const configPath = `.github/${configName}`;
+
+            // Parse additional include paths
+            const includePaths = new Set();
+            try {
+              const includePathsInput = JSON.parse(process.env.INCLUDE_PATHS || '[]');
+              if (!Array.isArray(includePathsInput)) {
+                return core.setFailed('include-paths input is not an array');
+              }
+
+              for (const includePath of includePathsInput) {
+                if (typeof includePath !== 'string') {
+                  return core.setFailed('include-paths input must be an array of strings');
+                }
+                const trimmedPath = includePath.trim();
+                if (trimmedPath.length === 0) {
+                  continue;
+                }
+                includePaths.add(trimmedPath);
+              }
+            } catch (e) {
+              return core.setFailed(`Failed to parse include-paths input: ${e.message}`);
+            }
+
+            // Amend include-paths if working directory is specified
+            if (workingDirectory) {
+              // Add working directory to include-paths
+              includePaths.add(workingDirectory);
+              const workflowRef = process.env.GITHUB_WORKFLOW_REF || '';
+              const repository = process.env.GITHUB_REPOSITORY || '';
+              if (workflowRef && repository) {
+                const currentWorkflow = workflowRef.replace(`${repository}/`, '').replace(/@.*/, '').trim();
+                if(currentWorkflow.length > 0) {
+                  includePaths.add(currentWorkflow);
+                }
+              }
+            }
+
+            // Build include-paths section if includePaths is not empty 
+            let includePathsSection = '';
+            if (includePaths.size > 0 ) {
+              const pathsYaml = Array.from(includePaths).map(p => `  - "${p}"`).join('\n');
+              includePathsSection += `include-paths:\n${pathsYaml}\n`;
+            }
 
             const config = `---
-            template: |
+            ${includePathsSection}template: |
               # What's Changed
               \$CHANGES
               **Full Changelog**: https://github.com/\$OWNER/\$REPOSITORY/compare/\$PREVIOUS_TAG...\$RESOLVED_VERSION
@@ -80,6 +168,8 @@ jobs:
               - label: "release-major"
                 title:
                   - "/^BREAKING CHANGE:/"
+                  - "/^\\\\w+!:/"
+                  - "/^\\\\w+\\\\(.+\\\\)!:/"
               - label: "release-minor"
                 title:
                   - "/^feat:/"
@@ -106,21 +196,27 @@ jobs:
             }
 
             core.setOutput('config', config);
+            core.setOutput('config-path', configPath);
 
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         if: steps.get-config.outputs.config
         with:
           persist-credentials: false
           ref: refs/heads/${{ github.event.repository.default_branch }}
-          sparse-checkout: ${{ env.CONFIG_PATH }}
+          sparse-checkout: ${{ steps.get-config.outputs.config-path }}
 
       - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         if: steps.get-config.outputs.config
+        env:
+          CONFIG_PATH: ${{ steps.get-config.outputs.config-path }}
         with:
           script: |
             const fs = require('node:fs');
+            const path = require('node:path');
             const configContent = ${{ toJSON(steps.get-config.outputs.config) }};
             const configPath = process.env.CONFIG_PATH;
+            const configDir = path.dirname(configPath);
+            fs.mkdirSync(configDir, { recursive: true });
             fs.writeFileSync(configPath, configContent, 'utf8');
 
       - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0

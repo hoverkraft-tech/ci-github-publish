@@ -85,9 +85,9 @@ _Actions for managing workflows._
 
 ### Cleaning deploy
 
-#### - [Clean deploy argocd app of apps](.github/workflows/clean-deploy-argocd-app-of-apps.md)
-
 #### - [Clean deploy](.github/workflows/clean-deploy.md)
+
+#### - [Clean deploy argocd app of apps](.github/workflows/clean-deploy-argocd-app-of-apps.md)
 
 ### Performs deploy
 
@@ -108,6 +108,8 @@ _Actions for managing workflows._
 _Reusable workflows for managing release process._
 
 #### - [Prepare release](.github/workflows/prepare-release.md)
+
+#### - [Release](.github/workflows/release.md)
 
 #### - [Release actions](.github/workflows/release-actions.md)
 

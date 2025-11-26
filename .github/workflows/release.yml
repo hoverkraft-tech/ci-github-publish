@@ -1,0 +1,56 @@
+# Reusable release workflow
+# This workflow delegates release tasks by reusing a shared release workflow, ensuring standardized publishing across projects.
+---
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      #checkov:skip=CKV_GHA_7: required
+      runs-on:
+        description: |
+          JSON array of runner(s) to use.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      prerelease:
+        description: |
+          Whether to mark the release as a prerelease
+          See ../../actions/release/create/README.md for more information.
+        type: boolean
+        default: false
+        required: false
+
+permissions: {}
+
+jobs:
+  release:
+    name: Release
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      contents: write
+      id-token: write
+    outputs:
+      tag: ${{ steps.create-release.outputs.tag }}
+    steps:
+      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
+      - id: oidc
+        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
+
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+          path: ./self-workflow
+          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
+          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
+          sparse-checkout: |
+            actions
+      - run: |
+          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
+          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
+
+      - id: create-release
+        uses: ./self-workflow/actions/release/create
+        with:
+          prerelease: ${{ inputs.prerelease }}

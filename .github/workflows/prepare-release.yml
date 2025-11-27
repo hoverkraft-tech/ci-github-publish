@@ -56,59 +56,38 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
     outputs:
-      config-slug: ${{ steps.get-config.outputs.config-slug }}
-      config-name: ${{ steps.get-config.outputs.config-name }}
-      config-path: ${{ steps.get-config.outputs.config-path }}
-      working-directory: ${{ steps.get-config.outputs.working-directory }}
+      config-slug: ${{ steps.get-configuration.outputs.config-slug }}
+      config-name: ${{ steps.get-configuration.outputs.config-name }}
+      config-path: ${{ steps.get-configuration.outputs.config-path }}
+      working-directory: ${{ steps.get-configuration.outputs.working-directory }}
       config-exists: ${{ steps.paths-exist.outputs.config-exists }}
+    permissions:
+      contents: read
+      id-token: write # Needed for getting local workflow actions
     steps:
-      - id: get-config
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        env:
-          WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
         with:
-          script: |
-            const path = require('node:path');
-            const fs = require('node:fs');
+          actions-path: actions
 
-            let workingDirectory = process.env.WORKING_DIRECTORY.trim();
-            let configName = 'release-config.yml';
-
-            if (workingDirectory) {
-              // Get working directory absolute path
-              const workingDirectoryFullPath = path.isAbsolute(workingDirectory)
-                ? workingDirectory
-                : path.join(process.env.GITHUB_WORKSPACE || '', workingDirectory);
-
-              workingDirectory = path.relative(process.env.GITHUB_WORKSPACE, workingDirectoryFullPath);
-              core.setOutput("working-directory", workingDirectory);
-
-              // Convert path to slug: handle slashes, spaces, and special characters
-              const slug = path.basename(workingDirectoryFullPath)
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
-                .replace(/^-+|-+$/g, '');     // Remove leading/trailing dashes
-
-              core.setOutput("config-slug", slug);
-              configName = `release-configs/${slug}.yml`;
-            }
-
-            core.setOutput("config-name", configName);
-            core.setOutput("config-path", `.github/${configName}`);
+      - id: get-configuration
+        uses: ./self-workflow/actions/release/get-configuration
+        with:
+          working-directory: ${{ inputs.working-directory }}
 
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           persist-credentials: false
           ref: refs/heads/${{ github.event.repository.default_branch }}
           sparse-checkout: |
-            ${{ steps.get-config.outputs.config-path }}
-            ${{ steps.get-config.outputs.working-directory || '' }}
+            ${{ steps.get-configuration.outputs.config-path }}
+            ${{ steps.get-configuration.outputs.working-directory || '' }}
 
       - id: paths-exist
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
-          WORKING_DIRECTORY: ${{ steps.get-config.outputs.working-directory }}
-          CONFIG_PATH: ${{ steps.get-config.outputs.config-path }}
+          WORKING_DIRECTORY: ${{ steps.get-configuration.outputs.working-directory }}
+          CONFIG_PATH: ${{ steps.get-configuration.outputs.config-path }}
           IS_DEFAULT_BRANCH: ${{ github.ref_name == github.event.repository.default_branch }}
         with:
           script: |
@@ -127,6 +106,15 @@ jobs:
               return core.warning(`Release configuration file "${configPath}" does not exist.`);
             }
             core.setOutput('config-exists', true);
+
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        if: always() && steps.local-workflow-actions.outputs.repository
+        with:
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end
 
   pull-request-labeler:
     needs: prepare

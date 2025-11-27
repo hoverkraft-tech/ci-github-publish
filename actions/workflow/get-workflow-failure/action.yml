@@ -9,6 +9,8 @@ description: |
 
   Note: this action reads jobs for the current run and therefore relies on the workflow run context;
   the default `GITHUB_TOKEN` already has read access to Actions in typical workflows.
+
+  It requires the `actions: read` permission on the token used.
 author: hoverkraft
 branding:
   icon: zap-off

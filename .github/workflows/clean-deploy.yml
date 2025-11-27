@@ -66,20 +66,14 @@ on:
           GitHub App private key to generate GitHub token in place of github-token.
           See https://github.com/actions/create-github-app-token.
 
-permissions:
-  contents: write
-  issues: write
-  packages: write
-  pull-requests: write
-  actions: read
-  deployments: write
-  # FIXME: This is a workaround for having workflow ref. See https://github.com/orgs/community/discussions/38659
-  id-token: write
+permissions: {}
 
 jobs:
   prepare-clean-deploy:
     name: Check if should clean deploy
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      issues: write
     outputs:
       trigger: ${{ steps.trigger.outputs.trigger }}
     steps:
@@ -117,30 +111,26 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     needs: prepare-clean-deploy
     if: needs.prepare-clean-deploy.outputs.trigger
+    permissions:
+      actions: read
+      deployments: write
+      issues: write
+      pull-requests: write
+      id-token: write # Needed for getting local workflow actions
     steps:
-      # jscpd:ignore-start
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - id: oidc
-        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
-
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
-      - run: |
-          echo "self-workflow" >> .gitignore
-          echo "self-workflow" >> .dockerignore
+          actions-path: actions
 
       - id: prepare-cleaning
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          REPOSITORY: ${{ fromJSON(inputs.clean-deploy-parameters).repository }}
         with:
           script: |
             // Repository
-            const repository = `${{ fromJSON(inputs.clean-deploy-parameters).repository }}`.trim();
+            const repository = process.env.REPOSITORY.trim();
 
             if (repository) {
               core.setOutput("repository", repository);
@@ -156,7 +146,6 @@ jobs:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
           owner: ${{ steps.prepare-cleaning.outputs.owner }}
-      # jscpd:ignore-end
 
       - id: delete-deployment
         uses: ./self-workflow/actions/deployment/delete
@@ -176,13 +165,11 @@ jobs:
           title: "Deployment(s) have been deleted :wastebasket:."
           body: "The following deployment(s) have been deleted:\n\n- ${{ join(fromJSON(steps.delete-deployment.outputs.environments),'\n- ') }}"
 
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        if: always() && steps.local-workflow-actions.outputs.repository
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end

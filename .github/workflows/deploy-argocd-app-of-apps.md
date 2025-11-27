@@ -85,7 +85,7 @@ on:
 permissions: {}
 jobs:
   deploy-argocd-app-of-apps:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-argocd-app-of-apps.yml@dbdcce2870b33525ac1fa26069bf95b2dd586fda # 0.15.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-argocd-app-of-apps.yml@ed864a88ec8610dc2a1b9aab1dbde2864bf75df4 # 0.16.0
     permissions: {}
     secrets:
       # GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).

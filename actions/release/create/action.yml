@@ -44,12 +44,14 @@ runs:
         WORKING_DIRECTORY: ${{ inputs.working-directory }}
       with:
         script: |
+          const path = require('node:path');
+
           const workingDirectory = process.env.WORKING_DIRECTORY.trim();
           if (!workingDirectory) {
             return 'release-drafter.yml';
           }
           // Convert path to slug: handle slashes, spaces, and special characters
-          const slug = workingDirectory
+          const slug = path.basename(workingDirectory)
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
             .replace(/^-+|-+$/g, '');      // Remove leading/trailing dashes

@@ -94,7 +94,6 @@ jobs:
       issues: write
       packages: write
       pull-requests: write
-      id-token: write
     secrets:
       # OCI registry password.
       # This input is required.

@@ -59,8 +59,9 @@ runs:
         publish: true
         # config-name is relative to .github/ directory
         config-name: ${{ steps.get-configuration.outputs.config-name }}
-        prerelease: ${{ inputs.pre-release }}
+        prerelease: ${{ inputs.prerelease }}
         disable-autolabeler: true
+        latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
 
     - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       id: get-tag

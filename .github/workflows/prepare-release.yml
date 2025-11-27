@@ -198,14 +198,14 @@ jobs:
             }
 
             const nameTemplate = workingDirectory
-              ? `Version ${process.env.CONFIG_SLUG} - \${RESOLVED_VERSION}`
-              : `Version \${RESOLVED_VERSION}`;
+              ? `Version ${process.env.CONFIG_SLUG} - \$RESOLVED_VERSION`
+              : `Version \$RESOLVED_VERSION`;
 
             const tagPrefix = workingDirectory
               ? `${process.env.CONFIG_SLUG}-`
               : '';
 
-            const tagTemplate = `${tagPrefix}\${RESOLVED_VERSION}`;
+            const tagTemplate = `${tagPrefix}\$RESOLVED_VERSION`;
 
             const config = `---
             ${includePathsSection}template: |

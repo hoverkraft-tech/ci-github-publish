@@ -60,12 +60,8 @@ jobs:
       config-name: ${{ steps.get-config.outputs.config-name }}
       config-path: ${{ steps.get-config.outputs.config-path }}
       working-directory: ${{ steps.get-config.outputs.working-directory }}
-      config-exists: ${{ steps.config-file-exists.outputs.exists }}
+      config-exists: ${{ steps.paths-exist.outputs.config-exists }}
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        with:
-          persist-credentials: false
-
       - id: get-config
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
@@ -84,10 +80,6 @@ jobs:
                 ? workingDirectory
                 : path.join(process.env.GITHUB_WORKSPACE || '', workingDirectory);
 
-              if (!fs.existsSync(workingDirectoryFullPath)){
-                return core.setFailed(`Working directory "${workingDirectory}" does not exist.`);
-              }
-
               core.setOutput("working-directory", path.relative(process.env.GITHUB_WORKSPACE, workingDirectoryFullPath));
 
               // Convert path to slug: handle slashes, spaces, and special characters
@@ -99,6 +91,8 @@ jobs:
               core.setOutput("config-slug", slug);
               configName = `release-configs/${slug}.yml`;
             }
+
+            core.setOutput("working-directory", workingDirectory);
             core.setOutput("config-name", configName);
             core.setOutput("config-path", `.github/${configName}`);
 
@@ -107,20 +101,37 @@ jobs:
         with:
           persist-credentials: false
           ref: refs/heads/${{ github.event.repository.default_branch }}
-          sparse-checkout: ${{ steps.get-config.outputs.config-path }}
+          sparse-checkout: |
+            ${{ steps.get-config.outputs.working-directory }}
+            ${{ steps.get-config.outputs.config-path }}
 
-      - id: config-file-exists
+      - id: paths-exist
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
+          WORKING_DIRECTORY: ${{ steps.get-config.outputs.working-directory }}
           CONFIG_PATH: ${{ steps.get-config.outputs.config-path }}
+          IS_DEFAULT_BRANCH: ${{ github.ref_name == github.event.repository.default_branch }}
         with:
           script: |
             const fs = require('node:fs');
+
+            const workingDirectory = process.env.WORKING_DIRECTORY;;
+            if (!workingDirectory) {
+              return core.setFailed('Working directory is not specified.');
+            }
+
+            if (!fs.existsSync(workingDirectory) && process.env.IS_DEFAULT_BRANCH === 'true') {
+              return core.setFailed(`Working directory "${workingDirectory}" does not exist.`);
+            }
+
             const configPath = process.env.CONFIG_PATH;
-            if (!configPath || !fs.existsSync(configPath)) {
+            if (!configPath){
+              return core.setFailed('Configuration path is not specified.');
+            } 
+            if (!fs.existsSync(configPath)) {
               return core.warning(`Release configuration file "${configPath}" does not exist.`);
             }
-            core.setOutput('exists', true);
+            core.setOutput('config-exists', true);
 
   pull-request-labeler:
     needs: prepare

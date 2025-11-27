@@ -31,7 +31,7 @@ inputs:
       Permissions:
         - pages: write
         - id-token: write
-      See https://github.com/actions/configure-pages.
+      See https://github.com/actions/deploy-pages.
     required: false
     default: ${{ github.token }}
 
@@ -83,9 +83,9 @@ runs:
 
     - shell: bash
       # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
-      run: mkdir -p ./self-github-pages-action/ && cp -r $GITHUB_ACTION_PATH/../../* ./self-github-pages-action/
+      run: mkdir -p ./self-github-pages-actions/ && cp -r $GITHUB_ACTION_PATH/../../* ./self-github-pages-actions/
 
-    - uses: ./self-github-pages-action/deploy/jampack
+    - uses: ./self-github-pages-actions/deploy/jampack
       with:
         path: ${{ steps.prepare-variables.outputs.build-path }}
 
@@ -111,16 +111,21 @@ runs:
     # jscpd:ignore-start
 
     # Url checks
-    - uses: ./self-github-pages-action/check/url-ping
+    - uses: ./self-github-pages-actions/check/url-ping
       with:
         url: ${{ steps.deployment.outputs.page_url }}
 
-    - uses: ./self-github-pages-action/check/url-lighthouse
+    - uses: ./self-github-pages-actions/check/url-lighthouse
       with:
         url: ${{ steps.deployment.outputs.page_url }}
         budget-path: ${{ inputs.budget-path }}
 
     # jscpd:ignore-end
+
+    - shell: bash
+      # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
+      run: |
+        rm -fr ./self-github-pages-actions
 
     - shell: bash
       run: |

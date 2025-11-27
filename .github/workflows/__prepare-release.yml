@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      id-token: write # Needed for getting local workflow actions
     with:
       github-app-id: ${{ vars.CI_BOT_APP_ID }}
     secrets:

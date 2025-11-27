@@ -30,27 +30,25 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
       contents: write
-      id-token: write
+      id-token: write # Needed for getting local workflow actions
     outputs:
       tag: ${{ steps.create-release.outputs.tag }}
     steps:
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - id: oidc
-        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
-
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
-      - run: |
-          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
-          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
+          actions-path: actions
 
       - id: create-release
         uses: ./self-workflow/actions/release/create
         with:
           prerelease: ${{ inputs.prerelease }}
+
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        if: always() && steps.local-workflow-actions.outputs.repository
+        with:
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end

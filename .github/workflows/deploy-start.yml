@@ -53,29 +53,28 @@ on:
         description: "Deployment ID to use for the deployment."
         value: ${{ jobs.start-deploy.outputs.deployment-id }}
 
-permissions:
-  actions: read
-  deployments: write
-  issues: write
-  pull-requests: write
-  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-  id-token: write
+permissions: {}
 
 jobs:
   prepare-deploy:
     name: Check if should deploy
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      issues: write
+      id-token: write # Needed for getting local workflow actions
     outputs:
       trigger: ${{ steps.trigger.outputs.trigger }}
       environment: ${{ steps.get-environment.outputs.environment }}
     steps:
       - id: not-created-issue-comment
         if: github.event_name != 'issue_comment'
-        run: echo "result=true" >> "$GITHUB_OUTPUT"
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: return true;
 
       - uses: shanegenschaw/pull-request-comment-trigger@de309e4a2e83bb08877cada483e3e2b13b8d8e4b # v3.0.0
         id: trigger-on-comment
-        if: ${{ steps.not-created-issue-comment.outputs.result != 'true' && inputs.trigger-on-comment }}
+        if: ${{ !steps.not-created-issue-comment.outputs.result && inputs.trigger-on-comment }}
         with:
           trigger: ${{ inputs.trigger-on-comment }}
           prefix_only: true
@@ -84,35 +83,22 @@ jobs:
           GITHUB_TOKEN: "${{ github.token }}"
 
       - id: trigger
-        if: ${{ steps.not-created-issue-comment.outputs.result == 'true' || steps.trigger-on-comment.outputs.triggered == 'true' }}
-        run: |
-          if [ "${{ steps.not-created-issue-comment.outputs.result }}" = "true" ]; then
-            echo "trigger=${{ github.event_name }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [ "${{ steps.trigger-on-comment.outputs.triggered }}" = "true" ]; then
-            echo "trigger=${{ github.event_name }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-        # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - id: oidc
-        if: ${{ steps.trigger.outputs.trigger }}
-        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
-
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        if: ${{ steps.trigger.outputs.trigger }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        if: ${{ steps.not-created-issue-comment.outputs.result || steps.trigger-on-comment.outputs.triggered == 'true' }}
+        env:
+          NOT_CREATED_ISSUE_COMMENT: ${{ steps.not-created-issue-comment.outputs.result }}
+          TRIGGER_ON_COMMENT: ${{ steps.trigger-on-comment.outputs.triggered }}
+          EVENT_NAME: ${{ github.event_name }}
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
-      - run: |
-          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
-          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
+          script: |
+            if (process.env.NOT_CREATED_ISSUE_COMMENT === 'true' || process.env.TRIGGER_ON_COMMENT === 'true') {
+              core.setOutput('trigger', process.env.EVENT_NAME);
+            }
+
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        with:
+          actions-path: actions
 
       - id: get-environment
         if: ${{ steps.trigger.outputs.trigger }}
@@ -120,43 +106,32 @@ jobs:
         with:
           environment: ${{ inputs.environment }}
 
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner && steps.trigger.outputs.trigger
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        if: always() && steps.local-workflow-actions.outputs.repository
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end
 
   start-deploy:
     name: Start deploy
     runs-on: ${{ fromJson(inputs.runs-on) }}
     needs: prepare-deploy
     if: needs.prepare-deploy.outputs.trigger
+    permissions:
+      deployments: write
+      id-token: write # Needed for getting local workflow actions
     environment: ${{ needs.prepare-deploy.outputs.environment }}
     outputs:
       deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
     steps:
-      # jscpd:ignore-start
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - id: oidc
-        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
-
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
-      - run: |
-          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
-          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
-      # jscpd:ignore-end
+          actions-path: actions
+
       - id: create-deployment
         uses: ./self-workflow/actions/deployment/create
         with:
@@ -168,13 +143,11 @@ jobs:
           state: "in_progress"
           description: "Starting deployment to ${{ needs.prepare-deploy.outputs.environment }}..."
 
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        if: always() && steps.local-workflow-actions.outputs.repository
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end

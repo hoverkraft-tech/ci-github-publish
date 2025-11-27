@@ -42,14 +42,7 @@ on:
         type: string
         required: false
 
-permissions:
-  contents: read
-  issues: read
-  pull-requests: write
-  actions: read
-  deployments: write
-  # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-  id-token: write
+permissions: {}
 
 jobs:
   get-finished-deployment:
@@ -58,24 +51,15 @@ jobs:
     outputs:
       url: ${{ steps.get-finished-deployment.outputs.url }}
       environment: ${{ steps.get-finished-deployment.outputs.environment }}
+    permissions:
+      id-token: write # Needed for getting local workflow actions
+      actions: read
     steps:
-      # jscpd:ignore-start
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - id: oidc
-        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
-
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
-      - run: |
-          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
-          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
-      # jscpd:ignore-end
+          actions-path: actions
+
       - id: get-workflow-failure
         if: ${{ inputs.deployment-id }}
         uses: ./self-workflow/actions/workflow/get-workflow-failure
@@ -88,22 +72,23 @@ jobs:
         with:
           deployment-id: ${{ inputs.deployment-id }}
 
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        if: always() && steps.local-workflow-actions.outputs.repository
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end
 
   deploy-checks:
     name: Deploy checks
-    needs: [get-finished-deployment]
+    needs: get-finished-deployment
     if: ${{ needs.get-finished-deployment.outputs.url }}
     uses: ./.github/workflows/deploy-checks.yml
+    permissions:
+      contents: read
+      id-token: write # Needed for getting local workflow actions
     with:
       runs-on: ${{ fromJson(inputs.runs-on) }}
       url: ${{ needs.get-finished-deployment.outputs.url }}
@@ -112,15 +97,21 @@ jobs:
 
   deploy-result:
     name: Deploy result
-    if: ${{ always() }}
+    if: always()
     needs: [get-finished-deployment, deploy-checks]
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      id-token: write # Needed for getting local workflow actions
+      deployments: write
     steps:
       - id: get-extra
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          INPUT_EXTRA: ${{ inputs.extra }}
+          SUMMARY_OUTPUT: ${{ toJson(needs.deploy-checks.outputs.summary) }}
         with:
           script: |
-            const extraInput = ${{ toJSON(inputs.extra) }};
+            const extraInput = process.env.INPUT_EXTRA.trim();
             let extra = null;
             if (extraInput) {
               // Check if is valid JSON
@@ -135,7 +126,7 @@ jobs:
               }
             }
 
-            const deployChecksSummaryOutput = ${{ toJson(needs.deploy-checks.outputs.summary) }};
+            const deployChecksSummaryOutput = process.env.SUMMARY_OUTPUT.trim();
             let deployChecksSummary = null;
             if (deployChecksSummaryOutput) {
               try {
@@ -146,6 +137,7 @@ jobs:
             }
 
             if (deployChecksSummary) {
+              // jscpd:ignore-start
               const toSentence = (str) => {
                 return str
                   .replace(/([A-Z])/g, ' $1') // Insert space before capital letters                  
@@ -153,6 +145,7 @@ jobs:
                   .replace(/^./, function(char) { return char.toUpperCase(); }) // Capitalize the first letter
                   .trim();
               };
+              // jscpd:ignore-end
 
               extra = extra || {};
               for(const [key, value] of Object.entries(deployChecksSummary["reportSummary"] || {})) {
@@ -167,23 +160,11 @@ jobs:
 
             return core.setOutput("extra", JSON.stringify(extra));
 
-      # jscpd:ignore-start
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - id: oidc
-        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
-
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
-      - run: |
-          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
-          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
-      # jscpd:ignore-end
+          actions-path: actions
+
       - uses: ./self-workflow/actions/deploy/report
         with:
           deployment-id: ${{ inputs.deployment-id }}
@@ -192,13 +173,11 @@ jobs:
           extra: ${{ steps.get-extra.outputs.extra }}
           github-token: ${{ secrets.github-token || github.token }}
 
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        if: always() && steps.oidc.outputs.job_workflow_repo_name_and_owner
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        if: always() && steps.local-workflow-actions.outputs.repository
         with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end

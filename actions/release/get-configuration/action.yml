@@ -1,0 +1,70 @@
+name: "Deployment - Create Release"
+description: "Action to create a new release"
+author: hoverkraft
+branding:
+  icon: bookmark
+  color: blue
+
+inputs:
+  working-directory:
+    description: |
+      Working directory for monorepo support.
+      If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path.
+      The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.
+    type: string
+    required: false
+    default: ""
+
+outputs:
+  working-directory:
+    description: |
+      The working directory used for the release.
+      Relative to the repository root.
+      Empty if not set.
+    value: ${{ steps.get-config.outputs.working-directory }}
+  config-slug:
+    description: "The slug derived from the working directory. Empty if no working directory is set."
+    value: ${{ steps.get-config.outputs.config-slug }}
+  config-name:
+    description: "The name of the release configuration file"
+    value: ${{ steps.get-config.outputs.config-name }}
+  config-path:
+    description: "The path to the release configuration file"
+    value: ${{ steps.get-config.outputs.config-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: get-config
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      with:
+        script: |
+          const path = require('node:path');
+          const fs = require('node:fs');
+
+          let workingDirectory = process.env.WORKING_DIRECTORY.trim();
+          let configName = 'release-config.yml';
+
+          if (workingDirectory) {
+            // Get working directory absolute path
+            const workingDirectoryFullPath = path.isAbsolute(workingDirectory)
+              ? workingDirectory
+              : path.join(process.env.GITHUB_WORKSPACE || '', workingDirectory);
+
+            workingDirectory = path.relative(process.env.GITHUB_WORKSPACE, workingDirectoryFullPath);
+            core.setOutput("working-directory", workingDirectory);
+
+            // Convert path to slug: handle slashes, spaces, and special characters
+            const slug = path.basename(workingDirectoryFullPath)
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
+              .replace(/^-+|-+$/g, '');     // Remove leading/trailing dashes
+
+            core.setOutput("config-slug", slug);
+            configName = `release-configs/${slug}.yml`;
+          }
+
+          core.setOutput("config-name", configName);
+          core.setOutput("config-path", `.github/${configName}`);

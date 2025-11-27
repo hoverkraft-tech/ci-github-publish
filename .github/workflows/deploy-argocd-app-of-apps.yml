@@ -86,8 +86,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      id-token: write
+      id-token: write # Needed for getting local workflow actions
     outputs:
       deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
       repository: ${{ steps.check-client-payload.outputs.repository }}
@@ -149,34 +148,17 @@ jobs:
         with:
           persist-credentials: false
 
-      # FIXME: This is a workaround for having workflow actions. See https://github.com/orgs/community/discussions/38659
-      # jscpd:ignore-start
-      - id: oidc
-        uses: ChristopherHX/oidc@73eee1ff03fdfce10eda179f617131532209edbd # v3
-
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        with:
-          persist-credentials: false
-          path: ./self-workflow
-          repository: ${{ steps.oidc.outputs.job_workflow_repo_name_and_owner }}
-          ref: ${{ steps.oidc.outputs.job_workflow_repo_ref }}
-          sparse-checkout: |
-            actions
-      - run: |
-          if [ -f .gitignore ]; then grep -q "self-workflow" .gitignore || echo "self-workflow" >> .gitignore; else echo "self-workflow" >> .gitignore; fi
-          if [ -f .dockerignore ]; then grep -q "self-workflow" .dockerignore || echo "self-workflow" >> .dockerignore; else echo "self-workflow" >> .dockerignore; fi
-      # jscpd:ignore-end
-      - id: get-namespace
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        with:
-          script: |
-            const namespace = `${{ steps.check-client-payload.outputs.repository }}-${{ steps.check-client-payload.outputs.environment }}`;
-            core.setOutput("namespace", namespace);
-
       - id: slugify-namespace
         uses: hoverkraft-tech/ci-github-common/actions/slugify@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
         with:
-          value: ${{ steps.get-namespace.outputs.namespace }}
+          value: ${{ format('{0}-{1}', steps.check-client-payload.outputs.repository, steps.check-client-payload.outputs.environment) }}
+
+      # jscpd:ignore-start
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        with:
+          actions-path: actions
+      # jscpd:ignore-end
 
       - id: get-manifest-files
         uses: ./self-workflow/actions/argocd/get-manifest-files
@@ -186,22 +168,26 @@ jobs:
 
       - id: get-manifest-templates
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          TEMPLATE_FILENAME: ${{ inputs.template-filename }}
+          APPLICATION_FILE: ${{ steps.get-manifest-files.outputs.application-file }}
+          MANIFEST_FILE: ${{ steps.get-manifest-files.outputs.manifest-file }}
         with:
           script: |
             const fs = require("node:fs");
             const path = require("node:path");
 
-            const templateFilename = ${{ toJSON(inputs.template-filename) }};
+            const templateFilename = process.env.TEMPLATE_FILENAME.trim();
             if (!templateFilename) {
               return core.setFailed(`Template filename is not defined`);
             }
 
-            const applicationFile = ${{ toJSON(steps.get-manifest-files.outputs.application-file) }};
+            const applicationFile = process.env.APPLICATION_FILE.trim();
             if (!applicationFile) {
               return core.setFailed(`Application file is not defined`);
             }
 
-            const manifestFile = ${{ toJSON(steps.get-manifest-files.outputs.manifest-file) }};
+            const manifestFile = process.env.MANIFEST_FILE.trim();
             if (!manifestFile) {
               return core.setFailed(`Manifest file is not defined`);
             }
@@ -253,3 +239,12 @@ jobs:
             feat(${{ steps.check-client-payload.outputs.repository }}): deploy ${{ steps.chart-variables.outputs.version }} to ${{ steps.check-client-payload.outputs.environment }}"
 
             [skip ci]
+
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        if: always() && steps.local-workflow-actions.outputs.repository
+        with:
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end

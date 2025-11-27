@@ -35,6 +35,7 @@ Reusable workflow that performs release preparation tasks:
 ### Permissions
 
 - **`contents`**: `read`
+- **`id-token`**: `write`
 - **`pull-requests`**: `write`
 
 <!-- overview:end -->

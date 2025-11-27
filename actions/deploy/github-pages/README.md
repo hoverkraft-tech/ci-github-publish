@@ -47,7 +47,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@275b6d8500449d5653bce59c799e4f54c072929d # 0.15.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@ed864a88ec8610dc2a1b9aab1dbde2864bf75df4 # 0.16.0
   with:
     # The path to the assets to deploy.
     # Can be absolute or relative $GITHUB_WORKSPACE.
@@ -68,7 +68,7 @@ permissions:
     # Permissions:
     # - pages: write
     # - id-token: write
-    # See https://github.com/actions/configure-pages.
+    # See https://github.com/actions/deploy-pages.
     #
     # Default: `${{ github.token }}`
     github-token: ${{ github.token }}
@@ -92,7 +92,7 @@ permissions:
 |                             | Permissions:                                                                                                          |              |                         |
 |                             | - pages: write                                                                                                        |              |                         |
 |                             | - id-token: write                                                                                                     |              |                         |
-|                             | See <https://github.com/actions/configure-pages>.                                                                     |              |                         |
+|                             | See <https://github.com/actions/deploy-pages>.                                                                        |              |                         |
 
 <!-- inputs:end -->
 

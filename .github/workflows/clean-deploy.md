@@ -43,11 +43,9 @@ Behavior / outputs:
 ### Permissions
 
 - **`actions`**: `read`
-- **`contents`**: `write`
 - **`deployments`**: `write`
 - **`id-token`**: `write`
 - **`issues`**: `write`
-- **`packages`**: `write`
 - **`pull-requests`**: `write`
 
 <!-- overview:end -->
@@ -66,14 +64,7 @@ permissions: {}
 jobs:
   clean-deploy:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@ed864a88ec8610dc2a1b9aab1dbde2864bf75df4 # 0.16.0
-    permissions:
-      contents: write
-      issues: write
-      packages: write
-      pull-requests: write
-      actions: read
-      deployments: write
-      id-token: write
+    permissions: {}
     secrets:
       # GitHub token for deploying.
       # Permissions:

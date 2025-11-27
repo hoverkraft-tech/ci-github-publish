@@ -38,6 +38,8 @@ Each failed job entry contains the job name, its conclusion, and the job web URL
 Note: this action reads jobs for the current run and therefore relies on the workflow run context;
 the default `GITHUB_TOKEN` already has read access to Actions in typical workflows.
 
+It requires the `actions: read` permission on the token used.
+
 <!-- overview:end -->
 
 <!-- usage:start -->
@@ -45,7 +47,7 @@ the default `GITHUB_TOKEN` already has read access to Actions in typical workflo
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
+- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@ed864a88ec8610dc2a1b9aab1dbde2864bf75df4 # 0.16.0
   with:
     # GitHub Token to get workflow information.
     # Permissions:

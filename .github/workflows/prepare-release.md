@@ -53,7 +53,7 @@ on:
 permissions: {}
 jobs:
   prepare-release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@ed864a88ec8610dc2a1b9aab1dbde2864bf75df4 # 0.16.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@5358acdb08b912114974ecc06a057cda8d391aa5 # 0.17.0
     permissions: {}
     secrets:
       # GitHub token with permissions `contents: write`, `pull-requests: write`.
@@ -141,7 +141,7 @@ permissions: {}
 
 jobs:
   prepare-release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@ed864a88ec8610dc2a1b9aab1dbde2864bf75df4 # 0.16.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@5358acdb08b912114974ecc06a057cda8d391aa5 # 0.17.0
     permissions:
       contents: read
       pull-requests: write

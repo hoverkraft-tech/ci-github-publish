@@ -119,7 +119,7 @@ jobs:
       id-token: write # Needed for getting local workflow actions
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
         with:
           actions-path: actions
 
@@ -159,14 +159,14 @@ jobs:
           environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}
         with:
           title: "Deployment(s) have been deleted :wastebasket:."
           body: "The following deployment(s) have been deleted:\n\n- ${{ join(fromJSON(steps.delete-deployment.outputs.environments),'\n- ') }}"
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions

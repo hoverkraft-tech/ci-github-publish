@@ -149,13 +149,13 @@ jobs:
           persist-credentials: false
 
       - id: slugify-namespace
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
         with:
           value: ${{ format('{0}-{1}', steps.check-client-payload.outputs.repository, steps.check-client-payload.outputs.environment) }}
 
       # jscpd:ignore-start
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
         with:
           actions-path: actions
       # jscpd:ignore-end
@@ -229,7 +229,7 @@ jobs:
           private-key: ${{ secrets.github-app-key }}
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: feat/deploy-${{ steps.slugify-namespace.outputs.result }}
@@ -241,7 +241,7 @@ jobs:
             [skip ci]
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions

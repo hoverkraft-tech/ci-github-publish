@@ -21,7 +21,7 @@ permissions: {}
 
 jobs:
   main:
-    uses: hoverkraft-tech/ci-github-common/.github/workflows/need-fix-to-issue.yml@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+    uses: hoverkraft-tech/ci-github-common/.github/workflows/need-fix-to-issue.yml@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
     permissions:
       contents: read
       issues: write

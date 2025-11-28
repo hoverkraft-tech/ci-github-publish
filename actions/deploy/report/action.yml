@@ -114,7 +114,7 @@ runs:
       run: |
         rm -fr ./self-deploy-report-actions
 
-    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@a55670b58d3e064526201acde6c720ede638420c # 0.31.0
+    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
       if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       with:
         title: "## ${{ steps.get-deployment-result.outputs.title }}"

@@ -1,5 +1,5 @@
-name: "Deployment - Create Release"
-description: "Action to create a new release"
+name: "Release - Get Configuration"
+description: "Action to get the release configuration details"
 author: hoverkraft
 branding:
   icon: bookmark

@@ -1,4 +1,4 @@
-name: "Deployment - Create Release"
+name: "Release - Create"
 description: "Action to create a new release"
 author: hoverkraft
 branding:

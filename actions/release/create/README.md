@@ -33,7 +33,7 @@ Action to create a new release
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@fcfe73575a3809b254acb6004cd42741f20b931a # main
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@5358acdb08b912114974ecc06a057cda8d391aa5 # 0.17.0
   with:
     # Whether the release is a prerelease
     # Default: `false`

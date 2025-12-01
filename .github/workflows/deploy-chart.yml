@@ -160,7 +160,7 @@ jobs:
       tag: ${{ steps.get-tag.outputs.tag }}
       images: ${{ steps.set-images-tag.outputs.images }}
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@2d3c39a47c6af3b9d57a230bcaf57d03093e96db # 0.31.2
         if: inputs.tag == ''
         with:
           fetch-depth: 0
@@ -173,7 +173,7 @@ jobs:
 
       - id: get-issue-number
         if: inputs.tag == '' && github.event_name == 'issue_comment'
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@2d3c39a47c6af3b9d57a230bcaf57d03093e96db # 0.31.2
 
       - id: get-tag
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -238,7 +238,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@0d92511a38c93e30ae0f8b82346116946987a9ca # 0.30.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@6901a2c6c6f5fc6d75fc40f0fb216e6984093f4b # 0.30.1
     with:
       runs-on: ${{ inputs.runs-on }}
       oci-registry: ${{ inputs.oci-registry }}
@@ -343,7 +343,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@0d92511a38c93e30ae0f8b82346116946987a9ca # 0.30.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@6901a2c6c6f5fc6d75fc40f0fb216e6984093f4b # 0.30.1
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}
@@ -451,7 +451,7 @@ jobs:
       # jscpd:ignore-end
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@2d3c39a47c6af3b9d57a230bcaf57d03093e96db # 0.31.2
         with:
           actions-path: actions
 
@@ -468,7 +468,7 @@ jobs:
           initiated-by: ${{ github.actor }}
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@e6733528d06b6e1668674c35ef3612ac416cedda # 0.31.1
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@2d3c39a47c6af3b9d57a230bcaf57d03093e96db # 0.31.2
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions

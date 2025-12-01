@@ -30,7 +30,7 @@ Action to get the release configuration details
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@fcfe73575a3809b254acb6004cd42741f20b931a # main
+- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@5358acdb08b912114974ecc06a057cda8d391aa5 # 0.17.0
   with:
     # Working directory for monorepo support.
     # If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path.

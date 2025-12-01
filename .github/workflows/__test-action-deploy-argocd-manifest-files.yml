@@ -7,18 +7,25 @@ permissions: {}
 
 jobs:
   tests:
-    name: Tests for deploy/argocd-manifest-files action
+    name: Tests for deploy/argocd-manifest-files action (${{ matrix.test-case }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - test-case: sources array format
+            test-dir: test-app
+          - test-case: singular source format
+            test-dir: test-app-single-source
     env:
-      TEST_APPLICATION_TEMPLATE_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/test-app/template.yml.tpl
-      TEST_APPLICATION_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/test-app/test-app.yml
-      TEST_EXPECTED_APPLICATION_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/test-app/expected.yml
-
-      TEST_MANIFEST_TEMPLATE_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/test-app/template.yml.tpl
-      TEST_MANIFEST_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/test-app/test-app.yml
-      TEST_EXPECTED_MANIFEST_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/test-app/expected.yml
+      TEST_APPLICATION_TEMPLATE_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/${{ matrix.test-dir }}/template.yml.tpl
+      TEST_APPLICATION_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/${{ matrix.test-dir }}/test-app.yml
+      TEST_EXPECTED_APPLICATION_FILE: tests/argocd-app-of-apps/ci/apps/ci-test/${{ matrix.test-dir }}/expected.yml
+      TEST_MANIFEST_TEMPLATE_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/${{ matrix.test-dir }}/template.yml.tpl
+      TEST_MANIFEST_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/${{ matrix.test-dir }}/test-app.yml
+      TEST_EXPECTED_MANIFEST_FILE: tests/argocd-app-of-apps/ci/manifests/ci-test/${{ matrix.test-dir }}/expected.yml
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
@@ -34,9 +41,9 @@ jobs:
         uses: ./actions/deploy/argocd-manifest-files
         with:
           deployment-id: 999
-          application-file: $TEST_APPLICATION_FILE
+          application-file: ${{ env.TEST_APPLICATION_FILE }}
           application-repository: test-app
-          manifest-file: $TEST_MANIFEST_FILE
+          manifest-file: ${{ env.TEST_MANIFEST_FILE }}
           namespace: test-app-pr-100
           chart-name: test-app
           chart-repository: ghcr.io/my-org/test-app/charts

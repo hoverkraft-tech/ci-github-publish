@@ -3,6 +3,7 @@ author: Hoverkraft
 branding:
   icon: file-text
   color: blue
+# jscpd:ignore-start
 description: |
   Prepares the ArgoCD manifest files for deployment.
   Fills in the required fields and updates the Helm chart values.
@@ -33,18 +34,49 @@ description: |
   - Spec:
     - Destination:
       - Namespace: set to the target namespace
-    - Sources (first source):
+    - Source or Sources: supports both singular `source` and multiple `sources` array formats
       - Chart: set to the Helm chart name
       - RepoURL: set to the Helm chart repository URL
       - TargetRevision: set to the Helm chart version
-      - Plugin - hoverkraft-deployment (if exists):
+      - Plugin - hoverkraft-deployment (if exists in source or any sources[]):
         - Environment variable `HOVERKRAFT_DEPLOYMENT_ID`: updated with the deployment ID to trigger sync detection
       - Helm Values:
         - Chart values: custom values provided via the `chart-values` input, allowing dynamic configuration of the Helm chart (e.g., application URIs, feature flags).
         - Deployment ID: injected as a value to identify the deployment instance within the chart values.
         - Vendor-specific values: additional values set for integrations, such as updating `tags.datadoghq.com/version` for Datadog monitoring/versioning.
 
-  Example:
+  Example with singular `source` format:
+
+  ```yaml
+  metadata:
+    name: my-namespace
+    annotations:
+      argocd.argoproj.io/application-repository: https://github.com/my-org/my-app
+      argocd.argoproj.io/deployment-id: deploy-1234
+  spec:
+    destination:
+      namespace: my-namespace
+    source:
+      chart: my-chart
+      repoURL: https://charts.example.com
+      targetRevision: 1.2.3
+      # If using ArgoCD plugin (optional):
+      plugin:
+        name: hoverkraft-deployment
+        env:
+          - name: HOVERKRAFT_DEPLOYMENT_ID
+            value: deploy-1234
+      helm:
+        values:
+          application:
+            appUri: https://my-app-review-app-1234.my-org.com
+          deploymentId: deploy-1234
+          tags:
+            datadoghq.com:
+              version: 1.2.3
+  ```
+
+  Example with multiple `sources` array format:
 
   ```yaml
   metadata:
@@ -91,7 +123,7 @@ description: |
     annotations:
       app.kubernetes.io/instance: my-namespace
   ```
-
+# jscpd:ignore-end
 inputs:
   deployment-id:
     description: "Deployment ID to be used in the ArgoCD application manifest"
@@ -186,26 +218,52 @@ runs:
       uses: mikefarah/yq@7ccaf8e700ce99eb3f0f6cef7f5930a0b3c827cd # v4.49.2
       with:
         cmd: |
+          # Update ArgoCD Application manifest file
           yq -i '
             .metadata.name = "${{ inputs.namespace }}" |
             .metadata.annotations["argocd.argoproj.io/application-repository"] = "${{ inputs.application-repository }}" |
             .metadata.annotations["argocd.argoproj.io/deployment-id"] = "${{ inputs.deployment-id }}" |
-            .spec.destination.namespace = "${{ inputs.namespace }}" |
-            .spec.sources[0].chart = "${{ inputs.chart-name }}" |
-            .spec.sources[0].repoURL = "${{ inputs.chart-repository }}" |
-            .spec.sources[0].targetRevision = "${{ inputs.chart-version }}" |
-            .spec.sources[0].helm.values |= (
-                from_yaml |
-                ${{ steps.common-chart-yq-updates.outputs.cmd }}
-                ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
-                to_yaml
-            )
+            .spec.destination.namespace = "${{ inputs.namespace }}"
           ' ${{ inputs.application-file }}
 
-          # Update plugin env if it exists on the first source and plugin name is "hoverkraft-deployment"
-          if [ "$(yq eval '.spec.sources[0].plugin.name' ${{ inputs.application-file }})" = "hoverkraft-deployment" ]; then
+          # Detect whether the manifest uses singular 'source' or 'sources' array
+          if [ "$(yq eval '.spec | has("source")' ${{ inputs.application-file }})" = "true" ]; then
+            # Singular source format
             yq -i '
-              (.spec.sources[0].plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
+              .spec.source.chart = "${{ inputs.chart-name }}" |
+              .spec.source.repoURL = "${{ inputs.chart-repository }}" |
+              .spec.source.targetRevision = "${{ inputs.chart-version }}" |
+              .spec.source.helm.values |= (
+                  from_yaml |
+                  ${{ steps.common-chart-yq-updates.outputs.cmd }}
+                  ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
+                  to_yaml
+              )
+            ' ${{ inputs.application-file }}
+
+            # Update plugin env if it exists on source and plugin name is "hoverkraft-deployment"
+            if [ "$(yq eval '.spec.source.plugin.name' ${{ inputs.application-file }})" = "hoverkraft-deployment" ]; then
+              yq -i '
+                (.spec.source.plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
+              ' ${{ inputs.application-file }}
+            fi
+          else
+            # Multiple sources array format
+            yq -i '
+              .spec.sources[0].chart = "${{ inputs.chart-name }}" |
+              .spec.sources[0].repoURL = "${{ inputs.chart-repository }}" |
+              .spec.sources[0].targetRevision = "${{ inputs.chart-version }}" |
+              .spec.sources[0].helm.values |= (
+                  from_yaml |
+                  ${{ steps.common-chart-yq-updates.outputs.cmd }}
+                  ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
+                  to_yaml
+              )
+            ' ${{ inputs.application-file }}
+
+            # Update plugin env for any source in the array where plugin name is "hoverkraft-deployment"
+            yq -i '
+              (.spec.sources[] | select(.plugin.name == "hoverkraft-deployment") | .plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
             ' ${{ inputs.application-file }}
           fi
 

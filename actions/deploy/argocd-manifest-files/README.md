@@ -53,18 +53,49 @@ It updates the application manifest with the provided values and deploys it to t
 - Spec:
   - Destination:
     - Namespace: set to the target namespace
-  - Sources (first source):
+  - Source or Sources: supports both singular `source` and multiple `sources` array formats
     - Chart: set to the Helm chart name
     - RepoURL: set to the Helm chart repository URL
     - TargetRevision: set to the Helm chart version
-    - Plugin - hoverkraft-deployment (if exists):
+    - Plugin - hoverkraft-deployment (if exists in source or any sources[]):
       - Environment variable `HOVERKRAFT_DEPLOYMENT_ID`: updated with the deployment ID to trigger sync detection
     - Helm Values:
       - Chart values: custom values provided via the `chart-values` input, allowing dynamic configuration of the Helm chart (e.g., application URIs, feature flags).
       - Deployment ID: injected as a value to identify the deployment instance within the chart values.
       - Vendor-specific values: additional values set for integrations, such as updating `tags.datadoghq.com/version` for Datadog monitoring/versioning.
 
-Example:
+Example with singular `source` format:
+
+```yaml
+metadata:
+  name: my-namespace
+  annotations:
+    argocd.argoproj.io/application-repository: https://github.com/my-org/my-app
+    argocd.argoproj.io/deployment-id: deploy-1234
+spec:
+  destination:
+    namespace: my-namespace
+  source:
+    chart: my-chart
+    repoURL: https://charts.example.com
+    targetRevision: 1.2.3
+    # If using ArgoCD plugin (optional):
+    plugin:
+      name: hoverkraft-deployment
+      env:
+        - name: HOVERKRAFT_DEPLOYMENT_ID
+          value: deploy-1234
+    helm:
+      values:
+        application:
+          appUri: https://my-app-review-app-1234.my-org.com
+        deploymentId: deploy-1234
+        tags:
+          datadoghq.com:
+            version: 1.2.3
+```
+
+Example with multiple `sources` array format:
 
 ```yaml
 metadata:

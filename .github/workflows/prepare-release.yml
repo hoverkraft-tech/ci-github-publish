@@ -66,7 +66,7 @@ jobs:
       id-token: write # Needed for getting local workflow actions
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@2d3c39a47c6af3b9d57a230bcaf57d03093e96db # 0.31.2
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@5ac504609f6ef35c5ac94bd8199063aa32104721 # 0.31.3
         with:
           actions-path: actions
 
@@ -75,7 +75,7 @@ jobs:
         with:
           working-directory: ${{ inputs.working-directory }}
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
           ref: refs/heads/${{ github.event.repository.default_branch }}
@@ -108,7 +108,7 @@ jobs:
             core.setOutput('config-exists', true);
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@2d3c39a47c6af3b9d57a230bcaf57d03093e96db # 0.31.2
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@5ac504609f6ef35c5ac94bd8199063aa32104721 # 0.31.3
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions
@@ -261,7 +261,7 @@ jobs:
             core.setOutput('config-content', config);
             core.setOutput('config-path', configPath);
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         if: steps.get-config.outputs.config-content
         with:
           persist-credentials: false
@@ -306,7 +306,7 @@ jobs:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@2d3c39a47c6af3b9d57a230bcaf57d03093e96db # 0.31.2
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@5ac504609f6ef35c5ac94bd8199063aa32104721 # 0.31.3
         if: steps.get-config.outputs.config-content
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}

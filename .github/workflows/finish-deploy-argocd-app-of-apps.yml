@@ -54,7 +54,9 @@ jobs:
   finish-deploy:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
+      actions: read
       contents: read
+      deployments: write
       id-token: write # Needed for getting local workflow actions
     outputs:
       repository: ${{ steps.check-client-payload.outputs.repository }}

@@ -63,6 +63,7 @@ jobs:
       contents: read
       id-token: write # Needed for getting local workflow actions
       issues: write
+      pull-requests: write
     outputs:
       trigger: ${{ steps.trigger.outputs.trigger }}
       environment: ${{ steps.get-environment.outputs.environment }}

@@ -146,6 +146,7 @@ jobs:
       deployments: write
       id-token: write # Needed for getting local workflow actions
       issues: write
+      pull-requests: write
     with:
       runs-on: ${{ inputs.runs-on }}
       environment: ${{ inputs.environment }}

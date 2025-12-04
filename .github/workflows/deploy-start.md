@@ -47,6 +47,7 @@ Environment:
 
 ### Permissions
 
+- **`actions`**: `read`
 - **`contents`**: `read`
 - **`deployments`**: `write`
 - **`id-token`**: `write`

@@ -50,7 +50,7 @@ Key features:
 - **`id-token`**: `write`
 - **`issues`**: `write`
 - **`packages`**: `write`
-- **`pull-requests`**: `read`
+- **`pull-requests`**: `write`
 
 <!-- overview:end -->
 

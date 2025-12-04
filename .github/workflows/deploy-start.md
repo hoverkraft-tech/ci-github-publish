@@ -51,6 +51,7 @@ Environment:
 - **`deployments`**: `write`
 - **`id-token`**: `write`
 - **`issues`**: `write`
+- **`pull-requests`**: `write`
 
 <!-- overview:end -->
 

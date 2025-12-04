@@ -54,9 +54,9 @@ It updates the application manifest with the provided values and deploys it to t
   - Destination:
     - Namespace: set to the target namespace
   - Source or Sources: supports both singular `source` and multiple `sources` array formats
-    - Chart: set to the Helm chart name
-    - RepoURL: set to the Helm chart repository URL
+    - Chart/RepoURL: validated against the provided `chart-name` and `chart-repository` inputs; the action fails if they do not match the manifest contents
     - TargetRevision: set to the Helm chart version
+    - Source Selection: when multiple `sources` entries exist, only the entry (or entries) whose chart and repoURL match the provided inputs is updated; the action fails if no entry matches
     - Plugin - hoverkraft-deployment (if exists in source or any sources[]):
       - Environment variable `HOVERKRAFT_DEPLOYMENT_ID`: updated with the deployment ID to trigger sync detection
     - Helm Values:
@@ -150,7 +150,7 @@ metadata:
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/argocd-manifest-files@5358acdb08b912114974ecc06a057cda8d391aa5 # 0.17.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/argocd-manifest-files@55f6193fb7a9eaab81f5db18aa0c3400971d87b3 # 0.17.3
   with:
     # Deployment ID to be used in the ArgoCD application manifest
     # This input is required.

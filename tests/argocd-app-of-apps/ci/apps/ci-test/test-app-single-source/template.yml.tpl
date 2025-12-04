@@ -27,7 +27,7 @@ spec:
       selfHeal: false
   source:
     chart: test-app
-    repoURL: ghcr.io/test-org/test-app/charts
+    repoURL: ghcr.io/my-org/test-app/charts
     targetRevision: # Will be updated by deploy workflow
     plugin:
       name: hoverkraft-deployment

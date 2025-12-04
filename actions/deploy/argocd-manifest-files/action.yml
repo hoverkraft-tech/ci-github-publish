@@ -35,9 +35,9 @@ description: |
     - Destination:
       - Namespace: set to the target namespace
     - Source or Sources: supports both singular `source` and multiple `sources` array formats
-      - Chart: set to the Helm chart name
-      - RepoURL: set to the Helm chart repository URL
+      - Chart/RepoURL: validated against the provided `chart-name` and `chart-repository` inputs; the action fails if they do not match the manifest contents
       - TargetRevision: set to the Helm chart version
+      - Source Selection: when multiple `sources` entries exist, only the entry (or entries) whose chart and repoURL match the provided inputs is updated; the action fails if no entry matches
       - Plugin - hoverkraft-deployment (if exists in source or any sources[]):
         - Environment variable `HOVERKRAFT_DEPLOYMENT_ID`: updated with the deployment ID to trigger sync detection
       - Helm Values:
@@ -229,9 +229,19 @@ runs:
           # Detect whether the manifest uses singular 'source' or 'sources' array
           if [ "$(yq eval '.spec | has("source")' ${{ inputs.application-file }})" = "true" ]; then
             # Singular source format
+            current_chart=$(yq eval -r '.spec.source.chart // ""' ${{ inputs.application-file }})
+            if [ "$current_chart" != "${{ inputs.chart-name }}" ]; then
+              echo "::error::ArgoCD manifest chart ('$current_chart') does not match input chart-name ('${{ inputs.chart-name }}')"
+              exit 1
+            fi
+
+            current_repo=$(yq eval -r '.spec.source.repoURL // ""' ${{ inputs.application-file }})
+            if [ "$current_repo" != "${{ inputs.chart-repository }}" ]; then
+              echo "::error::ArgoCD manifest repoURL ('$current_repo') does not match input chart-repository ('${{ inputs.chart-repository }}')"
+              exit 1
+            fi
+
             yq -i '
-              .spec.source.chart = "${{ inputs.chart-name }}" |
-              .spec.source.repoURL = "${{ inputs.chart-repository }}" |
               .spec.source.targetRevision = "${{ inputs.chart-version }}" |
               .spec.source.helm.values |= (
                   from_yaml |
@@ -249,11 +259,20 @@ runs:
             fi
           else
             # Multiple sources array format
+            matching_source_count=$(yq eval '
+              (.spec.sources // [])
+              | map(select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}"))
+              | length
+            ' ${{ inputs.application-file }})
+
+            if [ "$matching_source_count" -eq 0 ]; then
+              echo "::error::No entry in spec.sources matches chart '${{ inputs.chart-name }}' and repoURL '${{ inputs.chart-repository }}'"
+              exit 1
+            fi
+
             yq -i '
-              .spec.sources[0].chart = "${{ inputs.chart-name }}" |
-              .spec.sources[0].repoURL = "${{ inputs.chart-repository }}" |
-              .spec.sources[0].targetRevision = "${{ inputs.chart-version }}" |
-              .spec.sources[0].helm.values |= (
+              (.spec.sources[] | select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}") | .targetRevision) = "${{ inputs.chart-version }}" |
+              (.spec.sources[] | select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}" and has("helm")) | .helm.values) |= (
                   from_yaml |
                   ${{ steps.common-chart-yq-updates.outputs.cmd }}
                   ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
@@ -261,9 +280,16 @@ runs:
               )
             ' ${{ inputs.application-file }}
 
-            # Update plugin env for any source in the array where plugin name is "hoverkraft-deployment"
+            # Update plugin env only for matching sources where plugin name is "hoverkraft-deployment"
             yq -i '
-              (.spec.sources[] | select(.plugin.name == "hoverkraft-deployment") | .plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
+              (
+                .spec.sources[]
+                | select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}")
+                | select(.plugin.name == "hoverkraft-deployment")
+                | .plugin.env[]
+                | select(.name == "HOVERKRAFT_DEPLOYMENT_ID")
+                | .value
+              ) = "${{ inputs.deployment-id }}"
             ' ${{ inputs.application-file }}
           fi
 

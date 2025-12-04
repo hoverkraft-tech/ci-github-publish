@@ -29,11 +29,6 @@ spec:
     - chart: test-app
       repoURL: ghcr.io/my-org/test-app/charts
       targetRevision: # Will be updated by deploy worklfow
-      plugin:
-        name: hoverkraft-deployment
-        env:
-          - name: HOVERKRAFT_DEPLOYMENT_ID
-            value: ""
       helm:
         values: |
           deploymentId: # Will be updated by deploy worklfow
@@ -70,3 +65,30 @@ spec:
             primary:
               persistence:
                 enabled: false
+    - chart: test-app
+      repoURL: ghcr.io/my-org/test-app/charts
+      targetRevision: # Will be updated by deploy worklfow
+      plugin:
+        name: hoverkraft-deployment
+        env:
+          - name: HOVERKRAFT_DEPLOYMENT_ID
+            value: ""
+    - chart: other-app
+      repoURL: ghcr.io/other-org/other-app/charts
+      targetRevision: keep-me-unchanged
+      plugin:
+        name: hoverkraft-deployment
+        env:
+          - name: HOVERKRAFT_DEPLOYMENT_ID
+            value: "should-not-change"
+      helm:
+        values: |
+          deploymentId: keep-me-unchanged
+          application:
+            appUri: keep-me-unchanged
+          ingress:
+            enabled: true
+            hosts:
+              - host: keep-me-unchanged
+          commonLabels:
+            tags.datadoghq.com/version: keep-me-unchanged

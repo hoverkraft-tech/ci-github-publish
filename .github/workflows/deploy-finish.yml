@@ -48,12 +48,13 @@ jobs:
   get-finished-deployment:
     name: Get finished deployment
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      actions: read
+      id-token: write # Needed for getting local workflow actions
+      deployments: read
     outputs:
       url: ${{ steps.get-finished-deployment.outputs.url }}
       environment: ${{ steps.get-finished-deployment.outputs.environment }}
-    permissions:
-      id-token: write # Needed for getting local workflow actions
-      actions: read
     steps:
       - id: local-workflow-actions
         uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@5ac504609f6ef35c5ac94bd8199063aa32104721 # 0.31.3

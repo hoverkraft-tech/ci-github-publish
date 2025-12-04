@@ -142,6 +142,7 @@ jobs:
     name: Start deploy
     uses: ./.github/workflows/deploy-start.yml
     permissions:
+      actions: read
       contents: read
       deployments: write
       id-token: write # Needed for getting local workflow actions

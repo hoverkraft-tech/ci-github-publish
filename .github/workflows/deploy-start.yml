@@ -123,6 +123,7 @@ jobs:
     needs: prepare-deploy
     if: needs.prepare-deploy.outputs.trigger
     permissions:
+      actions: read
       deployments: write
       id-token: write # Needed for getting local workflow actions
     environment: ${{ needs.prepare-deploy.outputs.environment }}

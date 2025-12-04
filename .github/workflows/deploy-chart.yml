@@ -142,8 +142,9 @@ jobs:
     name: Start deploy
     uses: ./.github/workflows/deploy-start.yml
     permissions:
+      contents: read
       deployments: write
-      id-token: write
+      id-token: write # Needed for getting local workflow actions
       issues: write
     with:
       runs-on: ${{ inputs.runs-on }}

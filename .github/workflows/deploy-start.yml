@@ -60,8 +60,9 @@ jobs:
     name: Check if should deploy
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
-      issues: write
+      contents: read
       id-token: write # Needed for getting local workflow actions
+      issues: write
     outputs:
       trigger: ${{ steps.trigger.outputs.trigger }}
       environment: ${{ steps.get-environment.outputs.environment }}
@@ -80,7 +81,7 @@ jobs:
           prefix_only: true
           reaction: eyes
         env:
-          GITHUB_TOKEN: "${{ github.token }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN || github.token }}"
 
       - id: trigger
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0

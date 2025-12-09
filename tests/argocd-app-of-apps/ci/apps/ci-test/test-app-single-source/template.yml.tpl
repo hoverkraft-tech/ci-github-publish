@@ -34,6 +34,8 @@ spec:
       env:
         - name: HOVERKRAFT_DEPLOYMENT_ID
           value: ""
+        - name: ARGOCD_MULTI_SOURCES
+          value: ""
     helm:
       values: |
         deploymentId: # Will be updated by deploy worklfow

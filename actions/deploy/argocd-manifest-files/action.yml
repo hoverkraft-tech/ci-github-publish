@@ -254,7 +254,8 @@ runs:
             # Update plugin env if it exists on source and plugin name is "hoverkraft-deployment"
             if [ "$(yq eval '.spec.source.plugin.name' ${{ inputs.application-file }})" = "hoverkraft-deployment" ]; then
               yq -i '
-                (.spec.source.plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}"
+                (.spec.source.plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}" |
+                (.spec.source.plugin.env[] | select(.name == "ARGOCD_MULTI_SOURCES") | .value) = "0"
               ' ${{ inputs.application-file }}
             fi
           else
@@ -289,7 +290,15 @@ runs:
                 | .plugin.env[]
                 | select(.name == "HOVERKRAFT_DEPLOYMENT_ID")
                 | .value
-              ) = "${{ inputs.deployment-id }}"
+              ) = "${{ inputs.deployment-id }}" |
+              (
+                .spec.sources[]
+                | select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}")
+                | select(.plugin.name == "hoverkraft-deployment")
+                | .plugin.env[]
+                | select(.name == "ARGOCD_MULTI_SOURCES")
+                | .value
+              ) = "1"
             ' ${{ inputs.application-file }}
           fi
 

@@ -73,6 +73,8 @@ spec:
         env:
           - name: HOVERKRAFT_DEPLOYMENT_ID
             value: ""
+          - name: ARGOCD_MULTI_SOURCES
+            value: ""
     - chart: other-app
       repoURL: ghcr.io/other-org/other-app/charts
       targetRevision: keep-me-unchanged

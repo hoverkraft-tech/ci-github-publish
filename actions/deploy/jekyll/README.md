@@ -32,10 +32,10 @@ Builds a Jekyll site from source files with automatic asset management and link 
 
 Main steps performed by this action:
 
-1. **Site Preparation**: Creates the site directory (default `_site`, configurable via `site-path`) and generates `_config.yml` with the specified theme
+1. **Site Preparation**: Creates the site directory (configurable via `site-path`) and generates `_config.yml` with the specified theme
 2. **Index Page Creation**: Converts README.md to index.md with Jekyll front matter if index doesn't exist
 3. **Additional Pages Processing**: Processes pages (Markdown or HTML) matching the `pages` input pattern, creating Jekyll pages with proper structure
-4. **Asset Management**: Copies images and media files referenced by pages plus any files matched by `assets` input into `assets/`, rewriting references in Markdown and HTML formats
+4. **Asset Management**: Copies images and media files referenced by pages plus any files matched by `assets` input into `assets/`, rewriting references in Markdown and HTML
 5. **Link Rewriting**: Updates internal page links to maintain correct navigation after Jekyll structure transformation
 6. **Jekyll Build**: Executes official Jekyll build process to generate the final static site
 
@@ -46,22 +46,11 @@ Main steps performed by this action:
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jekyll@5358acdb08b912114974ecc06a057cda8d391aa5 # 0.17.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jekyll@44e0f1bacebf3711bf90895fc45d815e9fe582e8 # 0.18.0
   with:
     # The Jekyll theme to use for the site.
     # Default: `jekyll-theme-cayman`
     theme: jekyll-theme-cayman
-
-    # The working directory where the prepared Jekyll site is written. Relative to the workspace.
-    # Default: `_site`
-    site-path: _site
-
-    # The destination directory for the built site assets. Relative to the workspace.
-    # Default: `build`
-    build-path: build
-
-    # Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).
-    assets: ""
 
     # The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line). Accepts Markdown (`.md`, `.markdown`) and HTML (`.html`, `.htm`) files.
     #
@@ -72,6 +61,27 @@ Main steps performed by this action:
     # actions/*/README.md
     # ```
     pages: ""
+
+    # Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).
+    #
+    # ```yml
+    # assets: |
+    # css/**
+    # images/**
+    # media/**/*.png
+    # ```
+    assets: ""
+
+    # The working directory where the prepared Jekyll site is written. Relative to the workspace.
+    # Defaults to `_site`.
+    #
+    # Default: `_site`
+    site-path: _site
+
+    # The destination directory for the built site assets. Relative to the workspace. Defaults to `build` when not set.
+    #
+    # Default: `build`
+    build-path: build
 ````
 
 <!-- usage:end -->
@@ -83,12 +93,15 @@ Main steps performed by this action:
 | **Input**        | **Description**                                                                                                                                                   | **Required** | **Default**           |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
 | **`theme`**      | The Jekyll theme to use for the site.                                                                                                                             | **false**    | `jekyll-theme-cayman` |
-| **`site-path`**  | The working directory where the prepared Jekyll site is written. Relative to the workspace.                                                                       | **false**    | `_site`               |
-| **`build-path`** | The destination directory for the built site assets. Relative to the workspace. Defaults to `build` when not set.                                                 | **false**    | `build`               |
-| **`assets`**     | Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).                                        | **false**    | -                     |
 | **`pages`**      | The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line). Accepts Markdown (`.md`, `.markdown`) and HTML (`.html`, `.htm`) files. | **false**    | -                     |
 |                  |                                                                                                                                                                   |              |                       |
-|                  | <!-- textlint-disable --><pre lang="yml"> pages: \|&#13; docs/\*_/_.md&#13; .github/workflows/_.md&#13; actions/_/README.md</pre><!-- textlint-enable -->         |              |                       |
+|                  | <!-- textlint-disable --><pre lang="yml"> pages: \|&#13; docs/**/*.md&#13; .github/workflows/*.md&#13; actions/*/README.md</pre><!-- textlint-enable -->          |              |                       |
+| **`assets`**     | Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).                                        | **false**    | -                     |
+|                  |                                                                                                                                                                   |              |                       |
+|                  | <!-- textlint-disable --><pre lang="yml"> assets: \|&#13; css/**&#13; images/**&#13; media/**/*.png</pre><!-- textlint-enable -->                                 |              |                       |
+| **`site-path`**  | The working directory where the prepared Jekyll site is written. Relative to the workspace.                                                                       | **false**    | `_site`               |
+|                  | Defaults to `_site`.                                                                                                                                              |              |                       |
+| **`build-path`** | The destination directory for the built site assets. Relative to the workspace. Defaults to `build` when not set.                                                 | **false**    | `build`               |
 
 <!-- inputs:end -->
 

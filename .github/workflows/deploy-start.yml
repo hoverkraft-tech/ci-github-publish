@@ -98,7 +98,7 @@ jobs:
             }
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@5ac504609f6ef35c5ac94bd8199063aa32104721 # 0.31.3
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
         with:
           actions-path: actions
 
@@ -109,7 +109,7 @@ jobs:
           environment: ${{ inputs.environment }}
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@5ac504609f6ef35c5ac94bd8199063aa32104721 # 0.31.3
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions
@@ -131,7 +131,7 @@ jobs:
       deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@5ac504609f6ef35c5ac94bd8199063aa32104721 # 0.31.3
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
         with:
           actions-path: actions
 
@@ -147,7 +147,7 @@ jobs:
           description: "Starting deployment to ${{ needs.prepare-deploy.outputs.environment }}..."
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@5ac504609f6ef35c5ac94bd8199063aa32104721 # 0.31.3
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions

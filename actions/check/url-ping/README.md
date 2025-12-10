@@ -54,6 +54,10 @@ Action to run ping check on given URL.
     # Expected HTTP status codes. Comma separated list.
     # Default: `200`
     expected-statuses: "200"
+
+    # Optional bearer token used to access private url.
+    # Default: unset
+    authorization: "Bearer ${{ secrets.GITHUB_TOKEN }}"
 ```
 
 <!-- usage:end -->
@@ -73,6 +77,7 @@ Action to run ping check on given URL.
 | **`timeout`**           | Timeout in seconds for the full URL check process.          | **false**    | `60`        |
 | **`retries`**           | Total number of attempts allowed for the URL check process. | **false**    | `3`         |
 | **`expected-statuses`** | Expected HTTP status codes. Comma separated list.           | **false**    | `200`       |
+| **`authorization`**     | Optional Authorization header for private URLs.             | **false**    | -           |
 
 <!-- inputs:end -->
 

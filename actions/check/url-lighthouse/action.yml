@@ -1,5 +1,7 @@
 name: "Check - URL - Lighthouse"
-description: "Action to run Lighthouse audits on given URL."
+description: |
+  Action to run Lighthouse audits on given URL.
+  The action always sends `User-Agent: hoverkraft-tech-url-lighthouse-action` when making requests.
 author: hoverkraft
 branding:
   icon: sun
@@ -13,6 +15,12 @@ inputs:
     description: "The path to the performance budget file. See https://web.dev/articles/use-lighthouse-for-performance-budgets."
     required: false
     default: "./budget.json"
+  authorization:
+    description: |
+      Optional Authorization header used to access private URLs.
+      Example: `Bearer xxx...`, `token xxx...`
+    required: false
+    default: ""
 outputs:
   report-url:
     description: "The URL to the Lighthouse report artifact."
@@ -26,14 +34,23 @@ runs:
   steps:
     - id: prepare-variables
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        INPUT_AUTHORIZATION: ${{ inputs.authorization }}
       with:
         script: |
           const { randomUUID } = require('crypto');
           // Define a unique artifact name
           const uniquid = randomUUID();
           const timestamp = Date.now();
-          const artifactName = `${{ github.run_id }}-${{ github.run_number }}-lighthouse-results-${timestamp}-${uniquid}`;
+          const artifactName = `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_NUMBER}-lighthouse-results-${timestamp}-${uniquid}`;
           core.setOutput("artifact-name", artifactName);
+
+          const headers = { "User-Agent": "hoverkraft-tech-url-lighthouse-action" };
+          const authorization = process.env.INPUT_AUTHORIZATION?.trim();
+          if (authorization) {
+            headers.Authorization = authorization;
+          }
+          core.setOutput("extra-headers", JSON.stringify(headers));
 
     - id: lighthouse
       uses: treosh/lighthouse-ci-action@fcd65974f7c4c2bf0ee9d09b84d2489183c29726 # 12.6.1
@@ -42,6 +59,7 @@ runs:
         budgetPath: ${{ inputs.budget-path }}
         uploadArtifacts: true
         artifactName: ${{ steps.prepare-variables.outputs.artifact-name }}
+        extraHeaders: ${{ steps.prepare-variables.outputs.extra-headers }}
 
     - id: summary
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0

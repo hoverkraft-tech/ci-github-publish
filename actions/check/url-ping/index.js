@@ -86,6 +86,14 @@ const parseExpectedStatuses = (rawValue) => {
   return statuses;
 };
 
+const sanitizeOptionalString = (rawValue) => {
+  if (!rawValue) {
+    return null;
+  }
+  const trimmed = rawValue.toString().trim();
+  return trimmed.length ? trimmed : null;
+};
+
 const computeBackoffDelay = (attemptNumber, policy = RETRY_POLICY) => {
   const growth =
     policy.baseBackoffMs * Math.pow(policy.backoffFactor, attemptNumber - 1);
@@ -119,11 +127,25 @@ const clearDeadlineTimer = (controller) => {
   }
 };
 
+const buildRequestHeaders = (authorization) => {
+  const headers = {
+    "User-Agent": "hoverkraft-tech-url-ping-action",
+  };
+
+  if (authorization) {
+    headers.Authorization = authorization;
+  }
+
+  return headers;
+};
+
 const fetchStatusCode = async ({
+  core,
   url,
   followRedirect,
   attemptTimeoutMs,
   globalSignal,
+  authorization,
 }) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), attemptTimeoutMs);
@@ -138,11 +160,17 @@ const fetchStatusCode = async ({
   }
 
   try {
-    const response = await fetch(url, {
+    const fetchOptions = {
       method: "HEAD",
       redirect: followRedirect ? "follow" : "manual",
       signal: controller.signal,
-    });
+      headers: buildRequestHeaders(authorization),
+    };
+    core.debug(
+      `Fetching URL ${url.href} with options: ${JSON.stringify(fetchOptions)}`,
+    );
+
+    const response = await fetch(url, fetchOptions);
     return response.status;
   } catch (error) {
     if (globalSignal && globalSignal.aborted) {
@@ -204,10 +232,12 @@ const executeAttempt = async ({
   globalSignal,
 }) => {
   const statusCode = await fetchStatusCode({
+    core,
     url: config.url,
     followRedirect: config.followRedirect,
     attemptTimeoutMs,
     globalSignal,
+    authorization: config.authorization,
   });
   core.setOutput("status-code", statusCode);
   ensureStatusIsExpected(statusCode, config.expectedStatuses);
@@ -230,6 +260,7 @@ const createConfig = (rawInputs) => {
   const totalTimeoutMs = timeoutSeconds * MS_IN_SECOND;
   const totalAttempts = parsePositiveInteger(rawInputs.retries, "retries");
   const expectedStatuses = parseExpectedStatuses(rawInputs.expectedStatuses);
+  const authorization = sanitizeOptionalString(rawInputs.authorization);
 
   return {
     url,
@@ -238,6 +269,7 @@ const createConfig = (rawInputs) => {
     totalTimeoutMs,
     totalAttempts,
     expectedStatuses,
+    authorization,
   };
 };
 

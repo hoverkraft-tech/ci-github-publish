@@ -4,10 +4,10 @@ description: |
 
   Main steps performed by this action:
 
-  1. **Site Preparation**: Creates `_site` directory structure and generates `_config.yml` with the specified theme
+  1. **Site Preparation**: Creates the site directory (configurable via `site-path`) and generates `_config.yml` with the specified theme
   2. **Index Page Creation**: Converts README.md to index.md with Jekyll front matter if index doesn't exist
-  3. **Additional Pages Processing**: Processes pages matching the `pages` input pattern, creating Jekyll pages with proper structure
-  4. **Asset Management**: Copies images and media files to `assets/` directory, rewrites references in both Markdown and HTML formats
+  3. **Additional Pages Processing**: Processes pages (Markdown or HTML) matching the `pages` input pattern, creating Jekyll pages with proper structure
+  4. **Asset Management**: Copies images and media files referenced by pages plus any files matched by `assets` input into `assets/`, rewriting references in Markdown and HTML
   5. **Link Rewriting**: Updates internal page links to maintain correct navigation after Jekyll structure transformation
   6. **Jekyll Build**: Executes official Jekyll build process to generate the final static site
 author: hoverkraft
@@ -22,7 +22,7 @@ inputs:
     default: "jekyll-theme-cayman"
   pages:
     description: |
-      The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line).
+      The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line). Accepts Markdown (`.md`, `.markdown`) and HTML (`.html`, `.htm`) files.
 
       ```yml
         pages: |
@@ -31,6 +31,28 @@ inputs:
           actions/*/README.md
       ```
     required: false
+  assets:
+    description: |
+      Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).
+
+      ```yml
+        assets: |
+          css/**
+          images/**
+          media/**/*.png
+      ```
+    required: false
+  site-path:
+    description: |
+      The working directory where the prepared Jekyll site is written. Relative to the workspace.
+      Defaults to `_site`.
+    required: false
+    default: "_site"
+  build-path:
+    description: |
+      The destination directory for the built site assets. Relative to the workspace. Defaults to `build` when not set.
+    required: false
+    default: "build"
 
 outputs:
   build-path:
@@ -52,7 +74,10 @@ runs:
             glob,
             inputs: {
               theme: ${{ toJson(inputs.theme) }},
-              pages: ${{ toJson(inputs.pages) }}
+              pages: ${{ toJson(inputs.pages) }},
+              assets: ${{ toJson(inputs.assets) }},
+              "site-path": ${{ toJson(inputs.site-path) }},
+              "build-path": ${{ toJson(inputs.build-path) }}
             }
           });
 

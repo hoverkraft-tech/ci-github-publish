@@ -25,6 +25,7 @@
 ## Overview
 
 Action to run Lighthouse audits on given URL.
+The action always sends `User-Agent: hoverkraft-tech-url-lighthouse-action` when making requests.
 
 <!-- overview:end -->
 
@@ -33,7 +34,7 @@ Action to run Lighthouse audits on given URL.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/check/url-lighthouse@5358acdb08b912114974ecc06a057cda8d391aa5 # 0.17.0
+- uses: hoverkraft-tech/ci-github-publish/actions/check/url-lighthouse@44e0f1bacebf3711bf90895fc45d815e9fe582e8 # 0.18.0
   with:
     # The URL to audit using Lighthouse.
     # This input is required.
@@ -43,9 +44,9 @@ Action to run Lighthouse audits on given URL.
     # Default: `./budget.json`
     budget-path: ./budget.json
 
-    # Optional Authorization header for private URLs.
-    # Default: unset
-    authorization: "Bearer ${{ secrets.GITHUB_TOKEN }}"
+    # Optional Authorization header used to access private URLs.
+    # Example: `Bearer xxx...`, `token xxx...`
+    authorization: ""
 ```
 
 <!-- usage:end -->
@@ -62,9 +63,8 @@ Action to run Lighthouse audits on given URL.
 | ------------------- | --------------------------------------------------------------------------------------------------------------- | ------------ | --------------- |
 | **`url`**           | The URL to audit using Lighthouse.                                                                              | **true**     | -               |
 | **`budget-path`**   | The path to the performance budget file. See <https://web.dev/articles/use-lighthouse-for-performance-budgets>. | **false**    | `./budget.json` |
-| **`authorization`** | Optional Authorization header for private URLs.                                                                 | **false**    | -               |
-
-The action always sends `User-Agent: hoverkraft-tech-url-lighthouse-action` when making requests.
+| **`authorization`** | Optional Authorization header used to access private URLs.                                                      | **false**    | -               |
+|                     | Example: `Bearer xxx...`, `token xxx...`                                                                        |              |                 |
 
 <!-- inputs:end -->
 

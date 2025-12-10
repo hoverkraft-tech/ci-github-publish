@@ -33,7 +33,7 @@ Action to run ping check on given URL.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/check/url-ping@5358acdb08b912114974ecc06a057cda8d391aa5 # 0.17.0
+- uses: hoverkraft-tech/ci-github-publish/actions/check/url-ping@44e0f1bacebf3711bf90895fc45d815e9fe582e8 # 0.18.0
   with:
     # The URL to check.
     # This input is required.
@@ -55,9 +55,9 @@ Action to run ping check on given URL.
     # Default: `200`
     expected-statuses: "200"
 
-    # Optional bearer token used to access private url.
-    # Default: unset
-    authorization: "Bearer ${{ secrets.GITHUB_TOKEN }}"
+    # Optional Authorization header used to access private URLs.
+    # Examples: `Bearer xxx...`, `token xxx...`
+    authorization: ""
 ```
 
 <!-- usage:end -->
@@ -77,7 +77,8 @@ Action to run ping check on given URL.
 | **`timeout`**           | Timeout in seconds for the full URL check process.          | **false**    | `60`        |
 | **`retries`**           | Total number of attempts allowed for the URL check process. | **false**    | `3`         |
 | **`expected-statuses`** | Expected HTTP status codes. Comma separated list.           | **false**    | `200`       |
-| **`authorization`**     | Optional Authorization header for private URLs.             | **false**    | -           |
+| **`authorization`**     | Optional Authorization header used to access private URLs.  | **false**    | -           |
+|                         | Examples: `Bearer xxx...`, `token xxx...`                   |              |             |
 
 <!-- inputs:end -->
 

@@ -32,10 +32,10 @@ Builds a Jekyll site from source files with automatic asset management and link 
 
 Main steps performed by this action:
 
-1. **Site Preparation**: Creates `_site` directory structure and generates `_config.yml` with the specified theme
+1. **Site Preparation**: Creates the site directory (default `_site`, configurable via `site-path`) and generates `_config.yml` with the specified theme
 2. **Index Page Creation**: Converts README.md to index.md with Jekyll front matter if index doesn't exist
-3. **Additional Pages Processing**: Processes pages matching the `pages` input pattern, creating Jekyll pages with proper structure
-4. **Asset Management**: Copies images and media files to `assets/` directory, rewrites references in both Markdown and HTML formats
+3. **Additional Pages Processing**: Processes pages (Markdown or HTML) matching the `pages` input pattern, creating Jekyll pages with proper structure
+4. **Asset Management**: Copies images and media files referenced by pages plus any files matched by `assets` input into `assets/`, rewriting references in Markdown and HTML formats
 5. **Link Rewriting**: Updates internal page links to maintain correct navigation after Jekyll structure transformation
 6. **Jekyll Build**: Executes official Jekyll build process to generate the final static site
 
@@ -52,7 +52,18 @@ Main steps performed by this action:
     # Default: `jekyll-theme-cayman`
     theme: jekyll-theme-cayman
 
-    # The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line).
+    # The working directory where the prepared Jekyll site is written. Relative to the workspace.
+    # Default: `_site`
+    site-path: _site
+
+    # The destination directory for the built site assets. Relative to the workspace.
+    # Default: `build`
+    build-path: build
+
+    # Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).
+    assets: ""
+
+    # The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line). Accepts Markdown (`.md`, `.markdown`) and HTML (`.html`, `.htm`) files.
     #
     # ```yml
     # pages: |
@@ -69,12 +80,15 @@ Main steps performed by this action:
 
 ## Inputs
 
-| **Input**   | **Description**                                                                                                                                           | **Required** | **Default**           |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`theme`** | The Jekyll theme to use for the site.                                                                                                                     | **false**    | `jekyll-theme-cayman` |
-| **`pages`** | The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line).                                                                 | **false**    | -                     |
-|             |                                                                                                                                                           |              |                       |
-|             | <!-- textlint-disable --><pre lang="yml"> pages: \|&#13; docs/\*_/_.md&#13; .github/workflows/_.md&#13; actions/_/README.md</pre><!-- textlint-enable --> |              |                       |
+| **Input**        | **Description**                                                                                                                                                   | **Required** | **Default**           |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`theme`**      | The Jekyll theme to use for the site.                                                                                                                             | **false**    | `jekyll-theme-cayman` |
+| **`site-path`**  | The working directory where the prepared Jekyll site is written. Relative to the workspace.                                                                       | **false**    | `_site`               |
+| **`build-path`** | The destination directory for the built site assets. Relative to the workspace. Defaults to `build` when not set.                                                 | **false**    | `build`               |
+| **`assets`**     | Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).                                        | **false**    | -                     |
+| **`pages`**      | The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line). Accepts Markdown (`.md`, `.markdown`) and HTML (`.html`, `.htm`) files. | **false**    | -                     |
+|                  |                                                                                                                                                                   |              |                       |
+|                  | <!-- textlint-disable --><pre lang="yml"> pages: \|&#13; docs/\*_/_.md&#13; .github/workflows/_.md&#13; actions/_/README.md</pre><!-- textlint-enable -->         |              |                       |
 
 <!-- inputs:end -->
 

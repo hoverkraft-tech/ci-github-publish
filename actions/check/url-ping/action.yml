@@ -25,6 +25,12 @@ inputs:
     description: "Expected HTTP status codes. Comma separated list."
     required: false
     default: "200"
+  authorization:
+    description: |
+      Optional Authorization header used to access private URLs.
+      Examples: `Bearer xxx...`, `token xxx...`
+    required: false
+    default: ""
 
 outputs:
   status-code:
@@ -52,5 +58,6 @@ runs:
               timeout: ${{ toJson(inputs.timeout) }},
               retries: ${{ toJson(inputs.retries) }},
               expectedStatuses: ${{ toJson(inputs['expected-statuses']) }},
+              authorization: ${{ toJson(inputs.authorization) }},
             },
           });

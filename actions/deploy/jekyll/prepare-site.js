@@ -10,16 +10,27 @@ const { AssetManager, toPosixPath } = require("./asset-manager");
 const DEFAULT_THEME = "jekyll-theme-cayman";
 module.exports = async function prepareSite({ core, inputs, io, glob }) {
   const workspacePath = resolveWorkspace();
-  const { theme, pagePatterns } = normalizeInputs(inputs);
-  const { sitePath, buildPath } = resolveSitePaths(workspacePath);
+  const { theme, pagePatterns, assetPatterns, sitePathInput, buildPathInput } =
+    normalizeInputs(inputs);
+  const { sitePath, buildPath } = resolveSitePaths(workspacePath, {
+    sitePathInput,
+    buildPathInput,
+  });
   const assetManager = new AssetManager({ workspacePath, sitePath });
 
-  core.setOutput("build-path", buildPath);
   core.setOutput("jekyll-source", relative(workspacePath, sitePath));
   core.setOutput("jekyll-destination", relative(workspacePath, buildPath));
 
   await io.mkdirP(sitePath);
   ensureConfigFile({ sitePath, theme });
+
+  if (assetPatterns.length > 0) {
+    const assetsGlobber = await glob.create(assetPatterns.join("\n"));
+    for await (const assetFile of assetsGlobber.globGenerator()) {
+      const assetPath = resolve(workspacePath, assetFile);
+      await assetManager.copyAssetFromWorkspace(assetPath);
+    }
+  }
 
   const indexPath = join(sitePath, INDEX_BASENAME);
   if (!existsSync(indexPath)) {
@@ -103,13 +114,60 @@ function normalizeInputs(rawInputs = {}) {
     ? pagesInput.split(/\s+/).filter(Boolean)
     : [];
 
-  return { theme, pagePatterns };
+  const assetsInput = (rawInputs.assets || "").trim();
+  const assetPatterns = assetsInput
+    ? assetsInput.split(/\s+/).filter(Boolean)
+    : [];
+
+  const sitePathInput = requireNonEmptyInput(
+    rawInputs["site-path"],
+    "site-path",
+  );
+  const buildPathInput = requireNonEmptyInput(
+    rawInputs["build-path"],
+    "build-path",
+  );
+
+  return {
+    theme,
+    pagePatterns,
+    assetPatterns,
+    sitePathInput,
+    buildPathInput,
+  };
 }
 
-function resolveSitePaths(workspacePath) {
-  const sitePath = join(workspacePath, "_site");
-  const buildPath = join(sitePath, "build");
+function resolveSitePaths(workspacePath, { sitePathInput, buildPathInput }) {
+  const sitePath = resolveWithinWorkspace(workspacePath, sitePathInput);
+  const buildPath = resolveWithinWorkspace(workspacePath, buildPathInput);
+
   return { sitePath, buildPath };
+}
+
+function requireNonEmptyInput(value, inputName) {
+  if (typeof value !== "string") {
+    throw new Error(`${inputName} input is required.`);
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    throw new Error(`${inputName} input cannot be empty.`);
+  }
+
+  return trimmed;
+}
+
+function resolveWithinWorkspace(workspacePath, targetPath) {
+  const resolvedPath = resolve(workspacePath, targetPath);
+  const pathFromWorkspace = relative(workspacePath, resolvedPath);
+
+  if (pathFromWorkspace.startsWith("..")) {
+    throw new Error(
+      `Path must stay within workspace. Provided value resolves to: ${resolvedPath}`,
+    );
+  }
+
+  return resolvedPath;
 }
 
 function ensureConfigFile({ sitePath, theme }) {

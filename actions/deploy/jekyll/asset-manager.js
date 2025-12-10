@@ -15,6 +15,48 @@ class AssetManager {
     this.cache = new Map();
   }
 
+  copyAssetFromWorkspace(assetAbsolutePath) {
+    if (!assetAbsolutePath) {
+      return null;
+    }
+
+    const workspaceRelativePath = relative(
+      this.workspacePath,
+      assetAbsolutePath,
+    );
+
+    if (!workspaceRelativePath || workspaceRelativePath.startsWith("..")) {
+      return null;
+    }
+
+    if (!existsSync(assetAbsolutePath)) {
+      return null;
+    }
+
+    const stats = statSync(assetAbsolutePath);
+    if (!stats.isFile()) {
+      return null;
+    }
+
+    let record = this.cache.get(assetAbsolutePath);
+    if (!record) {
+      const sanitizedTarget = this.#sanitizeAssetTarget(
+        workspaceRelativePath,
+        assetAbsolutePath,
+      );
+      const destination = join(this.sitePath, ASSETS_ROOT, sanitizedTarget);
+      mkdirSync(dirname(destination), { recursive: true });
+      copyFileSync(assetAbsolutePath, destination);
+
+      const normalizedTarget = toPosixPath(sanitizedTarget);
+      const publicPath = `${ASSETS_PUBLIC_PREFIX}/${normalizedTarget}`;
+      record = { destination, publicPath };
+      this.cache.set(assetAbsolutePath, record);
+    }
+
+    return record.publicPath;
+  }
+
   rewriteContent({ pageFilePath, pagePath, content }) {
     if (!content) {
       return content;

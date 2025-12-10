@@ -69,11 +69,21 @@ function getPageSection({ pageFilePath, workspacePath }) {
     extname(pageFilePath),
   ).toLowerCase();
   const sectionDir = sectionName !== "readme" ? toSafeSegment(sectionName) : "";
+  const indexBasename = getIndexBasename(pageFilePath);
 
-  const segments = [sectionParentDir, sectionDir, INDEX_BASENAME].filter(
+  const segments = [sectionParentDir, sectionDir, indexBasename].filter(
     Boolean,
   );
   return join(workspacePath, "_site", ...segments);
+}
+
+function getIndexBasename(pageFilePath) {
+  const ext = extname(pageFilePath).toLowerCase();
+  if (ext === ".html" || ext === ".htm") {
+    return "index.html";
+  }
+
+  return INDEX_BASENAME;
 }
 
 function getPageTitle({ pageFilePath, workspacePath }) {

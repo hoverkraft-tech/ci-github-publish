@@ -25,6 +25,11 @@ inputs:
     description: |
       The static site generator used to build the site. See https://github.com/actions/configure-pages.
     required: false
+  checks:
+    description: |
+      Whether to run URL checks after deployment.
+    required: false
+    default: "true"
   github-token:
     description: |
       GitHub Token for deploying to GitHub Pages.
@@ -112,10 +117,12 @@ runs:
 
     # Url checks
     - uses: ./self-github-pages-actions/check/url-ping
+      if: ${{ inputs.checks == 'true' }}
       with:
         url: ${{ steps.deployment.outputs.page_url }}
 
     - uses: ./self-github-pages-actions/check/url-lighthouse
+      if: ${{ inputs.checks == 'true' }}
       with:
         url: ${{ steps.deployment.outputs.page_url }}
         budget-path: ${{ inputs.budget-path }}
@@ -127,17 +134,15 @@ runs:
       run: |
         rm -fr ./self-github-pages-actions
 
-    - shell: bash
-      run: |
-        STEP_SUMMARY=$(cat << EOF
-        ### Github Page has been deployed :rocket:
-
-        Here it is: <${{ steps.deployment.outputs.page_url }}>
-
-        \`\`\`
-        ${{ steps.deployment.outputs.page_url }}
-        \`\`\`
-        EOF
-        )
-
-        echo "$STEP_SUMMARY" >> $GITHUB_STEP_SUMMARY
+    - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+      with:
+        script: |
+          const url = process.env.PAGE_URL;
+          await core.summary
+          .addHeading("Github Page has been deployed 🚀", 3)
+          .addRaw(`Here it is: <a href="${url}">${url}</a>`)
+          .addBreak().addBreak()
+          .addCodeBlock(url)
+          .write();

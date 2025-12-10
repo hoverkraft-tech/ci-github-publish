@@ -42,6 +42,10 @@ Action to run Lighthouse audits on given URL.
     # The path to the performance budget file. See https://web.dev/articles/use-lighthouse-for-performance-budgets.
     # Default: `./budget.json`
     budget-path: ./budget.json
+
+    # Optional Authorization header for private URLs.
+    # Default: unset
+    authorization: "Bearer ${{ secrets.GITHUB_TOKEN }}"
 ```
 
 <!-- usage:end -->
@@ -54,10 +58,13 @@ Action to run Lighthouse audits on given URL.
 
 ## Inputs
 
-| **Input**         | **Description**                                                                                                 | **Required** | **Default**     |
-| ----------------- | --------------------------------------------------------------------------------------------------------------- | ------------ | --------------- |
-| **`url`**         | The URL to audit using Lighthouse.                                                                              | **true**     | -               |
-| **`budget-path`** | The path to the performance budget file. See <https://web.dev/articles/use-lighthouse-for-performance-budgets>. | **false**    | `./budget.json` |
+| **Input**           | **Description**                                                                                                 | **Required** | **Default**     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- | ------------ | --------------- |
+| **`url`**           | The URL to audit using Lighthouse.                                                                              | **true**     | -               |
+| **`budget-path`**   | The path to the performance budget file. See <https://web.dev/articles/use-lighthouse-for-performance-budgets>. | **false**    | `./budget.json` |
+| **`authorization`** | Optional Authorization header for private URLs.                                                                 | **false**    | -               |
+
+The action always sends `User-Agent: hoverkraft-tech-url-lighthouse-action` when making requests.
 
 <!-- inputs:end -->
 

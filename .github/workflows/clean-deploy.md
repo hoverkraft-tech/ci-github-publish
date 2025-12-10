@@ -63,7 +63,7 @@ on:
 permissions: {}
 jobs:
   clean-deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@d7f1c4c95181e34ac3bd6bd4ef46d463b2eb62ad # 0.17.1
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@55f6193fb7a9eaab81f5db18aa0c3400971d87b3 # 0.17.3
     permissions: {}
     secrets:
       # GitHub token for deploying.
@@ -178,7 +178,7 @@ permissions:
 
 jobs:
   clean-deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@d7f1c4c95181e34ac3bd6bd4ef46d463b2eb62ad # 0.17.1
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@55f6193fb7a9eaab81f5db18aa0c3400971d87b3 # 0.17.3
     with:
       clean-deploy-parameters: |
         { "repository": "${{ github.repository_owner }}/argocd-app-of-apps" }

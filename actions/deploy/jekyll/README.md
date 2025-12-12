@@ -46,7 +46,7 @@ Main steps performed by this action:
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jekyll@44e0f1bacebf3711bf90895fc45d815e9fe582e8 # 0.18.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jekyll@bd93fcce0b6b26974f649c2f89323fc6738a3e59 # main
   with:
     # The Jekyll theme to use for the site.
     # Default: `jekyll-theme-cayman`
@@ -95,10 +95,10 @@ Main steps performed by this action:
 | **`theme`**      | The Jekyll theme to use for the site.                                                                                                                             | **false**    | `jekyll-theme-cayman` |
 | **`pages`**      | The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line). Accepts Markdown (`.md`, `.markdown`) and HTML (`.html`, `.htm`) files. | **false**    | -                     |
 |                  |                                                                                                                                                                   |              |                       |
-|                  | <!-- textlint-disable --><pre lang="yml"> pages: \|&#13; docs/**/*.md&#13; .github/workflows/*.md&#13; actions/*/README.md</pre><!-- textlint-enable -->          |              |                       |
+|                  | <!-- textlint-disable --><pre lang="yml">pages: \|&#13; docs/\*_/_.md&#13; .github/workflows/_.md&#13; actions/_/README.md</pre><!-- textlint-enable -->          |              |                       |
 | **`assets`**     | Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).                                        | **false**    | -                     |
 |                  |                                                                                                                                                                   |              |                       |
-|                  | <!-- textlint-disable --><pre lang="yml"> assets: \|&#13; css/**&#13; images/**&#13; media/**/*.png</pre><!-- textlint-enable -->                                 |              |                       |
+|                  | <!-- textlint-disable --><pre lang="yml">assets: \|&#13; css/**&#13; images/**&#13; media/\*_/_.png</pre><!-- textlint-enable -->                                 |              |                       |
 | **`site-path`**  | The working directory where the prepared Jekyll site is written. Relative to the workspace.                                                                       | **false**    | `_site`               |
 |                  | Defaults to `_site`.                                                                                                                                              |              |                       |
 | **`build-path`** | The destination directory for the built site assets. Relative to the workspace. Defaults to `build` when not set.                                                 | **false**    | `build`               |

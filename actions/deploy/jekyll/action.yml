@@ -25,10 +25,10 @@ inputs:
       The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line). Accepts Markdown (`.md`, `.markdown`) and HTML (`.html`, `.htm`) files.
 
       ```yml
-        pages: |
-          docs/**/*.md
-          .github/workflows/*.md
-          actions/*/README.md
+      pages: |
+        docs/**/*.md
+        .github/workflows/*.md
+        actions/*/README.md
       ```
     required: false
   assets:
@@ -36,10 +36,10 @@ inputs:
       Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).
 
       ```yml
-        assets: |
-          css/**
-          images/**
-          media/**/*.png
+      assets: |
+        css/**
+        images/**
+        media/**/*.png
       ```
     required: false
   site-path:

@@ -3,6 +3,8 @@ const { readFileSync, writeFileSync } = require("fs");
 const { toPosixPath } = require("./asset-manager");
 
 const INDEX_BASENAME = "index.md";
+const LIQUID_TAG_PATTERN = /(\{%[^%]+%\})/g;
+const MARKDOWN_EXTENSIONS = new Set([".md", ".markdown", ".mdown", ".mkd"]);
 
 async function createSitePage({
   io,
@@ -23,7 +25,10 @@ async function createSitePage({
   await io.mkdirP(dirname(targetPagePath));
 
   const rawContent = readFileSync(absolutePageFilePath, "utf8");
-  const contentWithFrontMatter = `---\nlayout: default\ntitle: ${effectiveTitle}\n---\n\n${rawContent}`;
+  const safeContent = isMarkdownPage(absolutePageFilePath)
+    ? escapeLiquidTags(rawContent)
+    : rawContent;
+  const contentWithFrontMatter = `---\nlayout: default\ntitle: ${effectiveTitle}\n---\n\n${safeContent}`;
 
   const processedContent = assetManager.rewriteContent({
     pageFilePath: absolutePageFilePath,
@@ -110,6 +115,20 @@ function toSafeSegment(value) {
 function formatLinkReplacement(relativePath) {
   const normalized = toPosixPath(relativePath);
   return normalized || ".";
+}
+
+function isMarkdownPage(pageFilePath) {
+  return MARKDOWN_EXTENSIONS.has(extname(pageFilePath).toLowerCase());
+}
+
+function escapeLiquidTags(content) {
+  if (!content) {
+    return content;
+  }
+
+  return content.replace(LIQUID_TAG_PATTERN, (_match, tag) => {
+    return `{% raw %}${tag}{% endraw %}`;
+  });
 }
 
 module.exports = {

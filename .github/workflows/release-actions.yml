@@ -173,7 +173,7 @@ jobs:
 
       - id: changed-files
         if: ${{ inputs.update-all == false && (steps.get-documentation-files.outputs.paths || steps.get-manifest-files.outputs.paths) }}
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
         with:
           files: |
             ${{ steps.get-documentation-files.outputs.paths }}

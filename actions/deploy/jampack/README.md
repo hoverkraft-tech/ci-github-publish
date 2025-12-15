@@ -37,7 +37,7 @@ Action to run Jampack post-processing tool on given static assets.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jampack@44e0f1bacebf3711bf90895fc45d815e9fe582e8 # 0.18.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jampack@daee4406a47682bd2adf0822c12f1d46338d7da1 # 0.18.1
   with:
     # Path of the directory containing the static assets.
     # This input is required.

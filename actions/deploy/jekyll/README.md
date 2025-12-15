@@ -46,7 +46,7 @@ Main steps performed by this action:
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jekyll@7fb1befde297868a11ae8f7a4f67c82949d72fff # main
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/jekyll@daee4406a47682bd2adf0822c12f1d46338d7da1 # 0.18.1
   with:
     # The Jekyll theme to use for the site.
     # Default: `jekyll-theme-cayman`

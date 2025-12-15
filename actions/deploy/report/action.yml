@@ -85,7 +85,8 @@ runs:
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const run = require('./self-deploy-report-action/deploy/report/scripts/get-deployment-result.js');
+          const path = require('node:path');
+          const run = require(path.join(process.env.GITHUB_ACTION_PATH, 'scripts/get-deployment-result.js'));
           await run({
             github,
             context,
@@ -99,7 +100,7 @@ runs:
             extra: process.env.INPUT_EXTRA,
           });
 
-    - uses: ./self-deploy-report-action/deployment/update
+    - uses: ./self-deploy-report-actions/deployment/update
       if: inputs.deployment-id && inputs.repository
       with:
         deployment-id: ${{ inputs.deployment-id }}

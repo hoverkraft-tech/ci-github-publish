@@ -38,7 +38,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/clean-deploy/repository-dispatch@daee4406a47682bd2adf0822c12f1d46338d7da1 # 0.18.1
+- uses: hoverkraft-tech/ci-github-publish/actions/clean-deploy/repository-dispatch@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
   with:
     # GitHub Token for dispatch an event to a remote repository.
     # Permissions:

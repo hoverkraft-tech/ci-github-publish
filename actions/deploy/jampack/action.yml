@@ -20,7 +20,7 @@ runs:
       shell: bash
       run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
 
-    - uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
+    - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
       id: npm-cache
       with:
         path: ${{ steps.npm-cache-dir.outputs.dir }}
@@ -33,7 +33,7 @@ runs:
         # Install jampack globally
         npm install -g @divriots/jampack
 
-    - uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
+    - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
       with:
         path: "${{ runner.temp }}/.jampack"
         key: ${{ runner.os }}-jampack-${{ github.run_id }}

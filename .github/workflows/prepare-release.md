@@ -34,7 +34,7 @@ Reusable workflow that performs release preparation tasks:
 
 ### Permissions
 
-- **`contents`**: `read`
+- **`contents`**: `write`
 - **`id-token`**: `write`
 - **`pull-requests`**: `write`
 
@@ -53,10 +53,13 @@ on:
 permissions: {}
 jobs:
   prepare-release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@d825b90e70e04e0a183ab2af1d77c53f86f141be # fix/prepare-release-permissions
     permissions: {}
     secrets:
-      # GitHub token with permissions `contents: write`, `pull-requests: write`.
+      # GitHub token with following permissions:
+      #
+      # - `contents: write`
+      # - `pull-requests: write`
       github-token: ""
 
       # GitHub App private key to generate GitHub token in place of github-token.
@@ -113,7 +116,10 @@ jobs:
 
 | **Secret**           | **Description**                                                           | **Required** |
 | -------------------- | ------------------------------------------------------------------------- | ------------ |
-| **`github-token`**   | GitHub token with permissions `contents: write`, `pull-requests: write`.  | **false**    |
+| **`github-token`**   | GitHub token with following permissions:                                  | **false**    |
+|                      |                                                                           |              |
+|                      | - `contents: write`                                                       |              |
+|                      | - `pull-requests: write`                                                  |              |
 | **`github-app-key`** | GitHub App private key to generate GitHub token in place of github-token. | **false**    |
 |                      | See <https://github.com/actions/create-github-app-token>.                 |              |
 
@@ -141,7 +147,7 @@ permissions: {}
 
 jobs:
   prepare-release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@d825b90e70e04e0a183ab2af1d77c53f86f141be # fix/prepare-release-permissions
     permissions:
       contents: read
       pull-requests: write

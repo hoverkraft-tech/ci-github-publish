@@ -13,7 +13,7 @@ jobs:
   release:
     uses: ./.github/workflows/prepare-release.yml
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
       id-token: write # Needed for getting local workflow actions
     with:

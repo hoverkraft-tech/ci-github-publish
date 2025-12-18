@@ -39,7 +39,10 @@ on:
     secrets:
       github-token:
         description: |
-          GitHub token with permissions `contents: write`, `pull-requests: write`.
+          GitHub token with following permissions:
+
+          - `contents: write`
+          - `pull-requests: write`
       github-app-key:
         description: |
           GitHub App private key to generate GitHub token in place of github-token.
@@ -101,7 +104,7 @@ jobs:
             const configPath = process.env.CONFIG_PATH;
             if (!configPath){
               return core.setFailed('Configuration path is not specified.');
-            } 
+            }
             if (!fs.existsSync(configPath)) {
               return core.warning(`Release configuration file "${configPath}" does not exist.`);
             }
@@ -137,7 +140,7 @@ jobs:
     if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     env:
       INCLUDE_PATHS: ${{ inputs.include-paths }}
@@ -190,7 +193,7 @@ jobs:
               }
             }
 
-            // Build include-paths section if includePaths is not empty 
+            // Build include-paths section if includePaths is not empty
             let includePathsSection = '';
             if (includePaths.size > 0 ) {
               const pathsYaml = Array.from(includePaths).map(p => `  - "${p}"`).join('\n');
@@ -280,24 +283,24 @@ jobs:
           script: |
             const fs = require('node:fs');
             const path = require('node:path');
+
             const configContent = process.env.CONFIG_CONTENT;
             const configPath = process.env.CONFIG_PATH;
             const configDir = path.dirname(configPath);
+
             fs.mkdirSync(configDir, { recursive: true });
             fs.writeFileSync(configPath, configContent, 'utf8');
 
-            core.setOutput('branch', `ci/prepare-release-config${
-              process.env.CONFIG_SLUG ? `/${process.env.CONFIG_SLUG}` : ''
-            }`);
-            core.setOutput('title', `ci: prepare release configuration${
-              process.env.CONFIG_SLUG ? ` for "${process.env.CONFIG_SLUG}"` : ''
-            }`);
-            core.setOutput('body', `Prepare release configuration${
-              process.env.WORKING_DIRECTORY ? ` for "${process.env.WORKING_DIRECTORY}" working directory` : ''
-            }.`);
-            core.setOutput('commit-message', `ci: prepare release configuration${
-              process.env.CONFIG_SLUG ? ` for "${process.env.CONFIG_SLUG}"` : ''
-            }\n\n[skip ci]`);
+            const outputs = {
+              branch: `ci/prepare-release-config${process.env.CONFIG_SLUG ? `/${process.env.CONFIG_SLUG}` : ''}`,
+              title: `ci: prepare release configuration${process.env.CONFIG_SLUG ? ` for "${process.env.CONFIG_SLUG}"` : ''}`,
+              body: `Prepare release configuration${process.env.WORKING_DIRECTORY ? ` for "${process.env.WORKING_DIRECTORY}" working directory` : ''}.`,
+              "commit-message": `ci: prepare release configuration${process.env.CONFIG_SLUG ? ` for "${process.env.CONFIG_SLUG}"` : ''}\n\n[skip ci]`,
+            };
+
+            for (const [key, value] of Object.entries(outputs)) {
+              core.setOutput(key, value);
+            }
 
       - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         if: ${{ steps.get-config.outputs.config-content && inputs.github-app-id }}

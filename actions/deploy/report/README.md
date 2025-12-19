@@ -62,7 +62,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/report@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/report@1a70990f2168a7b322632383edf9ca29d8d8b173 # 0.19.0
   with:
     # The repository where the deployment was made
     # Default: `${{ github.event.repository.name }}`
@@ -84,6 +84,8 @@ permissions:
     # Permissions:
     # - actions: read
     # - deployments: write
+    # - issues: write
+    # - pull-requests: write
     # See https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status.
     #
     # Default: `${{ github.token }}`
@@ -107,6 +109,8 @@ permissions:
 |                     | Permissions:                                                                                                 |              |                                       |
 |                     | - actions: read                                                                                              |              |                                       |
 |                     | - deployments: write                                                                                         |              |                                       |
+|                     | - issues: write                                                                                              |              |                                       |
+|                     | - pull-requests: write                                                                                       |              |                                       |
 |                     | See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. |              |                                       |
 
 <!-- inputs:end -->

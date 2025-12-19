@@ -75,7 +75,7 @@ jobs:
           persist-credentials: false
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         with:
           actions-path: actions
 
@@ -116,7 +116,7 @@ jobs:
           private-key: ${{ secrets.github-app-key }}
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         if: steps.remove-files.outputs.has-changes == 'true'
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
@@ -129,7 +129,7 @@ jobs:
             [skip ci]
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions

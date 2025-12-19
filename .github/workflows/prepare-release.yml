@@ -69,7 +69,7 @@ jobs:
       id-token: write # Needed for getting local workflow actions
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         with:
           actions-path: actions
 
@@ -111,7 +111,7 @@ jobs:
             core.setOutput('config-exists', true);
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions
@@ -309,7 +309,7 @@ jobs:
           app-id: ${{ inputs.github-app-id }}
           private-key: ${{ secrets.github-app-key }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         if: steps.get-config.outputs.config-content
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}

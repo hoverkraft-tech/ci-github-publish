@@ -91,7 +91,7 @@ jobs:
       contents: read
       id-token: write # Needed for getting local workflow actions
     with:
-      runs-on: ${{ fromJson(inputs.runs-on) }}
+      runs-on: ${{ inputs.runs-on }}
       url: ${{ needs.get-finished-deployment.outputs.url }}
       budget-path: ${{ inputs.budget-path }}
       print-summary: false

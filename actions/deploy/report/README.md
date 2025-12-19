@@ -96,18 +96,18 @@ permissions:
 
 ## Inputs
 
-| **Input**           | **Description**                                                                                              | **Required** | **Default**                             |
-| ------------------- | ------------------------------------------------------------------------------------------------------------ | ------------ | --------------------------------------- |
-| **`repository`**    | The repository where the deployment was made                                                                 | **false**    | `$\{\{ github.event.repository.name }}` |
-| **`deployment-id`** | Deployment ID to report.                                                                                     | **false**    | -                                       |
-| **`environment`**   | Environment where the deployment was made.                                                                   | **false**    | -                                       |
-| **`url`**           | URL where the deployment is available.                                                                       | **false**    | -                                       |
-| **`extra`**         | Extra outputs to be included in the summary. JSON object with key-value pairs.                               | **false**    | -                                       |
-| **`github-token`**  | GitHub Token to update the deployment.                                                                       | **false**    | `$\{\{ github.token }}`                 |
-|                     | Permissions:                                                                                                 |              |                                         |
-|                     | - actions: read                                                                                              |              |                                         |
-|                     | - deployments: write                                                                                         |              |                                         |
-|                     | See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. |              |                                         |
+| **Input**           | **Description**                                                                                              | **Required** | **Default**                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ | ------------ | ------------------------------------- |
+| **`repository`**    | The repository where the deployment was made                                                                 | **false**    | `${{ github.event.repository.name }}` |
+| **`deployment-id`** | Deployment ID to report.                                                                                     | **false**    | -                                     |
+| **`environment`**   | Environment where the deployment was made.                                                                   | **false**    | -                                     |
+| **`url`**           | URL where the deployment is available.                                                                       | **false**    | -                                     |
+| **`extra`**         | Extra outputs to be included in the summary. JSON object with key-value pairs.                               | **false**    | -                                     |
+| **`github-token`**  | GitHub Token to update the deployment.                                                                       | **false**    | `${{ github.token }}`                 |
+|                     | Permissions:                                                                                                 |              |                                       |
+|                     | - actions: read                                                                                              |              |                                       |
+|                     | - deployments: write                                                                                         |              |                                       |
+|                     | See <https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status>. |              |                                       |
 
 <!-- inputs:end -->
 

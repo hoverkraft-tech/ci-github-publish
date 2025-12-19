@@ -62,15 +62,15 @@ Action to create a new release
 
 ## Inputs
 
-| **Input**               | **Description**                                                                                                                                            | **Required** | **Default**             |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------- |
-| **`prerelease`**        | Whether the release is a prerelease                                                                                                                        | **false**    | `false`                 |
-| **`working-directory`** | Working directory for monorepo support.                                                                                                                    | **false**    | -                       |
-|                         | If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path. |              |                         |
-|                         | The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.                       |              |                         |
-| **`github-token`**      | GitHub Token for creating the release.                                                                                                                     | **false**    | `$\{\{ github.token }}` |
-|                         | Permissions:                                                                                                                                               |              |                         |
-|                         | - contents: write                                                                                                                                          |              |                         |
+| **Input**               | **Description**                                                                                                                                            | **Required** | **Default**           |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`prerelease`**        | Whether the release is a prerelease                                                                                                                        | **false**    | `false`               |
+| **`working-directory`** | Working directory for monorepo support.                                                                                                                    | **false**    | -                     |
+|                         | If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path. |              |                       |
+|                         | The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.                       |              |                       |
+| **`github-token`**      | GitHub Token for creating the release.                                                                                                                     | **false**    | `${{ github.token }}` |
+|                         | Permissions:                                                                                                                                               |              |                       |
+|                         | - contents: write                                                                                                                                          |              |                       |
 
 <!-- inputs:end -->
 

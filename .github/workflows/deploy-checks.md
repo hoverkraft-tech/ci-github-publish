@@ -51,7 +51,7 @@ on:
 permissions: {}
 jobs:
   deploy-checks:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-checks.yml@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-checks.yml@1a70990f2168a7b322632383edf9ca29d8d8b173 # 0.19.0
     permissions: {}
     with:
       # JSON array of runner(s) to use.

@@ -62,7 +62,7 @@ on:
 permissions: {}
 jobs:
   deploy-finish:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@1a70990f2168a7b322632383edf9ca29d8d8b173 # 0.19.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@3de7f6a470af924f6e6dbdead5c495fcc99ec6b6 # 0.20.0
     permissions: {}
     with:
       # JSON array of runner(s) to use.

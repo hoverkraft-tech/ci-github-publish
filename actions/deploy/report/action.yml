@@ -43,6 +43,8 @@ inputs:
       Permissions:
         - actions: read
         - deployments: write
+        - issues: write
+        - pull-requests: write
       See https://docs.github.com/en/rest/deployments/statuses?apiVersion=2022-11-28#create-a-deployment-status.
     required: false
     default: ${{ github.token }}

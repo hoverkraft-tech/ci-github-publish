@@ -53,6 +53,8 @@ Payload:
 - **`contents`**: `read`
 - **`deployments`**: `write`
 - **`id-token`**: `write`
+- **`issues`**: `write`
+- **`pull-requests`**: `write`
 
 <!-- overview:end -->
 
@@ -69,7 +71,7 @@ on:
 permissions: {}
 jobs:
   finish-deploy-argocd-app-of-apps:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/finish-deploy-argocd-app-of-apps.yml@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/finish-deploy-argocd-app-of-apps.yml@1a70990f2168a7b322632383edf9ca29d8d8b173 # main
     permissions: {}
     secrets:
       # GitHub Token to update the deployment.

@@ -105,6 +105,8 @@ jobs:
       actions: read
       deployments: write
       id-token: write # Needed for getting local workflow actions
+      issues: write
+      pull-requests: write
     steps:
       - id: get-extra
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0

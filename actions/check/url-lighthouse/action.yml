@@ -52,14 +52,53 @@ runs:
           }
           core.setOutput("extra-headers", JSON.stringify(headers));
 
+    - id: prepare-lhci-config
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        EXTRA_HEADERS_JSON: ${{ steps.prepare-variables.outputs.extra-headers }}
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+
+          const extraHeadersJson = process.env.EXTRA_HEADERS_JSON?.trim();
+          if (!extraHeadersJson) {
+            return core.setFailed('Missing EXTRA_HEADERS_JSON.');
+          }
+
+          let extraHeaders = null;
+          try {
+            extraHeaders = JSON.parse(extraHeadersJson);
+          } catch (error) {
+            return core.setFailed(`EXTRA_HEADERS_JSON is not valid JSON: ${error}`);
+          }
+
+          if (!extraHeaders || typeof extraHeaders !== 'object' || Array.isArray(extraHeaders)) {
+            return core.setFailed('EXTRA_HEADERS_JSON must be a JSON object.');
+          }
+
+          const config = {
+            ci: {
+              collect: {
+                settings: {
+                  extraHeaders,
+                },
+              },
+            },
+          };
+
+          const configPath = path.join(process.env.GITHUB_WORKSPACE, '.lighthouserc.hoverkraft-url-lighthouse.json');
+          fs.writeFileSync(configPath, JSON.stringify(config));
+          core.setOutput('config-path', configPath);
+
     - id: lighthouse
       uses: treosh/lighthouse-ci-action@fcd65974f7c4c2bf0ee9d09b84d2489183c29726 # 12.6.1
       with:
         urls: ${{ inputs.url }}
         budgetPath: ${{ inputs.budget-path }}
+        configPath: ${{ steps.prepare-lhci-config.outputs.config-path }}
         uploadArtifacts: true
         artifactName: ${{ steps.prepare-variables.outputs.artifact-name }}
-        extraHeaders: ${{ steps.prepare-variables.outputs.extra-headers }}
 
     - id: summary
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0

@@ -140,7 +140,7 @@ jobs:
             core.setOutput("initiated-by", initiatedBy);
 
       - id: chart-variables
-        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@67e5563d6681bb610c1c961eecb6dfcd5b3cc62f # 0.30.5
+        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@a0bab9151cc074af9f6c8204ab42a48d2d570379 # 0.30.6
         with:
           uri: ${{ steps.check-client-payload.outputs.chart }}
 
@@ -149,13 +149,13 @@ jobs:
           persist-credentials: false
 
       - id: slugify-namespace
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@b17226e57c8ef31f860719766656ebb6df017218 # 0.31.6
         with:
           value: ${{ format('{0}-{1}', steps.check-client-payload.outputs.repository, steps.check-client-payload.outputs.environment) }}
 
       # jscpd:ignore-start
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b17226e57c8ef31f860719766656ebb6df017218 # 0.31.6
         with:
           actions-path: actions
       # jscpd:ignore-end
@@ -229,7 +229,7 @@ jobs:
           private-key: ${{ secrets.github-app-key }}
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@b17226e57c8ef31f860719766656ebb6df017218 # 0.31.6
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: feat/deploy-${{ steps.slugify-namespace.outputs.result }}
@@ -241,7 +241,7 @@ jobs:
             [skip ci]
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b17226e57c8ef31f860719766656ebb6df017218 # 0.31.6
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions

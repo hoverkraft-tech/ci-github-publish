@@ -321,7 +321,7 @@ jobs:
 
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: docs/actions-workflows-documentation-update

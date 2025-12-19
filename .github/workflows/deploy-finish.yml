@@ -57,7 +57,7 @@ jobs:
       environment: ${{ steps.get-finished-deployment.outputs.environment }}
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         with:
           actions-path: actions
 
@@ -74,7 +74,7 @@ jobs:
           deployment-id: ${{ inputs.deployment-id }}
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions
@@ -163,7 +163,7 @@ jobs:
             return core.setOutput("extra", JSON.stringify(extra));
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         with:
           actions-path: actions
 
@@ -176,7 +176,7 @@ jobs:
           github-token: ${{ secrets.github-token || github.token }}
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions

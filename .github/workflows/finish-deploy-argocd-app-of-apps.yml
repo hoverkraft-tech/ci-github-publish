@@ -58,6 +58,8 @@ jobs:
       contents: read
       deployments: write
       id-token: write # Needed for getting local workflow actions
+      issues: write
+      pull-requests: write
     outputs:
       repository: ${{ steps.check-client-payload.outputs.repository }}
       deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}

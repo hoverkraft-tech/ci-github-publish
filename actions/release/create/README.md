@@ -24,7 +24,7 @@
 
 ## Overview
 
-Action to create a new release
+Create or publish a GitHub release using Release Drafter, with optional monorepo scoping.
 
 <!-- overview:end -->
 
@@ -38,6 +38,10 @@ Action to create a new release
     # Whether the release is a prerelease
     # Default: `false`
     prerelease: "false"
+
+    # Whether to publish the release (false keeps it as a draft)
+    # Default: `true`
+    publish: "true"
 
     # Working directory for monorepo support.
     # If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path.
@@ -66,6 +70,7 @@ Action to create a new release
 | **Input**               | **Description**                                                                                                                                            | **Required** | **Default**           |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
 | **`prerelease`**        | Whether the release is a prerelease                                                                                                                        | **false**    | `false`               |
+| **`publish`**           | Whether to publish the release (false keeps it as a draft)                                                                                                 | **false**    | `true`                |
 | **`working-directory`** | Working directory for monorepo support.                                                                                                                    | **false**    | -                     |
 |                         | If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path. |              |                       |
 |                         | The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.                       |              |                       |

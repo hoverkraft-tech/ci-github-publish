@@ -1,5 +1,5 @@
 name: "Release - Create"
-description: "Action to create a new release"
+description: "Create or publish a release with Release Drafter, with optional monorepo scoping."
 author: hoverkraft
 branding:
   icon: bookmark
@@ -9,6 +9,9 @@ inputs:
   prerelease:
     description: "Whether the release is a prerelease"
     default: "false"
+  publish:
+    description: "Whether to publish the release (false keeps it as a draft)"
+    default: "true"
   working-directory:
     description: |
       Working directory for monorepo support.
@@ -57,7 +60,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
-        publish: true
+        publish: ${{ inputs.publish }}
         # config-name is relative to .github/ directory
         config-name: ${{ steps.get-configuration.outputs.config-name }}
         prerelease: ${{ inputs.prerelease }}

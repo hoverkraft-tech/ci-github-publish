@@ -20,26 +20,47 @@ runs:
   steps:
     - id: create-deployment
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        INPUTS_ENVIRONMENT: ${{ inputs.environment }}
       with:
         script: |
-          const issueNumber = context.issue?.number ?? undefined;
+          const { owner, repo } = context.repo;
 
-          const ref = issueNumber
-            ? `refs/pull/${issueNumber}/head`
-            : context.ref;
+          const prNumber =
+            context.payload?.pull_request?.number ??
+            context.payload?.workflow_run?.pull_requests?.[0]?.number ??
+            context.issue?.number ??
+            undefined;
+
+          let ref = context.ref;
+
+          if (prNumber) {
+            try {
+              const { data: pullRequest } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: prNumber,
+              });
+
+              ref = pullRequest?.head?.ref ?? ref;
+            } catch (error) {
+              return core.setFailed(
+                `Failed to resolve PR head ref for #${prNumber}: ${error.message ?? error}`
+              );
+            }
+          }
 
           if (!ref) {
-            core.setFailed('No ref found.');
-            return;
+            return core.setFailed('No ref found.');
           }
 
           const { data: deployment } = await github.rest.repos.createDeployment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
+            owner,
+            repo,
             ref,
-            environment: `${{ inputs.environment }}`,
+            environment: process.env.INPUTS_ENVIRONMENT,
             auto_merge: false,
-            transient_environment: `${{ inputs.environment }}`.startsWith('review-apps'),
+            transient_environment: process.env.INPUTS_ENVIRONMENT.startsWith('review-apps'),
             required_contexts: [],
           });
 

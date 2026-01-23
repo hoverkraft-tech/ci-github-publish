@@ -78,7 +78,7 @@ jobs:
         with:
           working-directory: ${{ inputs.working-directory }}
 
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
           ref: refs/heads/${{ github.event.repository.default_branch }}
@@ -127,7 +127,7 @@ jobs:
       pull-requests: write
     if: github.event_name == 'pull_request' && needs.prepare.outputs.config-exists
     steps:
-      - uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5 # v6.1.0
+      - uses: release-drafter/release-drafter@6db134d15f3909ccc9eefd369f02bd1e9cffdf97 # v6.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || secrets.GITHUB_TOKEN || github.token }}
         with:
@@ -264,7 +264,7 @@ jobs:
             core.setOutput('config-content', config);
             core.setOutput('config-path', configPath);
 
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         if: steps.get-config.outputs.config-content
         with:
           persist-credentials: false

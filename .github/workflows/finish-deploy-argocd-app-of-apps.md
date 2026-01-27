@@ -71,7 +71,7 @@ on:
 permissions: {}
 jobs:
   finish-deploy-argocd-app-of-apps:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/finish-deploy-argocd-app-of-apps.yml@1a70990f2168a7b322632383edf9ca29d8d8b173 # 0.19.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/finish-deploy-argocd-app-of-apps.yml@84e8ace407055e7a40ba6670a8c697e1ce2dfafa # 0.20.1
     permissions: {}
     secrets:
       # GitHub Token to update the deployment.
@@ -152,7 +152,7 @@ This project is licensed under the MIT License.
 
 SPDX-License-Identifier: MIT
 
-Copyright © 2025 hoverkraft-tech
+Copyright © 2026 hoverkraft-tech
 
 For more details, see the [license](http://choosealicense.com/licenses/mit/).
 

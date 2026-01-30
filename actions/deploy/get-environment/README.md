@@ -41,7 +41,7 @@ Action to get the environment to deploy regarding the workflow context.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/get-environment@1a70990f2168a7b322632383edf9ca29d8d8b173 # 0.19.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/get-environment@84e8ace407055e7a40ba6670a8c697e1ce2dfafa # 0.20.1
   with:
     # Environment where to deploy.
     environment: ""
@@ -94,7 +94,7 @@ This project is licensed under the MIT License.
 
 SPDX-License-Identifier: MIT
 
-Copyright © 2025 hoverkraft
+Copyright © 2026 hoverkraft
 
 For more details, see the [license](http://choosealicense.com/licenses/mit/).
 

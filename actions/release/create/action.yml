@@ -22,6 +22,7 @@ inputs:
       GitHub Token for creating the release.
       Permissions:
         - contents: write
+        - pull-requests: read
     required: false
     default: ${{ github.token }}
 

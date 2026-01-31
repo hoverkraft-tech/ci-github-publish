@@ -30,6 +30,7 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
       contents: write
+      pull-requests: read
       id-token: write # Needed for getting local workflow actions
     outputs:
       tag: ${{ steps.create-release.outputs.tag }}

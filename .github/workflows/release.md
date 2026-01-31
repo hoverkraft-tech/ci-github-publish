@@ -28,6 +28,7 @@ This workflow delegates release tasks by reusing a shared release workflow, ensu
 
 - **`contents`**: `write`
 - **`id-token`**: `write`
+- **`pull-requests`**: `read`
 
 <!-- overview:end -->
 <!-- usage:start -->

@@ -47,6 +47,7 @@ Action to create a new release
     # GitHub Token for creating the release.
     # Permissions:
     # - contents: write
+    # - pull-requests: read
     #
     # Default: `${{ github.token }}`
     github-token: ${{ github.token }}
@@ -71,6 +72,7 @@ Action to create a new release
 | **`github-token`**      | GitHub Token for creating the release.                                                                                                                     | **false**    | `${{ github.token }}` |
 |                         | Permissions:                                                                                                                                               |              |                       |
 |                         | - contents: write                                                                                                                                          |              |                       |
+|                         | - pull-requests: read                                                                                                                                      |              |                       |
 
 <!-- inputs:end -->
 

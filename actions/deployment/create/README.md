@@ -46,11 +46,15 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/create@84e8ace407055e7a40ba6670a8c697e1ce2dfafa # 0.20.1
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/create@5cb7c7655bd6ab95f4f6a2ef8b863a49228c42e8 # 0.21.0
   with:
     # The environment to deploy to
     # This input is required.
     environment: ""
+
+    # The token to use to fetch pull request data. It needs the `pull-requests:read` permission.
+    # Default: `${{ github.token }}`
+    token: ${{ github.token }}
 ```
 
 <!-- usage:end -->
@@ -59,9 +63,10 @@ permissions:
 
 ## Inputs
 
-| **Input**         | **Description**              | **Required** | **Default** |
-| ----------------- | ---------------------------- | ------------ | ----------- |
-| **`environment`** | The environment to deploy to | **true**     | -           |
+| **Input**         | **Description**                                                                            | **Required** | **Default**           |
+| ----------------- | ------------------------------------------------------------------------------------------ | ------------ | --------------------- |
+| **`environment`** | The environment to deploy to                                                               | **true**     | -                     |
+| **`token`**       | The token to use to fetch pull request data. It needs the `pull-requests:read` permission. | **false**    | `${{ github.token }}` |
 
 <!-- inputs:end -->
 

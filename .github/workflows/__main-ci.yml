@@ -24,6 +24,7 @@ jobs:
       actions: read
       contents: read
       deployments: write
+      pull-requests: read
       security-events: write
       statuses: write
     secrets: inherit

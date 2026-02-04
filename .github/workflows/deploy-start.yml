@@ -126,6 +126,7 @@ jobs:
       actions: read
       deployments: write
       id-token: write # Needed for getting local workflow actions
+      pull-requests: read
     environment: ${{ needs.prepare-deploy.outputs.environment }}
     outputs:
       deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}

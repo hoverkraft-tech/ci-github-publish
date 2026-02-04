@@ -5,15 +5,19 @@ branding:
   icon: arrow-right-circle
   color: blue
 
-outputs:
-  deployment-id:
-    description: "The ID of the created deployment"
-    value: ${{ steps.create-deployment.outputs.deployment-id }}
-
 inputs:
   environment:
     description: "The environment to deploy to"
     required: true
+  token:
+    description: "The token to use to fetch pull request data. It needs the `pull-requests:read` permission."
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  deployment-id:
+    description: "The ID of the created deployment"
+    value: ${{ steps.create-deployment.outputs.deployment-id }}
 
 runs:
   using: "composite"
@@ -23,6 +27,7 @@ runs:
       env:
         INPUTS_ENVIRONMENT: ${{ inputs.environment }}
       with:
+        github-token: ${{ inputs.token || github.token }}
         script: |
           const { owner, repo } = context.repo;
 

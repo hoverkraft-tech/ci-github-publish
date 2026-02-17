@@ -24,7 +24,7 @@
 
 ## Overview
 
-Create or publish a GitHub release using Release Drafter, with optional monorepo scoping.
+Create or publish a release with Release Drafter, with optional monorepo scoping.
 
 <!-- overview:end -->
 
@@ -33,7 +33,7 @@ Create or publish a GitHub release using Release Drafter, with optional monorepo
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@84e8ace407055e7a40ba6670a8c697e1ce2dfafa # 0.20.1
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@5ff7d4c3910971ed53834becd5967271b4e228cf # 0.21.1
   with:
     # Whether the release is a prerelease
     # Default: `false`

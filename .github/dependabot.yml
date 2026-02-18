@@ -26,6 +26,19 @@ updates:
         patterns:
           - "*"
 
+  - package-ecosystem: npm
+    open-pull-requests-limit: 20
+    directories:
+      - "/actions/**/*"
+    schedule:
+      interval: weekly
+      day: friday
+      time: "04:00"
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
+
   - package-ecosystem: "devcontainers"
     open-pull-requests-limit: 20
     directory: "/"

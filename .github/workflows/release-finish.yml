@@ -1,12 +1,11 @@
-# Reusable release workflow
-# This workflow delegates release tasks by reusing a shared release workflow, ensuring standardized publishing across projects.
+# Reusable workflow — publishes a draft release or deletes it on failure.
+# Pair with release-start.yml: call this after your gate jobs succeed or fail.
 ---
-name: Release
+name: Release - Finish
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      #checkov:skip=CKV_GHA_7: required
       runs-on:
         description: |
           JSON array of runner(s) to use.
@@ -14,26 +13,25 @@ on:
         type: string
         default: '["ubuntu-latest"]'
         required: false
-      prerelease:
-        description: |
-          Whether to mark the release as a prerelease
-          See ../../actions/release/create/README.md for more information.
+      tag:
+        description: "The tag of the draft release to publish or delete (output of the release-start.yml workflow)."
+        type: string
+        required: true
+      publish:
+        description: "Set to true to publish the draft, false to delete it."
         type: boolean
-        default: false
+        default: true
         required: false
 
 permissions: {}
 
 jobs:
-  release:
-    name: Release
+  publish:
+    if: ${{ !inputs.publish }}
+    name: Publish draft release
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
       contents: write
-      pull-requests: read
-      id-token: write # Needed for getting local workflow actions
-    outputs:
-      tag: ${{ steps.create-release.outputs.tag }}
     steps:
       - id: local-workflow-actions
         uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@f24ce3360a8abf9bf386a62ab13d0ae5de5f9d13 # 0.31.7
@@ -43,7 +41,8 @@ jobs:
       - id: create-release
         uses: ./self-workflow/actions/release/create
         with:
-          prerelease: ${{ inputs.prerelease }}
+          publish: true
+          tag: ${{ inputs.tag }}
 
       # jscpd:ignore-start
       - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@f24ce3360a8abf9bf386a62ab13d0ae5de5f9d13 # 0.31.7
@@ -53,3 +52,15 @@ jobs:
           repository: ${{ steps.local-workflow-actions.outputs.repository }}
           ref: ${{ steps.local-workflow-actions.outputs.ref }}
       # jscpd:ignore-end
+  cancel:
+    if: ${{ inputs.publish }}
+    name: Cancel release
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      contents: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: gh release delete "${{ inputs.tag }}" --cleanup-tag --yes

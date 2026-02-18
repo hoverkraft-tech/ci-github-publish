@@ -1,110 +1,184 @@
-<!-- header:start -->
+# Release — combining `release-start` and `release-finish`
 
-# GitHub Workflow: Release
+The release process is split into two composable reusable workflows:
 
-<div align="center">
-  <img src="../logo.svg" width="60px" align="center" alt="Release" />
-</div>
+| Workflow                                  | Purpose                                                                                 |
+| ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| [`release-start.yml`](release-start.md)   | Creates a **draft** release via Release Drafter and outputs the `tag`.                  |
+| [`release-finish.yml`](release-finish.md) | **Publishes** the draft (or **deletes** it). Controlled by the `publish` boolean input. |
 
----
+Between them, you own the **gate**: any job(s) you want to run before deciding whether to publish. GitHub Actions `needs` wires it all together — no polling, no scripting.
 
-<!-- header:end -->
-<!-- badges:start -->
-
-[![Release](https://img.shields.io/github/v/release/hoverkraft-tech/ci-github-publish)](https://github.com/hoverkraft-tech/ci-github-publish/releases)
-[![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
-[![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
-
-<!-- badges:end -->
-<!-- overview:start -->
-
-## Overview
-
-Reusable release workflow
-This workflow delegates release tasks by reusing a shared release workflow, ensuring standardized publishing across projects.
-
-### Permissions
-
-- **`contents`**: `write`
-- **`id-token`**: `write`
-- **`pull-requests`**: `read`
-
-<!-- overview:end -->
-<!-- usage:start -->
-
-## Usage
-
-```yaml
-name: Release
-on:
-  push:
-    branches:
-      - main
-permissions: {}
-jobs:
-  release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release.yml@84e8ace407055e7a40ba6670a8c697e1ce2dfafa # 0.20.1
-    permissions: {}
-    with:
-      # JSON array of runner(s) to use.
-      # See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
-      #
-      # Default: `["ubuntu-latest"]`
-      runs-on: '["ubuntu-latest"]'
-
-      # Whether to mark the release as a prerelease
-      # See ../../actions/release/create/README.md for more information.
-      prerelease: false
+```txt
+release-start  →  [your gate job(s)]  →  release-finish
+     ↓                                         ↑
+  outputs tag                         publish: gate succeeded?
 ```
 
-<!-- usage:end -->
-<!-- inputs:start -->
+---
 
-## Inputs
+## Use case 1 — no gate (publish immediately)
 
-### Workflow Dispatch Inputs
+The simplest setup: draft is published right away.
 
-| **Input**        | **Description**                                                                    | **Required** | **Type**    | **Default**         |
-| ---------------- | ---------------------------------------------------------------------------------- | ------------ | ----------- | ------------------- |
-| **`runs-on`**    | JSON array of runner(s) to use.                                                    | **false**    | **string**  | `["ubuntu-latest"]` |
-|                  | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |             |                     |
-| **`prerelease`** | Whether to mark the release as a prerelease                                        | **false**    | **boolean** | `false`             |
-|                  | See ../../actions/release/create/README.md for more information.                   |              |             |                     |
+```yaml
+jobs:
+  start:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-start.yml@main
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write
 
-<!-- inputs:end -->
-<!-- secrets:start -->
-<!-- secrets:end -->
-<!-- outputs:start -->
-<!-- outputs:end -->
-<!-- examples:start -->
-<!-- examples:end -->
-<!-- contributing:start -->
-
-## Contributing
-
-Contributions are welcome! Please see the [contributing guidelines](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md) for more details.
-
-<!-- contributing:end -->
-<!-- security:start -->
-<!-- security:end -->
-<!-- license:start -->
-
-## License
-
-This project is licensed under the MIT License.
-
-SPDX-License-Identifier: MIT
-
-Copyright © 2026 hoverkraft-tech
-
-For more details, see the [license](http://choosealicense.com/licenses/mit/).
-
-<!-- license:end -->
-<!-- generated:start -->
+  finish:
+    needs: start
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-finish.yml@main
+    permissions:
+      contents: write
+    with:
+      tag: ${{ needs.start.outputs.tag }}
+      publish: true
+```
 
 ---
 
-This documentation was automatically generated by [CI Dokumentor](https://github.com/hoverkraft-tech/ci-dokumentor).
+## Use case 2 — gate: automated test suite
 
-<!-- generated:end -->
+Run your test suite before committing to publish. If tests fail, the draft is deleted.
+
+```yaml
+jobs:
+  start:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-start.yml@main
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write
+
+  tests:
+    needs: start
+    uses: ./.github/workflows/tests.yml # your own workflow
+
+  finish:
+    needs: [start, tests]
+    if: always() && needs.start.result == 'success'
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-finish.yml@main
+    permissions:
+      contents: write
+    with:
+      tag: ${{ needs.start.outputs.tag }}
+      publish: ${{ needs.tests.result == 'success' }}
+```
+
+---
+
+## Use case 3 — gate: deploy to staging and run smoke tests
+
+Draft a release, deploy it to staging with the candidate tag, run smoke tests, then decide.
+
+```yaml
+jobs:
+  start:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-start.yml@main
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write
+
+  deploy-staging:
+    needs: start
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      tag: ${{ needs.start.outputs.tag }}
+
+  smoke-tests:
+    needs: deploy-staging
+    uses: ./.github/workflows/smoke-tests.yml
+
+  finish:
+    needs: [start, smoke-tests]
+    if: always() && needs.start.result == 'success'
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-finish.yml@main
+    permissions:
+      contents: write
+    with:
+      tag: ${{ needs.start.outputs.tag }}
+      publish: ${{ needs.smoke-tests.result == 'success' }}
+```
+
+---
+
+## Use case 4 — gate: manual approval via environment protection
+
+Use a GitHub [environment with required reviewers](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment#required-reviewers) to gate the publish step.
+
+```yaml
+jobs:
+  start:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-start.yml@main
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write
+
+  approve:
+    needs: start
+    runs-on: ubuntu-latest
+    environment: production # ← reviewers must approve before this job runs
+    steps:
+      - run: echo "Approved for ${{ needs.start.outputs.tag }}"
+
+  finish:
+    needs: [start, approve]
+    if: always() && needs.start.result == 'success'
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-finish.yml@main
+    permissions:
+      contents: write
+    with:
+      tag: ${{ needs.start.outputs.tag }}
+      publish: ${{ needs.approve.result == 'success' }}
+```
+
+---
+
+## Use case 5 — gate: multiple parallel gates
+
+Run several independent checks in parallel; publish only if all pass.
+
+```yaml
+jobs:
+  start:
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-start.yml@main
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write
+
+  unit-tests:
+    needs: start
+    uses: ./.github/workflows/unit-tests.yml
+
+  integration-tests:
+    needs: start
+    uses: ./.github/workflows/integration-tests.yml
+
+  security-scan:
+    needs: start
+    uses: ./.github/workflows/security-scan.yml
+
+  finish:
+    needs: [start, unit-tests, integration-tests, security-scan]
+    if: always() && needs.start.result == 'success'
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-finish.yml@main
+    permissions:
+      contents: write
+    with:
+      tag: ${{ needs.start.outputs.tag }}
+      publish: >-
+        ${{
+          needs.unit-tests.result == 'success' &&
+          needs.integration-tests.result == 'success' &&
+          needs.security-scan.result == 'success'
+        }}
+```

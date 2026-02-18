@@ -1,5 +1,7 @@
 name: "Release - Create"
-description: "Create a GitHub release from Release Drafter or from an explicit tag, name, and target SHA."
+description: |
+  Create a GitHub release from Release Drafter or from an explicit tag, name, and target SHA.
+  With optional changelog summarization prepended to the published notes.
 author: hoverkraft
 branding:
   icon: bookmark
@@ -41,11 +43,36 @@ inputs:
         - pull-requests: read
     required: false
     default: ${{ github.token }}
+  changelog-summary:
+    description: |
+      Optional JSON-serialized configuration used to generate and prepend a release summary to the published release notes.
+      When provided, the action summarizes the changelog body returned by release-drafter, then updates the created release body to include the summary above the full changelog.
+      Supported properties:
+        - llmAuth (required)
+        - llmProvider (optional, default: `openai`)
+        - llmModel (optional, default: `gpt-5.4`)
+        - llmConfig (optional object or JSON string forwarded to `release/summarize-changelog`)
+        - workingDirectory (optional, default: `working-directory` input or `.`)
+        - summaryTemplate (optional template forwarded to `release/summarize-changelog`)
+
+      See: [`release/summarize-changelog` action inputs](../summarize-changelog/README.md) for details on the summarization configuration.
+
+      Example value:
+
+      ```json
+      {
+        "llmAuth": "$\{{ secrets.OPENAI_API_KEY }}",
+        "llmProvider": "openai",
+        "llmModel": "gpt-5.4",
+      }
+      ```
+    required: false
+    default: ""
 
 outputs:
   tag:
     description: "The tag of the release"
-    value: ${{ steps.collect-outputs.outputs.tag }}
+    value: ${{ steps.resolve-release.outputs.tag }}
 
 runs:
   using: "composite"
@@ -74,8 +101,73 @@ runs:
 
           core.setOutput('mode', 'drafter');
 
+    - id: resolve-changelog-summary
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_CHANGELOG_SUMMARY: ${{ inputs.changelog-summary }}
+        INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      with:
+        script: |
+          const rawSummaryConfig = (process.env.INPUT_CHANGELOG_SUMMARY || '').trim();
+          const fallbackWorkingDirectory = (process.env.INPUT_WORKING_DIRECTORY || '').trim() || '.';
+
+          if (!rawSummaryConfig) {
+            core.setOutput('enabled', 'false');
+            return;
+          }
+
+          let summaryConfig;
+          try {
+            summaryConfig = JSON.parse(rawSummaryConfig);
+          } catch (error) {
+            return core.setFailed(`changelog-summary must be valid JSON: ${error.message}`);
+          }
+
+          if (!summaryConfig || typeof summaryConfig !== 'object' || Array.isArray(summaryConfig)) {
+            return core.setFailed('changelog-summary must be a JSON object when provided');
+          }
+
+          const llmAuth = (summaryConfig.llmAuth || '').trim();
+          if (!llmAuth) {
+            return core.setFailed('changelog-summary.llmAuth is required when changelog-summary is provided');
+          }
+
+          const llmProvider = (summaryConfig.llmProvider || 'openai').trim() || 'openai';
+          const llmModel = (summaryConfig.llmModel || 'gpt-5.4').trim() || 'gpt-5.4';
+          const workingDirectory = (summaryConfig.workingDirectory || fallbackWorkingDirectory).trim() || '.';
+          const summaryTemplate = typeof summaryConfig.summaryTemplate === 'string'
+            ? summaryConfig.summaryTemplate
+            : '';
+
+          let llmConfig = summaryConfig.llmConfig;
+          if (typeof llmConfig === 'undefined') {
+            llmConfig = '{}';
+          } else if (typeof llmConfig === 'string') {
+            const rawLlmConfig = llmConfig.trim() || '{}';
+
+            try {
+              JSON.parse(rawLlmConfig);
+            } catch (error) {
+              return core.setFailed(`changelog-summary.llmConfig must be valid JSON: ${error.message}`);
+            }
+
+            llmConfig = rawLlmConfig;
+          } else if (llmConfig && typeof llmConfig === 'object' && !Array.isArray(llmConfig)) {
+            llmConfig = JSON.stringify(llmConfig);
+          } else {
+            return core.setFailed('changelog-summary.llmConfig must be a JSON object or a JSON string when provided');
+          }
+
+          core.setOutput('enabled', 'true');
+          core.setOutput('llm-auth', llmAuth);
+          core.setOutput('llm-provider', llmProvider);
+          core.setOutput('llm-model', llmModel);
+          core.setOutput('llm-config', llmConfig);
+          core.setOutput('working-directory', workingDirectory);
+          core.setOutput('summary-template', summaryTemplate);
+
     - id: local-actions
-      if: steps.resolve-mode.outputs.mode == 'drafter'
+      if: steps.resolve-mode.outputs.mode == 'drafter' || steps.resolve-changelog-summary.outputs.enabled == 'true'
       uses: hoverkraft-tech/ci-github-common/actions/local-actions@ff815105ba418bd0203868c8b52e0e02fea3f1a4 # 0.35.2
       with:
         source-path: ${{ github.action_path }}/..
@@ -110,19 +202,79 @@ runs:
         prerelease: ${{ inputs.prerelease }}
         latest: ${{ inputs.prerelease != 'true' && 'true' || 'false' }}
 
-    - id: collect-outputs
+    - id: resolve-release
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         MODE: ${{ steps.resolve-mode.outputs.mode }}
         EXPLICIT_TAG: ${{ inputs.tag }}
+        EXPLICIT_BODY: ${{ steps.explicit-release.outputs.body }}
         DRAFTER_TAG: ${{ steps.draft-release.outputs.tag_name }}
+        DRAFTER_BODY: ${{ steps.draft-release.outputs.body }}
+        SUMMARY_ENABLED: ${{ steps.resolve-changelog-summary.outputs.enabled }}
       with:
         script: |
           const mode = process.env.MODE || 'drafter';
           const tag = (mode === 'drafter' ? process.env.DRAFTER_TAG : process.env.EXPLICIT_TAG || '').trim();
+          const body = (mode === 'drafter' ? process.env.DRAFTER_BODY : process.env.EXPLICIT_BODY || '').trim();
 
           if (!tag) {
             return core.setFailed('No tag found from release-drafter outputs');
           }
 
+          if (process.env.SUMMARY_ENABLED === 'true' && !body) {
+            return core.setFailed('Cannot summarize release notes because release-drafter did not return a changelog body');
+          }
+
           core.setOutput('tag', tag);
+          core.setOutput('body', body);
+
+    - id: summarize-changelog
+      if: steps.resolve-changelog-summary.outputs.enabled == 'true'
+      uses: ./../self-actions/summarize-changelog
+      with:
+        changelog-body: ${{ steps.resolve-release.outputs.body }}
+        working-directory: ${{ steps.resolve-changelog-summary.outputs.working-directory }}
+        llm-model: ${{ steps.resolve-changelog-summary.outputs.llm-model }}
+        llm-provider: ${{ steps.resolve-changelog-summary.outputs.llm-provider }}
+        llm-auth: ${{ steps.resolve-changelog-summary.outputs.llm-auth }}
+        llm-config: ${{ steps.resolve-changelog-summary.outputs.llm-config }}
+        summary-template: ${{ steps.resolve-changelog-summary.outputs.summary-template }}
+
+    - id: update-release-body
+      if: steps.resolve-changelog-summary.outputs.enabled == 'true'
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        RELEASE_TAG: ${{ steps.resolve-release.outputs.tag }}
+        RELEASE_BODY: ${{ steps.resolve-release.outputs.body }}
+        RELEASE_SUMMARY: ${{ steps.summarize-changelog.outputs.summary }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const releaseTag = (process.env.RELEASE_TAG || '').trim();
+          const releaseBody = (process.env.RELEASE_BODY || '').trim();
+          const releaseSummary = (process.env.RELEASE_SUMMARY || '').trim();
+
+          if (!releaseTag) {
+            throw new Error('Expected a release tag before updating the release body');
+          }
+
+          if (!releaseSummary) {
+            throw new Error('Expected a changelog summary before updating the release body');
+          }
+
+          const updatedBody = releaseBody
+            ? `${releaseSummary}\n\n---\n\n${releaseBody}`
+            : releaseSummary;
+
+          const release = await github.rest.repos.getReleaseByTag({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag: releaseTag,
+          });
+
+          await github.rest.repos.updateRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: release.data.id,
+            body: updatedBody,
+          });

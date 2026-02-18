@@ -1,0 +1,276 @@
+name: Internal - Tests for "release/summarize-changelog" action
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  continuous-integration:
+    name: Continuous integration for "release/summarize-changelog" action
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@6b74a8f070140f5c120f78026d58e4c00d1b1e37 # 0.24.2
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+      pull-requests: write
+      security-events: write
+    with:
+      working-directory: ./actions/release/summarize-changelog
+      build: null
+      lint: null
+      test: '{ "coverage": null }'
+
+  tests:
+    name: Tests for "release/summarize-changelog" action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      mock-llm:
+        image: wiremock/wiremock:3.13.1@sha256:d61e7720f89483fdef5366843b58d1dfd06bcce5828179c9f2f54de5c28354b0
+        ports:
+          - 11434:8080
+    steps:
+      - name: Arrange - Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Arrange - Configure local LLM stub
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const http = require('http');
+
+            const delay = (milliseconds) => new Promise((resolve) => {
+              setTimeout(resolve, milliseconds);
+            });
+
+            const makeWireMockRequest = (method, path, data = null) => {
+              return new Promise((resolve, reject) => {
+                const request = http.request(
+                  {
+                    hostname: '127.0.0.1',
+                    port: 11434,
+                    path,
+                    method,
+                    headers: data
+                      ? {
+                          'Content-Type': 'application/json',
+                          'Content-Length': Buffer.byteLength(data),
+                        }
+                      : {},
+                  },
+                  (response) => {
+                    const chunks = [];
+                    response.on('data', (chunk) => chunks.push(chunk));
+                    response.on('end', () => {
+                      const body = Buffer.concat(chunks).toString();
+
+                      if (
+                        [301, 302, 307, 308].includes(response.statusCode) &&
+                        response.headers.location
+                      ) {
+                        resolve(
+                          makeWireMockRequest(
+                            method,
+                            response.headers.location,
+                            data,
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (response.statusCode >= 200 && response.statusCode < 300) {
+                        resolve(body);
+                        return;
+                      }
+
+                      reject(
+                        new Error(
+                          `WireMock request failed with status ${response.statusCode}: ${body}`,
+                        ),
+                      );
+                    });
+                  },
+                );
+
+                request.on('error', reject);
+
+                if (data) {
+                  request.write(data);
+                }
+
+                request.end();
+              });
+            };
+
+            let lastError;
+            for (let attempt = 1; attempt <= 20; attempt += 1) {
+              try {
+                await makeWireMockRequest('GET', '/__admin');
+                lastError = null;
+                break;
+              } catch (error) {
+                lastError = error;
+                await delay(1000);
+              }
+            }
+
+            if (lastError) {
+              throw lastError;
+            }
+
+            await makeWireMockRequest(
+              'POST',
+              '/__admin/mappings',
+              JSON.stringify({
+                request: {
+                  method: 'POST',
+                  urlPath: '/v1/chat/completions',
+                },
+                response: {
+                  status: 200,
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  jsonBody: {
+                    id: 'chatcmpl-test',
+                    object: 'chat.completion',
+                    created: 0,
+                    model: 'gpt-5.4',
+                    choices: [
+                      {
+                        index: 0,
+                        finish_reason: 'stop',
+                        message: {
+                          role: 'assistant',
+                          content: JSON.stringify({
+                            releaseSummary: 'Released a simpler changelog summary flow.',
+                            breakingChanges: 'There is no breaking change.',
+                          }),
+                        },
+                      },
+                    ],
+                    usage: {
+                      prompt_tokens: 1,
+                      completion_tokens: 1,
+                      total_tokens: 2,
+                    },
+                  },
+                },
+              }),
+            );
+
+      - name: Act - Summarize changelog
+        id: summarize
+        uses: ./actions/release/summarize-changelog
+        with:
+          changelog-body: |
+            ## What's Changed
+
+            - Added release summary generation for end users.
+            - Fixed prompt pruning for oversized changelogs.
+          working-directory: actions/release/summarize-changelog
+          llm-auth: test-token
+          llm-config: '{"baseUrl":"http://127.0.0.1:11434/v1"}'
+          summary-template: |
+            ## Highlights
+
+            {{release_summary}}
+
+            ## Migration notes
+
+            {{breaking_changes}}
+
+      - name: Assert - Validate summarized changelog
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const assert = require('node:assert/strict');
+            const http = require('http');
+
+            const makeWireMockRequest = (path) => {
+              return new Promise((resolve, reject) => {
+                const request = http.request(
+                  {
+                    hostname: '127.0.0.1',
+                    port: 11434,
+                    path,
+                    method: 'GET',
+                  },
+                  (response) => {
+                    const chunks = [];
+                    response.on('data', (chunk) => chunks.push(chunk));
+                    response.on('end', () => {
+                      const body = Buffer.concat(chunks).toString();
+
+                      if (
+                        [301, 302, 307, 308].includes(response.statusCode) &&
+                        response.headers.location
+                      ) {
+                        resolve(makeWireMockRequest(response.headers.location));
+                        return;
+                      }
+
+                      if (response.statusCode >= 200 && response.statusCode < 300) {
+                        resolve(body);
+                        return;
+                      }
+
+                      reject(
+                        new Error(
+                          `WireMock request failed with status ${response.statusCode}: ${body}`,
+                        ),
+                      );
+                    });
+                  },
+                );
+
+                request.on('error', reject);
+                request.end();
+              });
+            };
+
+            const summary = ${{ toJSON(steps.summarize.outputs.summary) }};
+            const llmPrompt = ${{ toJSON(steps.summarize.outputs.llm-prompt) }};
+            const requestJournal = JSON.parse(await makeWireMockRequest('/__admin/requests'));
+            const llmRequestEntry = requestJournal.requests.find(({ request }) => {
+              return request.url === '/v1/chat/completions' || request.absoluteUrl?.includes('/v1/chat/completions');
+            });
+
+            assert.ok(llmRequestEntry, 'Expected the action to call the local LLM stub');
+
+            const llmRequest = JSON.parse(llmRequestEntry.request.body);
+
+            assert.equal(
+              summary,
+              [
+                '## Highlights',
+                '',
+                'Released a simpler changelog summary flow.',
+                '',
+                '## Migration notes',
+                '',
+                'There is no breaking change.',
+              ].join('\n'),
+            );
+            assert.equal(llmRequest.model, 'gpt-5.4');
+            assert.match(llmRequest.messages[0].role, /^(system|developer)$/);
+            assert.equal(llmRequest.messages[1].role, 'user');
+            assert.match(
+              llmRequest.messages[0].content,
+              /You write accurate release summaries for technical end users\./,
+            );
+            assert.equal(llmRequest.messages[1].content, llmPrompt);
+            assert.match(
+              llmPrompt,
+              /Working directory focus: actions\/release\/summarize-changelog/,
+            );
+            assert.match(
+              llmPrompt,
+              /Added release summary generation for end users\./,
+            );
+            assert.match(llmPrompt, /## Highlights/);
+            assert.doesNotMatch(llmPrompt, /Confirmed git evidence:/);

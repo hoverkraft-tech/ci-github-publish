@@ -1,0 +1,66 @@
+# Reusable workflow — publishes a draft release or deletes it on failure.
+# Pair with release-start.yml: call this after your gate jobs succeed or fail.
+---
+name: Release - Finish
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          JSON array of runner(s) to use.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      tag:
+        description: "The tag of the draft release to publish or delete (output of the release-start.yml workflow)."
+        type: string
+        required: true
+      publish:
+        description: "Set to true to publish the draft, false to delete it."
+        type: boolean
+        default: true
+        required: false
+
+permissions: {}
+
+jobs:
+  publish:
+    if: ${{ !inputs.publish }}
+    name: Publish draft release
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      contents: write
+    steps:
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@f24ce3360a8abf9bf386a62ab13d0ae5de5f9d13 # 0.31.7
+        with:
+          actions-path: actions
+
+      - id: create-release
+        uses: ./self-workflow/actions/release/create
+        with:
+          publish: true
+          tag: ${{ inputs.tag }}
+
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@f24ce3360a8abf9bf386a62ab13d0ae5de5f9d13 # 0.31.7
+        if: always() && steps.local-workflow-actions.outputs.repository
+        with:
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end
+  cancel:
+    if: ${{ inputs.publish }}
+    name: Cancel release
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      contents: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: gh release delete "${{ inputs.tag }}" --cleanup-tag --yes

@@ -109,7 +109,11 @@ _Reusable workflows for managing release process._
 
 #### - [Prepare release](.github/workflows/prepare-release.md)
 
-#### - [Release](.github/workflows/release.md)
+#### - [Release](.github/workflows/release.md) - combining start + finish
+
+#### - [Release - Start](.github/workflows/release-start.md)
+
+#### - [Release - Finish](.github/workflows/release-finish.md)
 
 #### - [Release actions](.github/workflows/release-actions.md)
 

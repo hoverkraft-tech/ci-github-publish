@@ -1,9 +1,29 @@
-# Reusable release workflow
-# This workflow delegates release tasks by reusing a shared release workflow, ensuring standardized publishing across projects.
+# Reusable release workflow — creates a draft release and outputs the tag.
+# Pair with release-finish.yml to publish or delete the draft after running your own gate.
 ---
-name: Release
+name: Release - Start
 
 on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          JSON array of runner(s) to use.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      prerelease:
+        description: |
+          Whether to mark the release as a prerelease.
+          See ../../actions/release/create/README.md for more information.
+        type: boolean
+        default: false
+        required: false
+    outputs:
+      tag:
+        description: "The tag of the draft release."
+        value: ${{ jobs.release.outputs.tag }}
   workflow_dispatch:
     inputs:
       #checkov:skip=CKV_GHA_7: required
@@ -16,7 +36,7 @@ on:
         required: false
       prerelease:
         description: |
-          Whether to mark the release as a prerelease
+          Whether to mark the release as a prerelease.
           See ../../actions/release/create/README.md for more information.
         type: boolean
         default: false
@@ -59,6 +79,7 @@ jobs:
           prerelease: ${{ inputs.prerelease }}
           working-directory: ${{ inputs.working-directory }}
           include-paths: ${{ inputs.include-paths }}
+          publish: false
 
       # jscpd:ignore-start
       - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@f5847cb398fe65d53794e6aba98ebdfa0801f691 # 0.32.0

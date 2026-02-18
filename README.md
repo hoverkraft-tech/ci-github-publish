@@ -75,6 +75,8 @@ _Actions for managing releases._
 
 #### - [Create](actions/release/create/README.md)
 
+#### - [Summarize changelog](actions/release/summarize-changelog/README.md)
+
 ### Workflow
 
 _Actions for managing workflows._

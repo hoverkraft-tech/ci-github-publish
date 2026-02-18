@@ -81,6 +81,8 @@ _Actions for managing releases._
 
 #### - [Recommended release workflow](.github/workflows/release.md)
 
+#### - [Summarize changelog](actions/release/summarize-changelog/README.md)
+
 ### Workflow
 
 _Actions for managing workflows._

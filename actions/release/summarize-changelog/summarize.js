@@ -1,4 +1,5 @@
 const { execSync } = require("node:child_process");
+const { initChatModel } = require("langchain/chat_models/universal");
 
 module.exports = async ({ core }) => {
   const baseRef = process.env.BASE_REF.trim();
@@ -7,6 +8,7 @@ module.exports = async ({ core }) => {
     process.env.CONVENTIONAL_COMMITS.trim() === "true";
   const llmSummaryInput = process.env.LLM_SUMMARY.trim();
   const llmModel = process.env.LLM_MODEL.trim();
+  const llmProvider = process.env.LLM_PROVIDER.trim() || "openai";
   const llmApiKey = process.env.LLM_API_KEY.trim();
   const llmBaseUrl = process.env.LLM_BASE_URL.trim();
   const llmSummaryCommand = process.env.LLM_SUMMARY_COMMAND.trim();
@@ -88,24 +90,36 @@ module.exports = async ({ core }) => {
       return;
     }
 
-    const OpenAI = require("openai");
-    const openai = new OpenAI({
-      apiKey: llmApiKey,
-      baseURL: llmBaseUrl || undefined,
-    });
-
-    const completion = await openai.chat.completions.create({
+    const llmConfig = {
       model: llmModel,
-      messages: [
-        {
-          role: "system",
-          content: "You generate concise release summaries in Markdown.",
-        },
-        { role: "user", content: llmPrompt },
-      ],
-    });
+      modelProvider: llmProvider,
+    };
+    if (llmProvider === "openai") {
+      llmConfig.apiKey = llmApiKey;
+      if (llmBaseUrl) {
+        llmConfig.configuration = { baseURL: llmBaseUrl };
+      }
+    } else if (llmProvider === "anthropic") {
+      llmConfig.apiKey = llmApiKey;
+    } else if (llmProvider === "google-genai") {
+      llmConfig.apiKey = llmApiKey;
+    } else {
+      core.setFailed(
+        "Unsupported llm-provider. Supported values: openai, anthropic, google-genai.",
+      );
+      return;
+    }
 
-    llmSummary = completion.choices?.[0]?.message?.content?.trim() || "";
+    const llm = await initChatModel(undefined, llmConfig);
+    const response = await llm.invoke([
+      {
+        role: "system",
+        content: "You generate concise release summaries in Markdown.",
+      },
+      { role: "user", content: llmPrompt },
+    ]);
+    llmSummary =
+      typeof response?.content === "string" ? response.content.trim() : "";
   }
 
   if (!llmSummary && llmSummaryCommand) {

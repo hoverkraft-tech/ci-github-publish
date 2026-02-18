@@ -1,0 +1,76 @@
+# Reusable release workflow — creates a draft release and outputs the tag.
+# Pair with release-finish.yml to publish or delete the draft after running your own gate.
+---
+name: Release - Start
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: |
+          JSON array of runner(s) to use.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      prerelease:
+        description: |
+          Whether to mark the release as a prerelease.
+          See ../../actions/release/create/README.md for more information.
+        type: boolean
+        default: false
+        required: false
+    outputs:
+      tag:
+        description: "The tag of the draft release."
+        value: ${{ jobs.release.outputs.tag }}
+  workflow_dispatch:
+    inputs:
+      #checkov:skip=CKV_GHA_7: required
+      runs-on:
+        description: |
+          JSON array of runner(s) to use.
+          See https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job.
+        type: string
+        default: '["ubuntu-latest"]'
+        required: false
+      prerelease:
+        description: |
+          Whether to mark the release as a prerelease.
+          See ../../actions/release/create/README.md for more information.
+        type: boolean
+        default: false
+        required: false
+
+permissions: {}
+
+jobs:
+  release:
+    name: Release
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write # Needed for getting local workflow actions
+    outputs:
+      tag: ${{ steps.create-release.outputs.tag }}
+    steps:
+      - id: local-workflow-actions
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@f24ce3360a8abf9bf386a62ab13d0ae5de5f9d13 # 0.31.7
+        with:
+          actions-path: actions
+
+      - id: create-release
+        uses: ./self-workflow/actions/release/create
+        with:
+          prerelease: ${{ inputs.prerelease }}
+          publish: false
+
+      # jscpd:ignore-start
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@f24ce3360a8abf9bf386a62ab13d0ae5de5f9d13 # 0.31.7
+        if: always() && steps.local-workflow-actions.outputs.repository
+        with:
+          actions-path: actions
+          repository: ${{ steps.local-workflow-actions.outputs.repository }}
+          ref: ${{ steps.local-workflow-actions.outputs.ref }}
+      # jscpd:ignore-end

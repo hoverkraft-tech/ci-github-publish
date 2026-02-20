@@ -55,7 +55,7 @@ jobs:
           initiated-by: ci/test-user
 
       - name: Assert - Check generated files are valid YAML
-        uses: mikefarah/yq@2be0094729a1006f61e8339ce9934bfb3cbb549f # v4.52.2
+        uses: mikefarah/yq@5a7e72a743649b1b3a47d1a1d8214f3453173c51 # v4.52.4
         with:
           cmd: |
             echo "Check application file"

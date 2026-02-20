@@ -69,7 +69,7 @@ on:
 permissions: {}
 jobs:
   deploy-start:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-start.yml@5cb7c7655bd6ab95f4f6a2ef8b863a49228c42e8 # 0.21.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-start.yml@5ff7d4c3910971ed53834becd5967271b4e228cf # 0.21.1
     permissions: {}
     with:
       # JSON array of runner(s) to use.

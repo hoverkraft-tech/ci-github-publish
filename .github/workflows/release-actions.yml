@@ -173,7 +173,7 @@ jobs:
 
       - id: changed-files
         if: ${{ inputs.update-all == false && (steps.get-documentation-files.outputs.paths || steps.get-manifest-files.outputs.paths) }}
-        uses: tj-actions/changed-files@8cba46e29c11878d930bca7870bb54394d3e8b21 # v47.0.2
+        uses: tj-actions/changed-files@7dee1b0c1557f278e5c7dc244927139d78c0e22a # v47.0.4
         with:
           files: |
             ${{ steps.get-documentation-files.outputs.paths }}
@@ -321,7 +321,7 @@ jobs:
 
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@f24ce3360a8abf9bf386a62ab13d0ae5de5f9d13 # 0.31.7
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@f5847cb398fe65d53794e6aba98ebdfa0801f691 # 0.32.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: docs/actions-workflows-documentation-update

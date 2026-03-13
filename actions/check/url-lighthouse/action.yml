@@ -92,7 +92,7 @@ runs:
           core.setOutput('config-path', configPath);
 
     - id: lighthouse
-      uses: treosh/lighthouse-ci-action@fcd65974f7c4c2bf0ee9d09b84d2489183c29726 # 12.6.1
+      uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
       with:
         urls: ${{ inputs.url }}
         budgetPath: ${{ inputs.budget-path }}

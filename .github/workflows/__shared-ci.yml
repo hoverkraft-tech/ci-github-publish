@@ -37,3 +37,7 @@ jobs:
     needs: linter
     uses: ./.github/workflows/__test-action-deployment.yml
     secrets: inherit
+
+  test-action-release-get-configuration:
+    needs: linter
+    uses: ./.github/workflows/__test-action-release-get-configuration.yml

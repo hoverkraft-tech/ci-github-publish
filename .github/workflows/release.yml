@@ -21,6 +21,19 @@ on:
         type: boolean
         default: false
         required: false
+      working-directory:
+        description: |
+          Working directory for monorepo support.
+          If specified, the release configuration will be generated at runtime when missing.
+        type: string
+        default: ""
+        required: false
+      include-paths:
+        description: |
+          Additional paths to include in the generated release configuration (JSON array).
+        type: string
+        default: "[]"
+        required: false
 
 permissions: {}
 
@@ -44,6 +57,8 @@ jobs:
         uses: ./self-workflow/actions/release/create
         with:
           prerelease: ${{ inputs.prerelease }}
+          working-directory: ${{ inputs.working-directory }}
+          include-paths: ${{ inputs.include-paths }}
 
       # jscpd:ignore-start
       - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@f5847cb398fe65d53794e6aba98ebdfa0801f691 # 0.32.0

@@ -14,22 +14,17 @@ inputs:
     type: string
     required: false
     default: ""
+  include-paths:
+    description: |
+      Additional paths to include in the release notes filtering (JSON array).
+      These paths are added to the `include-paths` configuration of release-drafter.
+    type: string
+    required: false
+    default: "[]"
 
 outputs:
-  working-directory:
-    description: |
-      The working directory used for the release.
-      Relative to the repository root.
-      Empty if not set.
-    value: ${{ steps.get-config.outputs.working-directory }}
-  config-slug:
-    description: "The slug derived from the working directory. Empty if no working directory is set."
-    value: ${{ steps.get-config.outputs.config-slug }}
-  config-name:
-    description: "The name of the release configuration file"
-    value: ${{ steps.get-config.outputs.config-name }}
   config-path:
-    description: "The path to the release configuration file"
+    description: "The effective configuration path relative to the .github directory"
     value: ${{ steps.get-config.outputs.config-path }}
 
 runs:
@@ -41,30 +36,164 @@ runs:
         WORKING_DIRECTORY: ${{ inputs.working-directory }}
       with:
         script: |
-          const path = require('node:path');
           const fs = require('node:fs');
+          const path = require('node:path');
 
+          const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
+          const githubDirectory = path.join(workspace, '.github');
           let workingDirectory = process.env.WORKING_DIRECTORY.trim();
-          let configName = 'release-config.yml';
+          let configRelativePath = 'release-config.yml';
+          let configSlug = '';
 
           if (workingDirectory) {
             // Get working directory absolute path
             const workingDirectoryFullPath = path.isAbsolute(workingDirectory)
               ? workingDirectory
-              : path.join(process.env.GITHUB_WORKSPACE || '', workingDirectory);
+              : path.join(workspace, workingDirectory);
 
-            workingDirectory = path.relative(process.env.GITHUB_WORKSPACE, workingDirectoryFullPath);
+            workingDirectory = path.relative(workspace, workingDirectoryFullPath);
             core.setOutput("working-directory", workingDirectory);
 
             // Convert path to slug: handle slashes, spaces, and special characters
-            const slug = path.basename(workingDirectoryFullPath)
+            configSlug = path.basename(workingDirectoryFullPath)
               .toLowerCase()
               .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
               .replace(/^-+|-+$/g, '');     // Remove leading/trailing dashes
 
-            core.setOutput("config-slug", slug);
-            configName = `release-configs/${slug}.yml`;
+            core.setOutput("config-slug", configSlug);
+            configRelativePath = `release-configs/${configSlug}.yml`;
           }
 
-          core.setOutput("config-name", configName);
-          core.setOutput("config-path", `.github/${configName}`);
+          const repositoryConfigPath = path.join(githubDirectory, configRelativePath);
+          const configExists = fs.existsSync(repositoryConfigPath);
+
+          if (configExists) {
+            core.setOutput('config-exists', true);
+            const relativeRepositoryConfigPath = path.relative(githubDirectory, repositoryConfigPath).split(path.sep).join('/');
+            core.debug(`Using repository config path: ${relativeRepositoryConfigPath}`);
+            core.setOutput('config-path', relativeRepositoryConfigPath);
+            return;
+          }
+
+          const runnerTemp = process.env.RUNNER_TEMP || path.join(workspace, '.runner-temp');
+          const tempDirectory = path.join(runnerTemp, 'release-drafter');
+          const tempConfigPath = path.join(tempDirectory, path.basename(configRelativePath));
+          const relativeTempConfigPath = path.relative(githubDirectory, tempConfigPath).split(path.sep).join('/');
+          core.debug(`Using generated config path: ${relativeTempConfigPath}`);
+          core.setOutput('config-path', relativeTempConfigPath);
+
+    - id: create-temp-config
+      if: steps.get-config.outputs.config-exists != 'true'
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        CONFIG_SLUG: ${{ steps.get-config.outputs.config-slug }}
+        INCLUDE_PATHS: ${{ inputs.include-paths }}
+        CONFIG_PATH: ${{ steps.get-config.outputs.config-path }}
+        WORKING_DIRECTORY: ${{ steps.get-config.outputs.working-directory }}
+      with:
+        script: |
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          let configPath = process.env.CONFIG_PATH;
+          const configSlug = process.env.CONFIG_SLUG || '';
+          const workingDirectory = process.env.WORKING_DIRECTORY || '';
+          const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
+          const githubDirectory = path.join(workspace, '.github');
+
+          if (!configPath) {
+            return core.setFailed('Configuration path is not specified.');
+          }
+          configPath = path.join(githubDirectory, configPath);
+
+          const includePaths = new Set();
+          try {
+            const includePathsInput = JSON.parse(process.env.INCLUDE_PATHS || '[]');
+            if (!Array.isArray(includePathsInput)) {
+              return core.setFailed('include-paths input is not an array');
+            }
+
+            for (const includePath of includePathsInput) {
+              if (typeof includePath !== 'string') {
+                return core.setFailed('include-paths input must be an array of strings');
+              }
+
+              const trimmedPath = includePath.trim();
+              if (trimmedPath.length === 0) {
+                continue;
+              }
+
+              includePaths.add(trimmedPath);
+            }
+          } catch (error) {
+            return core.setFailed(`Failed to parse include-paths input: ${error.message}`);
+          }
+
+          if (workingDirectory) {
+            includePaths.add(workingDirectory);
+            const workflowRef = process.env.GITHUB_WORKFLOW_REF || '';
+            const repository = process.env.GITHUB_REPOSITORY || '';
+            if (workflowRef && repository) {
+              const currentWorkflow = workflowRef.replace(`${repository}/`, '').replace(/@.*/, '').trim();
+              if (currentWorkflow.length > 0) {
+                includePaths.add(currentWorkflow);
+              }
+            }
+          }
+
+          core.debug(`Resolved include paths: ${JSON.stringify(Array.from(includePaths))}`);
+
+          let includePathsSection = '';
+          if (includePaths.size > 0) {
+            const pathsYaml = Array.from(includePaths).map(includePath => `  - "${includePath}"`).join('\n');
+            includePathsSection = `include-paths:\n${pathsYaml}\n`;
+          }
+
+          const nameTemplate = workingDirectory
+            ? `Version ${configSlug} - \$RESOLVED_VERSION`
+            : 'Version \$RESOLVED_VERSION';
+
+          const tagPrefix = workingDirectory
+            ? `${configSlug}-`
+            : '';
+
+          const tagTemplate = `${tagPrefix}\$RESOLVED_VERSION`;
+
+          const configContent = [
+            '---',
+            `${includePathsSection}template: |`,
+            '  # What\'s Changed',
+            '  \$CHANGES',
+            `  **Full Changelog**: https://github.com/\$OWNER/\$REPOSITORY/compare/\$PREVIOUS_TAG...${tagTemplate}`,
+            `name-template: "${nameTemplate}"`,
+            `tag-template: "${tagTemplate}"`,
+            `tag-prefix: "${tagPrefix}"`,
+            'prerelease-identifier: "rc"',
+            'version-resolver:',
+            '  major:',
+            '    labels:',
+            '      - "release-major"',
+            '  minor:',
+            '    labels:',
+            '      - "release-minor"',
+            '  patch:',
+            '    labels:',
+            '      - "release-patch"',
+            '  default: patch',
+            'autolabeler:',
+            '  - label: "release-major"',
+            '    title:',
+            '      - "/^BREAKING CHANGE:/"',
+            '      - "/^\\\\w+!:/"',
+            '      - "/^\\\\w+\\\\(.+\\\\)!:/"',
+            '  - label: "release-minor"',
+            '    title:',
+            '      - "/^feat:/"',
+            '      - "/^feat\\\\(.+\\\\):/"',
+            '',
+          ].join('\n');
+
+          core.debug(`Writing generated config to: ${configPath}:\n${configContent}`);
+
+          fs.mkdirSync(path.dirname(configPath), { recursive: true });
+          fs.writeFileSync(configPath, configContent, 'utf8');

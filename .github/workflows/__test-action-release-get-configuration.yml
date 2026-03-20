@@ -1,0 +1,80 @@
+name: Internal - Tests for "release/get-configuration" action
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  tests:
+    name: Tests for "release/get-configuration" action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Arrange - Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Arrange - Create repository config fixture
+        run: |
+          mkdir -p .github
+          cat <<'EOF' > .github/release-config.yml
+          ---
+          template: |
+            $CHANGES
+          EOF
+
+      - name: Act - Resolve existing repository config
+        id: existing-config
+        uses: ./actions/release/get-configuration
+
+      - name: Assert - Existing repository config
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          CONFIG_PATH: ${{ steps.existing-config.outputs.config-path }}
+        with:
+          script: |
+            const assert = require('node:assert');
+            const fs = require('node:fs');
+            const path = require('node:path');
+
+            const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
+            const configPath = process.env.CONFIG_PATH;
+
+            assert.equal(configPath, 'release-config.yml');
+
+            const absoluteConfigPath = path.resolve(workspace, '.github', configPath);
+            assert.ok(fs.existsSync(absoluteConfigPath), `Expected config to exist at ${absoluteConfigPath}`);
+
+      - name: Act - Resolve generated temp config
+        id: generated-config
+        uses: ./actions/release/get-configuration
+        with:
+          working-directory: actions/release/get-configuration
+          include-paths: '["actions/release/create"]'
+
+      - name: Assert - Generated temp config
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          CONFIG_PATH: ${{ steps.generated-config.outputs.config-path }}
+        with:
+          script: |
+            const assert = require('node:assert');
+            const fs = require('node:fs');
+            const path = require('node:path');
+
+            const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
+            const configPath = process.env.CONFIG_PATH;
+            const absoluteConfigPath = path.resolve(workspace, '.github', configPath);
+            const configContent = fs.readFileSync(absoluteConfigPath, 'utf8');
+
+            assert.notEqual(configPath, 'release-configs/get-configuration.yml');
+            assert.ok(configPath.endsWith('/release-drafter/get-configuration.yml') || configPath === '../release-drafter/get-configuration.yml' || configPath.includes('/release-drafter/get-configuration.yml'));
+            assert.ok(fs.existsSync(absoluteConfigPath), `Expected generated config to exist at ${absoluteConfigPath}`);
+            assert.ok(configContent.includes('include-paths:'), 'Expected include-paths section in generated config');
+            assert.ok(configContent.includes('  - "actions/release/create"'), 'Expected custom include path in generated config');
+            assert.ok(configContent.includes('  - "actions/release/get-configuration"'), 'Expected working directory include path in generated config');
+            assert.ok(configContent.includes('name-template: "Version get-configuration - $RESOLVED_VERSION"'), 'Expected working-directory-specific name template');
+            assert.ok(configContent.includes('tag-prefix: "get-configuration-"'), 'Expected working-directory-specific tag prefix');

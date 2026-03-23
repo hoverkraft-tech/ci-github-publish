@@ -30,12 +30,18 @@ Action to get the release configuration details
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@5ff7d4c3910971ed53834becd5967271b4e228cf # 0.21.1
   with:
     # Working directory for monorepo support.
     # If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path.
     # The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.
     working-directory: ""
+
+    # Additional paths to include in the release notes filtering (JSON array).
+    # These paths are added to the `include-paths` configuration of release-drafter.
+    #
+    # Default: `[]`
+    include-paths: "[]"
 ```
 
 <!-- usage:end -->
@@ -48,20 +54,17 @@ Action to get the release configuration details
 | **`working-directory`** | Working directory for monorepo support.                                                                                                                    | **false**    | -           |
 |                         | If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path. |              |             |
 |                         | The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.                       |              |             |
+| **`include-paths`**     | Additional paths to include in the release notes filtering (JSON array).                                                                                   | **false**    | `[]`        |
+|                         | These paths are added to the `include-paths` configuration of release-drafter.                                                                             |              |             |
 
 <!-- inputs:end -->
 <!-- outputs:start -->
 
 ## Outputs
 
-| **Output**              | **Description**                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------- |
-| **`working-directory`** | The working directory used for the release.                                        |
-|                         | Relative to the repository root.                                                   |
-|                         | Empty if not set.                                                                  |
-| **`config-slug`**       | The slug derived from the working directory. Empty if no working directory is set. |
-| **`config-name`**       | The name of the release configuration file                                         |
-| **`config-path`**       | The path to the release configuration file                                         |
+| **Output**        | **Description**                                                    |
+| ----------------- | ------------------------------------------------------------------ |
+| **`config-path`** | The effective configuration path relative to the .github directory |
 
 <!-- outputs:end -->
 <!-- secrets:start -->
@@ -88,7 +91,7 @@ This project is licensed under the MIT License.
 
 SPDX-License-Identifier: MIT
 
-Copyright © 2025 hoverkraft
+Copyright © 2026 hoverkraft
 
 For more details, see the [license](http://choosealicense.com/licenses/mit/).
 

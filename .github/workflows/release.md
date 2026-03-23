@@ -56,6 +56,15 @@ jobs:
       # Whether to mark the release as a prerelease
       # See ../../actions/release/create/README.md for more information.
       prerelease: false
+
+      # Working directory for monorepo support.
+      # If specified, the release configuration will be generated at runtime when missing.
+      working-directory: ""
+
+      # Additional paths to include in the generated release configuration (JSON array).
+      #
+      # Default: `[]`
+      include-paths: "[]"
 ```
 
 <!-- usage:end -->
@@ -65,12 +74,15 @@ jobs:
 
 ### Workflow Dispatch Inputs
 
-| **Input**        | **Description**                                                                    | **Required** | **Type**    | **Default**         |
-| ---------------- | ---------------------------------------------------------------------------------- | ------------ | ----------- | ------------------- |
-| **`runs-on`**    | JSON array of runner(s) to use.                                                    | **false**    | **string**  | `["ubuntu-latest"]` |
-|                  | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |             |                     |
-| **`prerelease`** | Whether to mark the release as a prerelease                                        | **false**    | **boolean** | `false`             |
-|                  | See ../../actions/release/create/README.md for more information.                   |              |             |                     |
+| **Input**               | **Description**                                                                    | **Required** | **Type**    | **Default**         |
+| ----------------------- | ---------------------------------------------------------------------------------- | ------------ | ----------- | ------------------- |
+| **`runs-on`**           | JSON array of runner(s) to use.                                                    | **false**    | **string**  | `["ubuntu-latest"]` |
+|                         | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |             |                     |
+| **`prerelease`**        | Whether to mark the release as a prerelease                                        | **false**    | **boolean** | `false`             |
+|                         | See ../../actions/release/create/README.md for more information.                   |              |             |                     |
+| **`working-directory`** | Working directory for monorepo support.                                            | **false**    | **string**  | -                   |
+|                         | If specified, the release configuration will be generated at runtime when missing. |              |             |                     |
+| **`include-paths`**     | Additional paths to include in the generated release configuration (JSON array).   | **false**    | **string**  | `[]`                |
 
 <!-- inputs:end -->
 <!-- secrets:start -->

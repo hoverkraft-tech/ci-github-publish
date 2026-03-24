@@ -33,9 +33,9 @@ Reusable workflow that performs release preparation tasks:
 
 ### Permissions
 
-- **`contents`**: `write`
+- **`contents`**: `read`
 - **`id-token`**: `write`
-- **`pull-requests`**: `read`
+- **`pull-requests`**: `write`
 
 <!-- overview:end -->
 
@@ -57,7 +57,7 @@ jobs:
     secrets:
       # GitHub token with following permissions:
       #
-      # - `contents: write`
+      # - `contents: read`
       # - `pull-requests: write`
       github-token: ""
     with:
@@ -99,7 +99,7 @@ jobs:
 | ------------------ | ---------------------------------------- | ------------ |
 | **`github-token`** | GitHub token with following permissions: | **false**    |
 |                    |                                          |              |
-|                    | - `contents: write`                      |              |
+|                    | - `contents: read`                       |              |
 |                    | - `pull-requests: write`                 |              |
 
 <!-- secrets:end -->

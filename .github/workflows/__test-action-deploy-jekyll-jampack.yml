@@ -6,6 +6,21 @@ on:
 permissions: {}
 
 jobs:
+  continuous-integration:
+    name: Continuous integration for "deploy/jekyll" action
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@775ce0902c528062cc94141dd7d13261083b752a # 0.22.0
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+      pull-requests: write
+      security-events: write
+    with:
+      working-directory: ./actions/deploy/jekyll
+      build: null
+      lint: null
+      test: '{ "coverage": null }'
+
   tests:
     name: Tests for "deploy/jekyll" and "deploy/jampack" actions
     runs-on: ubuntu-latest

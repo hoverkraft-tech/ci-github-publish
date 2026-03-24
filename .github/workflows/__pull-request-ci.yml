@@ -19,7 +19,9 @@ jobs:
       actions: read
       contents: read
       deployments: write
-      pull-requests: read
-      statuses: write
+      id-token: write
+      packages: read
+      pull-requests: write
       security-events: write
+      statuses: write
     secrets: inherit

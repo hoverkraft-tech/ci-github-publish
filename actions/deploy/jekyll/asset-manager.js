@@ -1,6 +1,8 @@
 const { randomUUID } = require("crypto");
-const { join, relative, basename, dirname, resolve, sep } = require("path");
-const { existsSync, copyFileSync, statSync, mkdirSync } = require("fs");
+const { join, basename, dirname, resolve, sep } = require("path");
+const { statSync, mkdirSync } = require("fs");
+const { WorkspacePathResolver } = require("./workspace-path-resolver");
+const { SiteFileManager } = require("./site-file-manager");
 
 const ASSETS_ROOT = "assets";
 const ASSETS_PUBLIC_PREFIX = `{{site.baseurl}}/${ASSETS_ROOT}`;
@@ -13,6 +15,8 @@ class AssetManager {
     this.workspacePath = workspacePath;
     this.sitePath = sitePath;
     this.cache = new Map();
+    this.workspacePathResolver = new WorkspacePathResolver({ workspacePath });
+    this.siteFileManager = new SiteFileManager();
   }
 
   copyAssetFromWorkspace(assetAbsolutePath) {
@@ -20,38 +24,30 @@ class AssetManager {
       return null;
     }
 
-    const workspaceRelativePath = relative(
-      this.workspacePath,
-      assetAbsolutePath,
-    );
-
-    if (!workspaceRelativePath || workspaceRelativePath.startsWith("..")) {
+    const assetPathInfo = this.#resolveAssetPathInfo(assetAbsolutePath);
+    if (!assetPathInfo) {
       return null;
     }
 
-    if (!existsSync(assetAbsolutePath)) {
-      return null;
-    }
-
-    const stats = statSync(assetAbsolutePath);
+    const stats = statSync(assetPathInfo.path);
     if (!stats.isFile()) {
       return null;
     }
 
-    let record = this.cache.get(assetAbsolutePath);
+    let record = this.cache.get(assetPathInfo.path);
     if (!record) {
       const sanitizedTarget = this.#sanitizeAssetTarget(
-        workspaceRelativePath,
-        assetAbsolutePath,
+        assetPathInfo.relativePath,
+        assetPathInfo.path,
       );
       const destination = join(this.sitePath, ASSETS_ROOT, sanitizedTarget);
       mkdirSync(dirname(destination), { recursive: true });
-      copyFileSync(assetAbsolutePath, destination);
+      this.siteFileManager.copyFile(assetPathInfo.path, destination);
 
       const normalizedTarget = toPosixPath(sanitizedTarget);
       const publicPath = `${ASSETS_PUBLIC_PREFIX}/${normalizedTarget}`;
       record = { destination, publicPath };
-      this.cache.set(assetAbsolutePath, record);
+      this.cache.set(assetPathInfo.path, record);
     }
 
     return record.publicPath;
@@ -127,42 +123,44 @@ class AssetManager {
 
     const { path: assetPath, suffix } =
       this.#splitAssetReference(assetReference);
-    const assetAbsolutePath = resolve(dirname(pageFilePath), assetPath);
-    const workspaceRelativePath = relative(
-      this.workspacePath,
-      assetAbsolutePath,
-    );
-
-    if (!workspaceRelativePath || workspaceRelativePath.startsWith("..")) {
+    const logicalAssetPath = resolve(dirname(pageFilePath), assetPath);
+    const assetPathInfo = this.#resolveAssetPathInfo(logicalAssetPath);
+    if (!assetPathInfo) {
       return null;
     }
 
-    if (!existsSync(assetAbsolutePath)) {
-      return null;
-    }
-
-    const stats = statSync(assetAbsolutePath);
+    const stats = statSync(assetPathInfo.path);
     if (!stats.isFile()) {
       return null;
     }
 
-    let record = this.cache.get(assetAbsolutePath);
+    let record = this.cache.get(assetPathInfo.path);
     if (!record) {
       const sanitizedTarget = this.#sanitizeAssetTarget(
-        workspaceRelativePath,
-        assetAbsolutePath,
+        assetPathInfo.relativePath,
+        assetPathInfo.path,
       );
       const destination = join(this.sitePath, ASSETS_ROOT, sanitizedTarget);
       mkdirSync(dirname(destination), { recursive: true });
-      copyFileSync(assetAbsolutePath, destination);
+      this.siteFileManager.copyFile(assetPathInfo.path, destination);
 
       const normalizedTarget = toPosixPath(sanitizedTarget);
       const publicPath = `${ASSETS_PUBLIC_PREFIX}/${normalizedTarget}`;
       record = { destination, publicPath };
-      this.cache.set(assetAbsolutePath, record);
+      this.cache.set(assetPathInfo.path, record);
     }
 
     return `${record.publicPath}${suffix}`;
+  }
+
+  #resolveAssetPathInfo(assetAbsolutePath) {
+    try {
+      return this.workspacePathResolver.resolveExistingWithinWorkspace(
+        assetAbsolutePath,
+      );
+    } catch {
+      return null;
+    }
   }
 
   #sanitizeAssetTarget(relativeAssetPath, assetAbsolutePath) {

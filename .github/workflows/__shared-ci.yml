@@ -4,40 +4,57 @@ name: Internal - Common Continuous Integration tasks
 on: # yamllint disable-line rule:truthy
   workflow_call:
 
-permissions:
-  actions: read
-  contents: read
-  deployments: write
-  pull-requests: read
-  security-events: write
-  statuses: write
+permissions: {}
 
 jobs:
   linter:
     uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@f5847cb398fe65d53794e6aba98ebdfa0801f691 # 0.32.0
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      statuses: write
 
   test-action-check-url-lighthouse:
     needs: linter
     uses: ./.github/workflows/__test-action-check-url-lighthouse.yml
+    permissions:
+      contents: read
 
   test-action-check-url-ping:
     needs: linter
     uses: ./.github/workflows/__test-action-check-url-ping.yml
+    permissions:
+      contents: read
 
   test-action-deploy-argocd-manifest-files:
     needs: linter
     uses: ./.github/workflows/__test-action-deploy-argocd-manifest-files.yml
+    permissions:
+      contents: read
 
-  test-action-deploy-jekyll:
+  test-action-deploy-jekyll-jampack:
     needs: linter
     uses: ./.github/workflows/__test-action-deploy-jekyll-jampack.yml
     secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+      pull-requests: write
+      security-events: write
 
   test-action-deployment:
     needs: linter
     uses: ./.github/workflows/__test-action-deployment.yml
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: read
     secrets: inherit
 
   test-action-release-get-configuration:
     needs: linter
     uses: ./.github/workflows/__test-action-release-get-configuration.yml
+    permissions:
+      contents: read

@@ -22,7 +22,9 @@ inputs:
     default: "jekyll-theme-cayman"
   pages:
     description: |
-      The Jekyll pages path to build. Supports glob patterns and multiple paths (one per line). Accepts Markdown (`.md`, `.markdown`) and HTML (`.html`, `.htm`) files.
+      The Jekyll pages path to build.
+      Supports glob patterns and multiple paths (one per line).
+      Accepts Markdown (`.md`, `.markdown`) and HTML (`.html`, `.htm`) files.
 
       ```yml
       pages: |
@@ -33,7 +35,8 @@ inputs:
     required: false
   assets:
     description: |
-      Additional files to copy into the generated `assets/` directory. Supports glob patterns and multiple paths (one per line).
+      Additional files to copy into the generated `assets/` directory.
+      Supports glob patterns and multiple paths (one per line).
 
       ```yml
       assets: |

@@ -1,10 +1,12 @@
 const { join, relative, basename, extname, dirname, resolve } = require("path");
-const { readFileSync, writeFileSync } = require("fs");
+const { readFileSync } = require("fs");
 const { toPosixPath } = require("./asset-manager");
+const { SiteFileManager } = require("./site-file-manager");
 
 const INDEX_BASENAME = "index.md";
 const LIQUID_TAG_PATTERN = /(\{%[^%]+%\})/g;
 const MARKDOWN_EXTENSIONS = new Set([".md", ".markdown", ".mdown", ".mkd"]);
+const siteFileManager = new SiteFileManager();
 
 async function createSitePage({
   io,
@@ -12,31 +14,40 @@ async function createSitePage({
   pageFilePath,
   pageTitle,
   pagePath,
+  sitePath,
   workspacePath,
 }) {
-  const absolutePageFilePath = resolve(pageFilePath);
+  const resolvedPageFilePath = resolve(pageFilePath);
   const targetPagePath =
     pagePath ||
-    getPageSection({ pageFilePath: absolutePageFilePath, workspacePath });
+    getPageSection({
+      pageFilePath: resolvedPageFilePath,
+      sitePath,
+      workspacePath,
+    });
   const effectiveTitle =
     pageTitle ||
-    getPageTitle({ pageFilePath: absolutePageFilePath, workspacePath });
+    getPageTitle({
+      pageFilePath: resolvedPageFilePath,
+      sitePath,
+      workspacePath,
+    });
 
   await io.mkdirP(dirname(targetPagePath));
 
-  const rawContent = readFileSync(absolutePageFilePath, "utf8");
-  const safeContent = isMarkdownPage(absolutePageFilePath)
+  const rawContent = readFileSync(resolvedPageFilePath, "utf8");
+  const safeContent = isMarkdownPage(resolvedPageFilePath)
     ? escapeLiquidTags(rawContent)
     : rawContent;
   const contentWithFrontMatter = `---\nlayout: default\ntitle: ${effectiveTitle}\n---\n\n${safeContent}`;
 
   const processedContent = assetManager.rewriteContent({
-    pageFilePath: absolutePageFilePath,
+    pageFilePath: resolvedPageFilePath,
     pagePath: targetPagePath,
     content: contentWithFrontMatter,
   });
 
-  writeFileSync(targetPagePath, processedContent);
+  siteFileManager.writeFile(targetPagePath, processedContent);
   return targetPagePath;
 }
 
@@ -65,7 +76,7 @@ function rewritePageLinks({ content, pagePath, pageMappings }) {
   return updatedContent;
 }
 
-function getPageSection({ pageFilePath, workspacePath }) {
+function getPageSection({ pageFilePath, sitePath, workspacePath }) {
   const sectionParentDir = toSafeSegment(
     relative(workspacePath, dirname(pageFilePath)),
   );
@@ -79,7 +90,7 @@ function getPageSection({ pageFilePath, workspacePath }) {
   const segments = [sectionParentDir, sectionDir, indexBasename].filter(
     Boolean,
   );
-  return join(workspacePath, "_site", ...segments);
+  return join(sitePath || join(workspacePath, "_site"), ...segments);
 }
 
 function getIndexBasename(pageFilePath) {
@@ -91,8 +102,8 @@ function getIndexBasename(pageFilePath) {
   return INDEX_BASENAME;
 }
 
-function getPageTitle({ pageFilePath, workspacePath }) {
-  const sectionPath = getPageSection({ pageFilePath, workspacePath });
+function getPageTitle({ pageFilePath, sitePath, workspacePath }) {
+  const sectionPath = getPageSection({ pageFilePath, sitePath, workspacePath });
   const sectionDir = dirname(sectionPath);
   const sectionName = basename(sectionDir);
 

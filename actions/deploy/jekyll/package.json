@@ -1,0 +1,20 @@
+{
+  "name": "deploy-jekyll",
+  "version": "1.0.0",
+  "description": "Tests for the deploy/jekyll GitHub Action",
+  "scripts": {
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "test:ci": "node --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test"
+  },
+  "keywords": [
+    "github-action",
+    "jekyll",
+    "static-site"
+  ],
+  "author": "hoverkraft",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

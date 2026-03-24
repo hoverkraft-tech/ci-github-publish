@@ -1,5 +1,5 @@
 const { join, relative, dirname, resolve } = require("path");
-const { existsSync, readFileSync, writeFileSync } = require("fs");
+const { existsSync, readFileSync } = require("fs");
 
 const {
   INDEX_BASENAME,
@@ -7,29 +7,57 @@ const {
   rewritePageLinks,
 } = require("./page-files");
 const { AssetManager, toPosixPath } = require("./asset-manager");
+const { SiteFileManager } = require("./site-file-manager");
+const { WorkspacePathResolver } = require("./workspace-path-resolver");
 const DEFAULT_THEME = "jekyll-theme-cayman";
 module.exports = async function prepareSite({ core, inputs, io, glob }) {
   const workspacePath = resolveWorkspace();
+  const workspacePathResolver = new WorkspacePathResolver({ workspacePath });
   const { theme, pagePatterns, assetPatterns, sitePathInput, buildPathInput } =
     normalizeInputs(inputs);
-  const { sitePath, buildPath } = resolveSitePaths(workspacePath, {
+  const { sitePath, buildPath } = resolveSitePaths(workspacePathResolver, {
     sitePathInput,
     buildPathInput,
   });
   const assetManager = new AssetManager({ workspacePath, sitePath });
+  const siteFileManager = new SiteFileManager();
+
+  core.debug(
+    `Configuration: ${JSON.stringify({
+      theme,
+      pagePatterns,
+      assetPatterns,
+      sitePath: toPosixPath(relative(workspacePath, sitePath)),
+      buildPath: toPosixPath(relative(workspacePath, buildPath)),
+    })}`,
+  );
 
   core.setOutput("jekyll-source", relative(workspacePath, sitePath));
   core.setOutput("jekyll-destination", relative(workspacePath, buildPath));
 
   await io.mkdirP(sitePath);
-  ensureConfigFile({ sitePath, theme });
+  ensureConfigFile({ core, sitePath, theme });
 
   if (assetPatterns.length > 0) {
     const assetsGlobber = await glob.create(assetPatterns.join("\n"));
+    const copiedAssets = [];
     for await (const assetFile of assetsGlobber.globGenerator()) {
-      const assetPath = resolve(workspacePath, assetFile);
-      await assetManager.copyAssetFromWorkspace(assetPath);
+      const assetPathInfo =
+        workspacePathResolver.resolveExistingWithinWorkspace(assetFile);
+      const publicPath = await assetManager.copyAssetFromWorkspace(
+        assetPathInfo.path,
+      );
+      if (publicPath) {
+        copiedAssets.push({
+          source: toPosixPath(assetPathInfo.relativePath),
+          target: publicPath,
+        });
+      }
     }
+
+    core.debug(
+      `Copied ${copiedAssets.length} additional assets: ${JSON.stringify(copiedAssets)}`,
+    );
   }
 
   const indexPath = join(sitePath, INDEX_BASENAME);
@@ -37,14 +65,25 @@ module.exports = async function prepareSite({ core, inputs, io, glob }) {
     await createSitePage({
       assetManager,
       io,
-      pageFilePath: resolve(workspacePath, "README.md"),
+      pageFilePath:
+        workspacePathResolver.resolveExistingWithinWorkspace("README.md").path,
       pageTitle: "Home",
       pagePath: indexPath,
+      sitePath,
       workspacePath,
     });
+
+    core.debug(
+      `Created site index from README.md at ${toPosixPath(relative(workspacePath, indexPath))}`,
+    );
+  } else {
+    core.debug(
+      `Using existing site index at ${toPosixPath(relative(workspacePath, indexPath))}`,
+    );
   }
 
   if (pagePatterns.length === 0) {
+    core.debug("No additional page patterns configured.");
     return;
   }
 
@@ -54,23 +93,35 @@ module.exports = async function prepareSite({ core, inputs, io, glob }) {
   const createdPagePaths = [];
 
   for await (const pageFile of globber.globGenerator()) {
-    const pageFilePath = resolve(workspacePath, pageFile);
+    const pagePathInfo =
+      workspacePathResolver.resolveExistingWithinWorkspace(pageFile);
     const createdPagePath = await createSitePage({
       assetManager,
       io,
-      pageFilePath,
+      pageFilePath: pagePathInfo.path,
+      sitePath,
       workspacePath,
     });
 
-    const pageFileRelative = toPosixPath(relative(workspacePath, pageFilePath));
-    if (!pageMappings.has(pageFileRelative)) {
-      pageMappings.set(pageFileRelative, dirname(createdPagePath));
-    }
+    addPageMapping(
+      pageMappings,
+      toPosixPath(pagePathInfo.relativePath),
+      dirname(createdPagePath),
+    );
 
     createdPagePaths.push(createdPagePath);
   }
 
+  core.debug(
+    `Prepared ${createdPagePaths.length} additional pages from patterns ${JSON.stringify(pagePatterns)}: ${JSON.stringify(
+      createdPagePaths.map((pagePath) =>
+        toPosixPath(relative(workspacePath, pagePath)),
+      ),
+    )}`,
+  );
+
   if (pageMappings.size === 0) {
+    core.debug("No additional pages matched the configured patterns.");
     return;
   }
 
@@ -81,7 +132,7 @@ module.exports = async function prepareSite({ core, inputs, io, glob }) {
   });
 
   if (rewrittenIndexContent !== indexContent) {
-    writeFileSync(indexPath, rewrittenIndexContent);
+    siteFileManager.writeFile(indexPath, rewrittenIndexContent);
   }
 
   for (const pagePath of createdPagePaths) {
@@ -93,7 +144,7 @@ module.exports = async function prepareSite({ core, inputs, io, glob }) {
     });
 
     if (rewrittenContent !== pageContent) {
-      writeFileSync(pagePath, rewrittenContent);
+      siteFileManager.writeFile(pagePath, rewrittenContent);
     }
   }
 };
@@ -137,9 +188,13 @@ function normalizeInputs(rawInputs = {}) {
   };
 }
 
-function resolveSitePaths(workspacePath, { sitePathInput, buildPathInput }) {
-  const sitePath = resolveWithinWorkspace(workspacePath, sitePathInput);
-  const buildPath = resolveWithinWorkspace(workspacePath, buildPathInput);
+function resolveSitePaths(
+  workspacePathResolver,
+  { sitePathInput, buildPathInput },
+) {
+  const sitePath = workspacePathResolver.resolveWithinWorkspace(sitePathInput);
+  const buildPath =
+    workspacePathResolver.resolveWithinWorkspace(buildPathInput);
 
   return { sitePath, buildPath };
 }
@@ -157,22 +212,21 @@ function requireNonEmptyInput(value, inputName) {
   return trimmed;
 }
 
-function resolveWithinWorkspace(workspacePath, targetPath) {
-  const resolvedPath = resolve(workspacePath, targetPath);
-  const pathFromWorkspace = relative(workspacePath, resolvedPath);
-
-  if (pathFromWorkspace.startsWith("..")) {
-    throw new Error(
-      `Path must stay within workspace. Provided value resolves to: ${resolvedPath}`,
-    );
+function addPageMapping(pageMappings, pageFileRelative, targetDir) {
+  if (!pageFileRelative || pageMappings.has(pageFileRelative)) {
+    return;
   }
 
-  return resolvedPath;
+  pageMappings.set(pageFileRelative, targetDir);
 }
 
-function ensureConfigFile({ sitePath, theme }) {
+function ensureConfigFile({ core, sitePath, theme }) {
+  const siteFileManager = new SiteFileManager();
   const configPath = join(sitePath, "_config.yml");
   if (existsSync(configPath)) {
+    core.debug(
+      `Using existing Jekyll config at ${toPosixPath(relative(resolveWorkspace(), configPath))}`,
+    );
     return;
   }
 
@@ -185,5 +239,9 @@ function ensureConfigFile({ sitePath, theme }) {
     ? `theme: ${theme}`
     : `remote_theme: ${theme}\nplugins:\n  - jekyll-remote-theme`;
 
-  writeFileSync(configPath, configContent);
+  siteFileManager.writeFile(configPath, configContent);
+
+  core.debug(
+    `Created Jekyll config at ${toPosixPath(relative(resolveWorkspace(), configPath))} with theme ${theme}`,
+  );
 }

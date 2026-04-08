@@ -54,7 +54,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/get-finished@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/get-finished@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
   with:
     # The ID of the GitHub deployment to wait for (numeric ID)
     # This input is required.
@@ -120,7 +120,7 @@ This project is licensed under the MIT License.
 
 SPDX-License-Identifier: MIT
 
-Copyright © 2025 hoverkraft
+Copyright © 2026 hoverkraft
 
 For more details, see the [license](http://choosealicense.com/licenses/mit/).
 

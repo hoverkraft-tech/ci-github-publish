@@ -37,7 +37,7 @@ Action to retrieve some deployment information.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/read@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/read@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
   with:
     # The ID of the deployment to update
     # This input is required.
@@ -62,14 +62,14 @@ Action to retrieve some deployment information.
 
 ## Inputs
 
-| **Input**           | **Description**                                                                                       | **Required** | **Default**                             |
-| ------------------- | ----------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------- |
-| **`deployment-id`** | The ID of the deployment to update                                                                    | **true**     | -                                       |
-| **`repository`**    | The repository where the deployment was made                                                          | **false**    | `$\{\{ github.event.repository.name }}` |
-| **`github-token`**  | GitHub Token to get the deployment information.                                                       | **false**    | `$\{\{ github.token }}`                 |
-|                     | Permissions:                                                                                          |              |                                         |
-|                     | - deployments: read                                                                                   |              |                                         |
-|                     | See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#get-a-deployment>. |              |                                         |
+| **Input**           | **Description**                                                                                       | **Required** | **Default**                           |
+| ------------------- | ----------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------- |
+| **`deployment-id`** | The ID of the deployment to update                                                                    | **true**     | -                                     |
+| **`repository`**    | The repository where the deployment was made                                                          | **false**    | `${{ github.event.repository.name }}` |
+| **`github-token`**  | GitHub Token to get the deployment information.                                                       | **false**    | `${{ github.token }}`                 |
+|                     | Permissions:                                                                                          |              |                                       |
+|                     | - deployments: read                                                                                   |              |                                       |
+|                     | See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#get-a-deployment>. |              |                                       |
 
 <!-- inputs:end -->
 
@@ -109,7 +109,7 @@ This project is licensed under the MIT License.
 
 SPDX-License-Identifier: MIT
 
-Copyright © 2025 hoverkraft
+Copyright © 2026 hoverkraft
 
 For more details, see the [license](http://choosealicense.com/licenses/mit/).
 

@@ -23,8 +23,9 @@ on:
         required: false
       working-directory:
         description: |
-          Working directory for monorepo support.
-          If specified, the release configuration will be generated at runtime when missing.
+          Working directory used to scope release automation in a monorepo.
+          If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
+          If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.
         type: string
         default: ""
         required: false

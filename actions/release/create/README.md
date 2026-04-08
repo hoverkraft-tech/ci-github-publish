@@ -43,9 +43,9 @@ Create or publish a release with Release Drafter, with optional monorepo scoping
     # Default: `true`
     publish: "true"
 
-    # Working directory for monorepo support.
-    # If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path.
-    # The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.
+    # Working directory used to scope release automation in a monorepo.
+    # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
+    # If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.
     working-directory: ""
 
     # Additional paths to include in the release notes filtering (JSON array).
@@ -73,19 +73,19 @@ Create or publish a release with Release Drafter, with optional monorepo scoping
 
 ## Inputs
 
-| **Input**               | **Description**                                                                                                                                            | **Required** | **Default**           |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`prerelease`**        | Whether the release is a prerelease                                                                                                                        | **false**    | `false`               |
-| **`publish`**           | Whether to publish the release (false keeps it as a draft)                                                                                                 | **false**    | `true`                |
-| **`working-directory`** | Working directory for monorepo support.                                                                                                                    | **false**    | -                     |
-|                         | If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path. |              |                       |
-|                         | The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.                       |              |                       |
-| **`include-paths`**     | Additional paths to include in the release notes filtering (JSON array).                                                                                   | **false**    | `[]`                  |
-|                         | These paths are added to the `include-paths` configuration of release-drafter.                                                                             |              |                       |
-| **`github-token`**      | GitHub Token for creating the release.                                                                                                                     | **false**    | `${{ github.token }}` |
-|                         | Permissions:                                                                                                                                               |              |                       |
-|                         | - contents: write                                                                                                                                          |              |                       |
-|                         | - pull-requests: read                                                                                                                                      |              |                       |
+| **Input**               | **Description**                                                                                                                                       | **Required** | **Default**           |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`prerelease`**        | Whether the release is a prerelease                                                                                                                   | **false**    | `false`               |
+| **`publish`**           | Whether to publish the release (false keeps it as a draft)                                                                                            | **false**    | `true`                |
+| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                     | **false**    | -                     |
+|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                 |              |                       |
+|                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file. |              |                       |
+| **`include-paths`**     | Additional paths to include in the release notes filtering (JSON array).                                                                              | **false**    | `[]`                  |
+|                         | These paths are added to the `include-paths` configuration of release-drafter.                                                                        |              |                       |
+| **`github-token`**      | GitHub Token for creating the release.                                                                                                                | **false**    | `${{ github.token }}` |
+|                         | Permissions:                                                                                                                                          |              |                       |
+|                         | - contents: write                                                                                                                                     |              |                       |
+|                         | - pull-requests: read                                                                                                                                 |              |                       |
 
 <!-- inputs:end -->
 

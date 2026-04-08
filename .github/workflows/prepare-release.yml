@@ -16,9 +16,9 @@ on:
         required: false
       working-directory:
         description: |
-          Working directory for monorepo support.
-          If specified, the release configuration file will be placed in `.github/release-configs/{slug}.yml` where slug is derived from the working directory path.
-          The configuration will include `include-paths` to filter pull requests to only those that modified files in the specified directory.
+          Working directory used to scope release preparation in a monorepo.
+          If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
+          If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.
         type: string
         required: false
         default: ""

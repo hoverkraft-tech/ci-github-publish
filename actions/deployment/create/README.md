@@ -46,7 +46,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/create@5cb7c7655bd6ab95f4f6a2ef8b863a49228c42e8 # 0.21.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/create@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
   with:
     # The environment to deploy to
     # This input is required.

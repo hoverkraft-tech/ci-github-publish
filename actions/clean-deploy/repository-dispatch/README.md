@@ -38,7 +38,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/clean-deploy/repository-dispatch@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+- uses: hoverkraft-tech/ci-github-publish/actions/clean-deploy/repository-dispatch@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
   with:
     # GitHub Token for dispatch an event to a remote repository.
     # Permissions:
@@ -67,14 +67,14 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 
 ## Inputs
 
-| **Input**          | **Description**                                                 | **Required** | **Default**             |
-| ------------------ | --------------------------------------------------------------- | ------------ | ----------------------- |
-| **`github-token`** | GitHub Token for dispatch an event to a remote repository.      | **false**    | `$\{\{ github.token }}` |
-|                    | Permissions:                                                    |              |                         |
-|                    | - contents: write                                               |              |                         |
-|                    | See <https://github.com/peter-evans/repository-dispatch#usage>. |              |                         |
-| **`repository`**   | Target repository where the deployment should be cleaned.       | **true**     | -                       |
-| **`environment`**  | Environment where to clean the deployment.                      | **true**     | -                       |
+| **Input**          | **Description**                                                 | **Required** | **Default**           |
+| ------------------ | --------------------------------------------------------------- | ------------ | --------------------- |
+| **`github-token`** | GitHub Token for dispatch an event to a remote repository.      | **false**    | `${{ github.token }}` |
+|                    | Permissions:                                                    |              |                       |
+|                    | - contents: write                                               |              |                       |
+|                    | See <https://github.com/peter-evans/repository-dispatch#usage>. |              |                       |
+| **`repository`**   | Target repository where the deployment should be cleaned.       | **true**     | -                     |
+| **`environment`**  | Environment where to clean the deployment.                      | **true**     | -                     |
 
 <!-- inputs:end -->
 
@@ -106,7 +106,7 @@ This project is licensed under the MIT License.
 
 SPDX-License-Identifier: MIT
 
-Copyright © 2025 hoverkraft
+Copyright © 2026 hoverkraft
 
 For more details, see the [license](http://choosealicense.com/licenses/mit/).
 

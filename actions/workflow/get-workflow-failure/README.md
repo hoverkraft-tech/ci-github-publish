@@ -47,7 +47,7 @@ It requires the `actions: read` permission on the token used.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@642cdb54493d05debdc1394f4bfd7365f82e7bf1 # 0.18.2
+- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
   with:
     # GitHub Token to get workflow information.
     # Permissions:
@@ -64,12 +64,12 @@ It requires the `actions: read` permission on the token used.
 
 ## Inputs
 
-| **Input**          | **Description**                                                                       | **Required** | **Default**             |
-| ------------------ | ------------------------------------------------------------------------------------- | ------------ | ----------------------- |
-| **`github-token`** | GitHub Token to get workflow information.                                             | **false**    | `$\{\{ github.token }}` |
-|                    | Permissions:                                                                          |              |                         |
-|                    | - actions: read                                                                       |              |                         |
-|                    | See <https://docs.github.com/en/rest/actions/workflows#list-jobs-for-a-workflow-run>. |              |                         |
+| **Input**          | **Description**                                                                       | **Required** | **Default**           |
+| ------------------ | ------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`github-token`** | GitHub Token to get workflow information.                                             | **false**    | `${{ github.token }}` |
+|                    | Permissions:                                                                          |              |                       |
+|                    | - actions: read                                                                       |              |                       |
+|                    | See <https://docs.github.com/en/rest/actions/workflows#list-jobs-for-a-workflow-run>. |              |                       |
 
 <!-- inputs:end -->
 
@@ -114,7 +114,7 @@ This project is licensed under the MIT License.
 
 SPDX-License-Identifier: MIT
 
-Copyright © 2025 hoverkraft
+Copyright © 2026 hoverkraft
 
 For more details, see the [license](http://choosealicense.com/licenses/mit/).
 

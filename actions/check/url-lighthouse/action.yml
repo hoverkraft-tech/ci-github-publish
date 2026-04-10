@@ -33,7 +33,7 @@ runs:
   using: composite
   steps:
     - id: prepare-variables
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         INPUT_AUTHORIZATION: ${{ inputs.authorization }}
       with:
@@ -53,7 +53,7 @@ runs:
           core.setOutput("extra-headers", JSON.stringify(headers));
 
     - id: prepare-lhci-config
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         EXTRA_HEADERS_JSON: ${{ steps.prepare-variables.outputs.extra-headers }}
       with:
@@ -101,7 +101,7 @@ runs:
         artifactName: ${{ steps.prepare-variables.outputs.artifact-name }}
 
     - id: summary
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
           const linksOutput = ${{ toJSON(steps.lighthouse.outputs.artifactLinks) }};

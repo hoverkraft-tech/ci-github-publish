@@ -68,7 +68,7 @@ jobs:
           fetch-depth: 0
 
       - id: get-manifest-files
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const path = require('node:path');
@@ -107,7 +107,7 @@ jobs:
             );
 
       - id: get-documentation-files
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           EXTRA_DOCUMENTATION_FILES: ${{ inputs.documentation-files }}
         with:
@@ -184,7 +184,7 @@ jobs:
           escape_json: false
 
       - id: get-changed-files
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           UPDATE_ALL: ${{ inputs.update-all }}
           CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_and_modified_files }}
@@ -274,7 +274,7 @@ jobs:
       # FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the absolute path
       - id: generated-documentation
         if: steps.generate-documentation.outputs.destination
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           DESTINATIONS: ${{ steps.generate-documentation.outputs.destination }}
         with:

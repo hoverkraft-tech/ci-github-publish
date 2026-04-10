@@ -179,7 +179,7 @@ jobs:
         uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@4b53189212d5810f710bed89711002626977215b # 0.33.0
 
       - id: get-tag
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           INPUT_TAG: ${{ inputs.tag }}
           PREVIOUS_TAG: ${{ steps.get-previous-tag.outputs.tag }}
@@ -211,7 +211,7 @@ jobs:
             core.setOutput('tag', tag);
 
       - id: set-images-tag
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TAG: ${{ steps.get-tag.outputs.tag }}
           IMAGES: ${{ inputs.images }}
@@ -241,7 +241,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@df8b445f6cc9661dcb282d897d7146a82e5f2960 # 0.31.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@bcbbcaff24e053e38ebab02dd0e41442df196719 # 0.32.0
     permissions:
       contents: read
       id-token: write
@@ -268,7 +268,7 @@ jobs:
       deploy-values: ${{ steps.set-chart-values.outputs.deploy-values }}
     steps:
       - id: set-chart-values
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TAG: ${{ needs.prepare-deploy.outputs.tag }}
           BUILT_IMAGES: ${{ needs.build-oci-images.outputs.built-images }}
@@ -355,7 +355,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@df8b445f6cc9661dcb282d897d7146a82e5f2960 # 0.31.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@bcbbcaff24e053e38ebab02dd0e41442df196719 # 0.32.0
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}
@@ -372,7 +372,7 @@ jobs:
       id-token: write # Needed for getting local workflow actions
     steps:
       - id: prepare-deployment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           REPOSITORY: ${{ fromJSON(inputs.deploy-parameters).repository }}
           ENVIRONMENT: ${{ needs.deploy-start.outputs.environment }}

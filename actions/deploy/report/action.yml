@@ -57,18 +57,19 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - shell: bash
-      # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
-      run: mkdir -p ./self-deploy-report-actions/ && cp -r $GITHUB_ACTION_PATH/../../* ./self-deploy-report-actions/
+    - id: local-actions
+      uses: hoverkraft-tech/ci-github-common/actions/local-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+      with:
+        source-path: ${{ github.action_path }}/../..
 
     - id: get-workflow-failure
-      uses: ./self-deploy-report-actions/workflow/get-workflow-failure
+      uses: ./../self-actions/workflow/get-workflow-failure
       with:
         github-token: ${{ inputs.github-token }}
 
     - id: get-deployment
       if: inputs.environment == '' && inputs.repository && inputs.deployment-id
-      uses: ./self-deploy-report-actions/deployment/read
+      uses: ./../self-actions/deployment/read
       with:
         github-token: ${{ inputs.github-token }}
         repository: ${{ inputs.repository }}
@@ -102,7 +103,7 @@ runs:
             extra: process.env.INPUT_EXTRA,
           });
 
-    - uses: ./self-deploy-report-actions/deployment/update
+    - uses: ./../self-actions/deployment/update
       if: inputs.deployment-id && inputs.repository
       with:
         deployment-id: ${{ inputs.deployment-id }}
@@ -113,12 +114,7 @@ runs:
         update-log-url: ${{ inputs.repository == github.event.repository.name && 'true' || 'false' }}
         github-token: ${{ inputs.github-token }}
 
-    - shell: bash
-      # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
-      run: |
-        rm -fr ./self-deploy-report-actions
-
-    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@4b53189212d5810f710bed89711002626977215b # 0.33.0
+    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
       if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       with:
         title: "## ${{ steps.get-deployment-result.outputs.title }}"

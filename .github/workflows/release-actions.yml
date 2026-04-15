@@ -288,7 +288,7 @@ jobs:
 
       - id: upload-artifact
         if: steps.generated-documentation.outputs.artifact-paths
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: changed-files
           path: ${{ steps.generated-documentation.outputs.artifact-paths }}
@@ -312,7 +312,7 @@ jobs:
 
       # jscpd:ignore-start
 
-      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         if: inputs.github-app-id
         id: generate-token
         with:
@@ -321,7 +321,7 @@ jobs:
 
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@4b53189212d5810f710bed89711002626977215b # 0.33.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: docs/actions-workflows-documentation-update
@@ -351,7 +351,7 @@ jobs:
           path: /
 
       - id: upload-artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: documentation-files-${{ github.run_id }}
           # We upload all documentation files, including unchanged ones, to have a complete set

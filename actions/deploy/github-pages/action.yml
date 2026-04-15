@@ -86,11 +86,12 @@ runs:
           const artifactName = `${{ github.run_id }}-${{ github.run_number }}-github-pages-${timestamp}-${uniquid}`;
           core.setOutput("artifact-name", artifactName);
 
-    - shell: bash
-      # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
-      run: mkdir -p ./self-github-pages-actions/ && cp -r $GITHUB_ACTION_PATH/../../* ./self-github-pages-actions/
+    - id: local-actions
+      uses: hoverkraft-tech/ci-github-common/actions/local-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+      with:
+        source-path: ${{ github.action_path }}/../..
 
-    - uses: ./self-github-pages-actions/deploy/jampack
+    - uses: ./../self-actions/deploy/jampack
       with:
         path: ${{ steps.prepare-variables.outputs.build-path }}
 
@@ -102,7 +103,7 @@ runs:
         enablement: true
 
     - name: 📦 Upload website build artifact
-      uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
+      uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
       with:
         path: ${{ steps.prepare-variables.outputs.build-path }}
         name: ${{ steps.prepare-variables.outputs.artifact-name }}
@@ -116,23 +117,18 @@ runs:
     # jscpd:ignore-start
 
     # Url checks
-    - uses: ./self-github-pages-actions/check/url-ping
+    - uses: ./../self-actions/check/url-ping
       if: ${{ inputs.checks == 'true' }}
       with:
         url: ${{ steps.deployment.outputs.page_url }}
 
-    - uses: ./self-github-pages-actions/check/url-lighthouse
+    - uses: ./../self-actions/check/url-lighthouse
       if: ${{ inputs.checks == 'true' }}
       with:
         url: ${{ steps.deployment.outputs.page_url }}
         budget-path: ${{ inputs.budget-path }}
 
     # jscpd:ignore-end
-
-    - shell: bash
-      # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
-      run: |
-        rm -fr ./self-github-pages-actions
 
     - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:

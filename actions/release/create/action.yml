@@ -44,24 +44,20 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: hoverkraft-tech/ci-github-common/actions/checkout@4b53189212d5810f710bed89711002626977215b # 0.33.0
+    - uses: hoverkraft-tech/ci-github-common/actions/checkout@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
       with:
         fetch-depth: "0"
 
-    - shell: bash
-      # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
-      run: mkdir -p ./self-release-create-actions/ && cp -r $GITHUB_ACTION_PATH/../* ./self-release-create-actions/
+    - id: local-actions
+      uses: hoverkraft-tech/ci-github-common/actions/local-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+      with:
+        source-path: ${{ github.action_path }}/..
 
     - id: get-configuration
-      uses: ./self-release-create-actions/get-configuration
+      uses: ./../self-actions/get-configuration
       with:
         working-directory: ${{ inputs.working-directory }}
         include-paths: ${{ inputs.include-paths }}
-
-    - shell: bash
-      # FIXME: workaround until will be merged: https://github.com/actions/runner/pull/1684
-      run: |
-        rm -fr ./self-release-create-actions
 
     - id: release
       uses: release-drafter/release-drafter@5de93583980a40bd78603b6dfdcda5b4df377b32 # v7.2.0

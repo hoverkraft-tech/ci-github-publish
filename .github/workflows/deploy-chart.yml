@@ -163,7 +163,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@4b53189212d5810f710bed89711002626977215b # 0.33.0
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
         if: inputs.tag == ''
         with:
           fetch-depth: 0
@@ -176,7 +176,7 @@ jobs:
 
       - id: get-issue-number
         if: inputs.tag == '' && github.event_name == 'issue_comment'
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@4b53189212d5810f710bed89711002626977215b # 0.33.0
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
 
       - id: get-tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -241,7 +241,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@bcbbcaff24e053e38ebab02dd0e41442df196719 # 0.32.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@e4bf7a12228a2a4b5993d2d36b99b4dd0ec80bf5 # 0.32.1
     permissions:
       contents: read
       id-token: write
@@ -355,7 +355,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@bcbbcaff24e053e38ebab02dd0e41442df196719 # 0.32.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@e4bf7a12228a2a4b5993d2d36b99b4dd0ec80bf5 # 0.32.1
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}
@@ -453,7 +453,7 @@ jobs:
             core.setOutput("deploy-values", JSON.stringify(deployValues));
 
       # jscpd:ignore-start
-      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         if: inputs.github-app-id
         id: generate-token
         with:
@@ -463,7 +463,7 @@ jobs:
       # jscpd:ignore-end
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@4b53189212d5810f710bed89711002626977215b # 0.33.0
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
         with:
           actions-path: actions
 
@@ -480,7 +480,7 @@ jobs:
           initiated-by: ${{ github.actor }}
 
       # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@4b53189212d5810f710bed89711002626977215b # 0.33.0
+      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
         if: always() && steps.local-workflow-actions.outputs.repository
         with:
           actions-path: actions

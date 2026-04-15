@@ -39,7 +39,7 @@ jobs:
       contents: read
     with:
       update-all: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || github.event_name == 'workflow_dispatch' }}
-      github-app-id: ${{ vars.CI_BOT_APP_ID }}
+      github-app-client-id: ${{ vars.CI_BOT_APP_CLIENT_ID }}
     secrets:
       github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
 
@@ -51,6 +51,6 @@ jobs:
       contents: read
     with:
       artifact-id: ${{ needs.release.outputs.artifact-id }}
-      github-app-id: ${{ vars.CI_BOT_APP_ID }}
+      github-app-client-id: ${{ vars.CI_BOT_APP_CLIENT_ID }}
     secrets:
       github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}

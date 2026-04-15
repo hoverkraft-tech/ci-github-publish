@@ -110,9 +110,9 @@ on:
         type: string
         required: false
         default: "[]"
-      github-app-id:
+      github-app-client-id:
         description: |
-          GitHub App ID to generate GitHub token in place of github-token.
+          GitHub App Client ID to generate GitHub token in place of github-token.
           See https://github.com/actions/create-github-app-token.
         required: false
         type: string
@@ -454,10 +454,10 @@ jobs:
 
       # jscpd:ignore-start
       - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
-        if: inputs.github-app-id
+        if: inputs.github-app-client-id
         id: generate-token
         with:
-          app-id: ${{ inputs.github-app-id }}
+          client-id: ${{ inputs.github-app-client-id }}
           private-key: ${{ secrets.github-app-key }}
           owner: ${{ steps.prepare-deployment.outputs.owner }}
       # jscpd:ignore-end

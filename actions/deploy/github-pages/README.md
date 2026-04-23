@@ -47,17 +47,16 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@48e0c54489152b98d9e18f0454ccce120e9d0fd1 # 0.23.0
   with:
-    # The path to the assets to deploy.
-    # When using a build artifact, it must exist in the artifact with its full path.
-    # Can be absolute or relative $GITHUB_WORKSPACE.
-    build-path: ""
-
     # The ID of the "build" artifact to download.
-    # The artifact must contain the full build path.
+    # The artifact must contain the full (absolute) build path.
     # If not set, the action will use the local workspace files.
     build-artifact-id: ""
+
+    # The path to the assets to deploy.
+    # Can be absolute or relative $GITHUB_WORKSPACE.
+    build-path: ""
 
     # The path to the performance budget file. See action [Check - URL - Lighthouse](../../check/url-lighthouse/README.md).
     # Default: `./budget.json`
@@ -89,12 +88,11 @@ permissions:
 
 | **Input**                   | **Description**                                                                                                       | **Required** | **Default**           |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`build-path`**            | The path to the assets to deploy.                                                                                     | **false**    | -                     |
-|                             | When using a build artifact, it must exist in the artifact with its full path.                                        |              |                       |
-|                             | Can be absolute or relative $GITHUB_WORKSPACE.                                                                        |              |                       |
 | **`build-artifact-id`**     | The ID of the "build" artifact to download.                                                                           | **false**    | -                     |
-|                             | The artifact must contain the full build path.                                                                        |              |                       |
+|                             | The artifact must contain the full (absolute) build path.                                                             |              |                       |
 |                             | If not set, the action will use the local workspace files.                                                            |              |                       |
+| **`build-path`**            | The path to the assets to deploy.                                                                                     | **false**    | -                     |
+|                             | Can be absolute or relative $GITHUB_WORKSPACE.                                                                        |              |                       |
 | **`budget-path`**           | The path to the performance budget file. See action [Check - URL - Lighthouse](../../check/url-lighthouse/README.md). | **false**    | `./budget.json`       |
 | **`static-site-generator`** | The static site generator used to build the site. See <https://github.com/actions/configure-pages>.                   | **false**    | -                     |
 | **`checks`**                | Whether to run URL checks after deployment.                                                                           | **false**    | `true`                |

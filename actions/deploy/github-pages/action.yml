@@ -6,17 +6,19 @@ branding:
   color: blue
 
 inputs:
+  build-artifact-id:
+    description: |
+      The ID of the "build" artifact to download.
+      The artifact must contain the full (absolute) build path.
+      If not set, the action will use the local workspace files.
+
+    required: false
+    default: ""
   build-path:
     description: |
       The path to the assets to deploy.
       Can be absolute or relative $GITHUB_WORKSPACE.
     required: false
-  build-artifact-id:
-    description: |
-      The ID of the "build" artifact to download.
-      If not set, the action will use the local workspace files.
-    required: false
-    default: ""
   budget-path:
     description: "The path to the performance budget file. See action [Check - URL - Lighthouse](../../check/url-lighthouse/README.md)."
     required: false

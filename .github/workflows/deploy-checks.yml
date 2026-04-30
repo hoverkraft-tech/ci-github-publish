@@ -67,34 +67,24 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
       contents: read
-      id-token: write # Needed for getting local workflow actions
     outputs:
       summary: ${{ steps.generate-summary.outputs.summary }}
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
         with:
           actions-path: actions
 
-      - uses: ./self-workflow/actions/check/url-ping
+      - uses: ./../self-workflow/actions/check/url-ping
         id: ping
         with:
           url: ${{ inputs.url }}
 
       - id: lighthouse
-        uses: ./self-workflow/actions/check/url-lighthouse
+        uses: ./../self-workflow/actions/check/url-lighthouse
         with:
           url: ${{ inputs.url }}
           budget-path: ${{ inputs.budget-path }}
-
-      # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
-        if: always() && steps.local-workflow-actions.outputs.repository
-        with:
-          actions-path: actions
-          repository: ${{ steps.local-workflow-actions.outputs.repository }}
-          ref: ${{ steps.local-workflow-actions.outputs.ref }}
-      # jscpd:ignore-end
 
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: generate-summary

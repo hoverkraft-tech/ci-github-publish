@@ -50,37 +50,27 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
       actions: read
-      id-token: write # Needed for getting local workflow actions
       deployments: read
     outputs:
       url: ${{ steps.get-finished-deployment.outputs.url }}
       environment: ${{ steps.get-finished-deployment.outputs.environment }}
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
         with:
           actions-path: actions
 
       - id: get-workflow-failure
         if: ${{ inputs.deployment-id }}
-        uses: ./self-workflow/actions/workflow/get-workflow-failure
+        uses: ./../self-workflow/actions/workflow/get-workflow-failure
         with:
           github-token: ${{ secrets.github-token || github.token }}
 
       - id: get-finished-deployment
         if: ${{ inputs.deployment-id && steps.get-workflow-failure.outputs.has-failed != 'true' }}
-        uses: ./self-workflow/actions/deployment/get-finished
+        uses: ./../self-workflow/actions/deployment/get-finished
         with:
           deployment-id: ${{ inputs.deployment-id }}
-
-      # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
-        if: always() && steps.local-workflow-actions.outputs.repository
-        with:
-          actions-path: actions
-          repository: ${{ steps.local-workflow-actions.outputs.repository }}
-          ref: ${{ steps.local-workflow-actions.outputs.ref }}
-      # jscpd:ignore-end
 
   deploy-checks:
     name: Deploy checks
@@ -89,7 +79,6 @@ jobs:
     uses: ./.github/workflows/deploy-checks.yml
     permissions:
       contents: read
-      id-token: write # Needed for getting local workflow actions
     with:
       runs-on: ${{ inputs.runs-on }}
       url: ${{ needs.get-finished-deployment.outputs.url }}
@@ -104,7 +93,6 @@ jobs:
     permissions:
       actions: read
       deployments: write
-      id-token: write # Needed for getting local workflow actions
       issues: write
       pull-requests: write
     steps:
@@ -165,23 +153,14 @@ jobs:
             return core.setOutput("extra", JSON.stringify(extra));
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
         with:
           actions-path: actions
 
-      - uses: ./self-workflow/actions/deploy/report
+      - uses: ./../self-workflow/actions/deploy/report
         with:
           deployment-id: ${{ inputs.deployment-id }}
           environment: ${{ needs.get-finished-deployment.outputs.environment }}
           url: ${{ needs.get-finished-deployment.outputs.url }}
           extra: ${{ steps.get-extra.outputs.extra }}
           github-token: ${{ secrets.github-token || github.token }}
-
-      # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
-        if: always() && steps.local-workflow-actions.outputs.repository
-        with:
-          actions-path: actions
-          repository: ${{ steps.local-workflow-actions.outputs.repository }}
-          ref: ${{ steps.local-workflow-actions.outputs.ref }}
-      # jscpd:ignore-end

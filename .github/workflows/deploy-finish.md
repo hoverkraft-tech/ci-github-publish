@@ -43,7 +43,6 @@ What this workflow does:
 - **`actions`**: `read`
 - **`contents`**: `read`
 - **`deployments`**: `write`
-- **`id-token`**: `write`
 - **`issues`**: `write`
 - **`pull-requests`**: `write`
 
@@ -62,7 +61,7 @@ on:
 permissions: {}
 jobs:
   deploy-finish:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@91a69c7a9730d3ec2886a80681dbb67634c70970 # 0.23.1
     permissions: {}
     with:
       # JSON array of runner(s) to use.

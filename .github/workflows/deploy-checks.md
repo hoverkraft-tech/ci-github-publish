@@ -34,7 +34,6 @@ What this workflow does:
 ### Permissions
 
 - **`contents`**: `read`
-- **`id-token`**: `write`
 
 <!-- overview:end -->
 
@@ -51,7 +50,7 @@ on:
 permissions: {}
 jobs:
   deploy-checks:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-checks.yml@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-checks.yml@91a69c7a9730d3ec2886a80681dbb67634c70970 # 0.23.1
     permissions: {}
     with:
       # JSON array of runner(s) to use.

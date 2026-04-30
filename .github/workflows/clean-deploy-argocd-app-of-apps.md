@@ -46,7 +46,6 @@ Payload:
 ### Permissions
 
 - **`contents`**: `read`
-- **`id-token`**: `write`
 - **`pull-requests`**: `write`
 
 <!-- overview:end -->
@@ -64,7 +63,7 @@ on:
 permissions: {}
 jobs:
   clean-deploy-argocd-app-of-apps:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@91a69c7a9730d3ec2886a80681dbb67634c70970 # 0.23.1
     permissions: {}
     secrets:
       # GitHub token for creating and merging pull request (permissions contents: write and pull-requests: write, workflows: write).
@@ -81,9 +80,9 @@ jobs:
       # Default: `["ubuntu-latest"]`
       runs-on: '["ubuntu-latest"]'
 
-      # GitHub App ID to generate GitHub token in place of github-token.
+      # GitHub App Client ID to generate GitHub token in place of github-token.
       # See https://github.com/actions/create-github-app-token.
-      github-app-id: ""
+      github-app-client-id: ""
 ```
 
 <!-- usage:end -->
@@ -94,12 +93,12 @@ jobs:
 
 ### Workflow Call Inputs
 
-| **Input**           | **Description**                                                                    | **Required** | **Type**   | **Default**         |
-| ------------------- | ---------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
-| **`runs-on`**       | JSON array of runner(s) to use.                                                    | **false**    | **string** | `["ubuntu-latest"]` |
-|                     | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |            |                     |
-| **`github-app-id`** | GitHub App ID to generate GitHub token in place of github-token.                   | **false**    | **string** | -                   |
-|                     | See <https://github.com/actions/create-github-app-token>.                          |              |            |                     |
+| **Input**                  | **Description**                                                                    | **Required** | **Type**   | **Default**         |
+| -------------------------- | ---------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
+| **`runs-on`**              | JSON array of runner(s) to use.                                                    | **false**    | **string** | `["ubuntu-latest"]` |
+|                            | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |            |                     |
+| **`github-app-client-id`** | GitHub App Client ID to generate GitHub token in place of github-token.            | **false**    | **string** | -                   |
+|                            | See <https://github.com/actions/create-github-app-token>.                          |              |            |                     |
 
 <!-- inputs:end -->
 
@@ -144,7 +143,7 @@ concurrency:
 
 jobs:
   deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@91a69c7a9730d3ec2886a80681dbb67634c70970 # 0.23.1
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
       github-app-key: ${{ secrets.GITHUB_APP_KEY }}

@@ -116,10 +116,9 @@ jobs:
       deployments: write
       issues: write
       pull-requests: write
-      id-token: write # Needed for getting local workflow actions
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
         with:
           actions-path: actions
 
@@ -148,28 +147,19 @@ jobs:
           owner: ${{ steps.prepare-cleaning.outputs.owner }}
 
       - id: delete-deployment
-        uses: ./self-workflow/actions/deployment/delete
+        uses: ./../self-workflow/actions/deployment/delete
         with:
           token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 
-      - uses: ./self-workflow/actions/clean-deploy/repository-dispatch
+      - uses: ./../self-workflow/actions/clean-deploy/repository-dispatch
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' && inputs.clean-deploy-type == 'repository-dispatch' }}
         with:
           repository: ${{ steps.prepare-cleaning.outputs.repository }}
           environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}
         with:
           title: "Deployment(s) have been deleted :wastebasket:."
           body: "The following deployment(s) have been deleted:\n\n- ${{ join(fromJSON(steps.delete-deployment.outputs.environments),'\n- ') }}"
-
-      # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
-        if: always() && steps.local-workflow-actions.outputs.repository
-        with:
-          actions-path: actions
-          repository: ${{ steps.local-workflow-actions.outputs.repository }}
-          ref: ${{ steps.local-workflow-actions.outputs.ref }}
-      # jscpd:ignore-end

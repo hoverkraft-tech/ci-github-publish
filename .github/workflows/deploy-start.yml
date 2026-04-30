@@ -61,7 +61,6 @@ jobs:
     runs-on: ${{ fromJson(inputs.runs-on) }}
     permissions:
       contents: read
-      id-token: write # Needed for getting local workflow actions
       issues: write
       pull-requests: write
     outputs:
@@ -98,24 +97,15 @@ jobs:
             }
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
         with:
           actions-path: actions
 
       - id: get-environment
         if: ${{ steps.trigger.outputs.trigger }}
-        uses: ./self-workflow/actions/deploy/get-environment
+        uses: ./../self-workflow/actions/deploy/get-environment
         with:
           environment: ${{ inputs.environment }}
-
-      # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
-        if: always() && steps.local-workflow-actions.outputs.repository
-        with:
-          actions-path: actions
-          repository: ${{ steps.local-workflow-actions.outputs.repository }}
-          ref: ${{ steps.local-workflow-actions.outputs.ref }}
-      # jscpd:ignore-end
 
   start-deploy:
     name: Start deploy
@@ -125,33 +115,23 @@ jobs:
     permissions:
       actions: read
       deployments: write
-      id-token: write # Needed for getting local workflow actions
       pull-requests: read
     environment: ${{ needs.prepare-deploy.outputs.environment }}
     outputs:
       deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
         with:
           actions-path: actions
 
       - id: create-deployment
-        uses: ./self-workflow/actions/deployment/create
+        uses: ./../self-workflow/actions/deployment/create
         with:
           environment: ${{ needs.prepare-deploy.outputs.environment }}
 
-      - uses: ./self-workflow/actions/deployment/update
+      - uses: ./../self-workflow/actions/deployment/update
         with:
           deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
           state: "in_progress"
           description: "Starting deployment to ${{ needs.prepare-deploy.outputs.environment }}..."
-
-      # jscpd:ignore-start
-      - uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@71b85947453f32b5d147ff3ab37351439a92d840 # 0.34.2
-        if: always() && steps.local-workflow-actions.outputs.repository
-        with:
-          actions-path: actions
-          repository: ${{ steps.local-workflow-actions.outputs.repository }}
-          ref: ${{ steps.local-workflow-actions.outputs.ref }}
-      # jscpd:ignore-end

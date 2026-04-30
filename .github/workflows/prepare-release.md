@@ -34,7 +34,6 @@ Reusable workflow that performs release preparation tasks:
 ### Permissions
 
 - **`contents`**: `read`
-- **`id-token`**: `write`
 - **`pull-requests`**: `write`
 
 <!-- overview:end -->
@@ -52,7 +51,7 @@ on:
 permissions: {}
 jobs:
   prepare-release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@91a69c7a9730d3ec2886a80681dbb67634c70970 # 0.23.1
     permissions: {}
     secrets:
       # GitHub token with following permissions:
@@ -126,7 +125,7 @@ permissions: {}
 
 jobs:
   prepare-release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@91a69c7a9730d3ec2886a80681dbb67634c70970 # 0.23.1
     permissions:
       contents: read
       pull-requests: write

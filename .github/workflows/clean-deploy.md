@@ -44,7 +44,6 @@ Behavior / outputs:
 
 - **`actions`**: `read`
 - **`deployments`**: `write`
-- **`id-token`**: `write`
 - **`issues`**: `write`
 - **`pull-requests`**: `write`
 
@@ -63,7 +62,7 @@ on:
 permissions: {}
 jobs:
   clean-deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@91a69c7a9730d3ec2886a80681dbb67634c70970 # 0.23.1
     permissions: {}
     secrets:
       # GitHub token for deploying.
@@ -81,9 +80,9 @@ jobs:
       # Default: `["ubuntu-latest"]`
       runs-on: '["ubuntu-latest"]'
 
-      # GitHub App ID to generate GitHub token in place of github-token.
+      # GitHub App Client ID to generate GitHub token in place of github-token.
       # See https://github.com/actions/create-github-app-token.
-      github-app-id: ""
+      github-app-client-id: ""
 
       # Type of clean-deploy action.
       # Supported values:
@@ -121,7 +120,7 @@ jobs:
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | --------------------- |
 | **`runs-on`**                 | JSON array of runner(s) to use.                                                                                     | **false**    | **string** | `["ubuntu-latest"]`   |
 |                               | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                  |              |            |                       |
-| **`github-app-id`**           | GitHub App ID to generate GitHub token in place of github-token.                                                    | **false**    | **string** | -                     |
+| **`github-app-client-id`**    | GitHub App Client ID to generate GitHub token in place of github-token.                                             | **false**    | **string** | -                     |
 |                               | See <https://github.com/actions/create-github-app-token>.                                                           |              |            |                       |
 | **`clean-deploy-type`**       | Type of clean-deploy action.                                                                                        | **false**    | **string** | `repository-dispatch` |
 |                               | Supported values:                                                                                                   |              |            |                       |
@@ -178,7 +177,7 @@ permissions:
 
 jobs:
   clean-deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@91a69c7a9730d3ec2886a80681dbb67634c70970 # 0.23.1
     with:
       clean-deploy-parameters: |
         { "repository": "${{ github.repository_owner }}/argocd-app-of-apps" }

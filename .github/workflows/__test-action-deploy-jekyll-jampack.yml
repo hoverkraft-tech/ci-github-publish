@@ -8,7 +8,7 @@ permissions: {}
 jobs:
   continuous-integration:
     name: Continuous integration for "deploy/jekyll" action
-    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@9f77c58db848451f244f78047fbf779c60bb8641 # 0.23.1
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@47891dc49a31209a88949e081d97a010f8cd20c4 # 0.23.2
     permissions:
       contents: read
       id-token: write

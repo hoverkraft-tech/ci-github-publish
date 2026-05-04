@@ -240,7 +240,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@e68cac9a52f0a24cd3800fc723dc4899f647e42b # 0.33.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@2b647ed6f11d50cb6beb6d56333e68ba2c804826 # 0.33.1
     permissions:
       contents: read
       id-token: write
@@ -354,7 +354,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@e68cac9a52f0a24cd3800fc723dc4899f647e42b # 0.33.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@2b647ed6f11d50cb6beb6d56333e68ba2c804826 # 0.33.1
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}

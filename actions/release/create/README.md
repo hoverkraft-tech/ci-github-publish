@@ -33,7 +33,7 @@ Create or publish a release with Release Drafter, with optional monorepo scoping
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@91a69c7a9730d3ec2886a80681dbb67634c70970 # 0.23.1
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@2c8e24b416226074aea1e240468f043edefc5760 # 0.23.2
   with:
     # Whether the release is a prerelease
     # Default: `false`

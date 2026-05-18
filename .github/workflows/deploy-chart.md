@@ -87,7 +87,14 @@ permissions: {}
 jobs:
   deploy-chart:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@2c8e24b416226074aea1e240468f043edefc5760 # 0.23.2
-    permissions: {}
+    permissions:
+      actions: read
+      contents: read
+      deployments: write
+      id-token: write
+      issues: write
+      packages: write
+      pull-requests: write
     secrets:
       # OCI registry password.
       # This input is required.

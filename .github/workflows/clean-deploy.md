@@ -63,7 +63,11 @@ permissions: {}
 jobs:
   clean-deploy:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy.yml@2c8e24b416226074aea1e240468f043edefc5760 # 0.23.2
-    permissions: {}
+    permissions:
+      actions: read
+      deployments: write
+      issues: write
+      pull-requests: write
     secrets:
       # GitHub token for deploying.
       # Permissions:

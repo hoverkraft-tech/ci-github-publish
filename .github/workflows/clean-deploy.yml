@@ -82,7 +82,7 @@ jobs:
         if: github.event_name != 'issue_comment'
         run: echo "result=true" >> "$GITHUB_OUTPUT"
 
-      - uses: shanegenschaw/pull-request-comment-trigger@de309e4a2e83bb08877cada483e3e2b13b8d8e4b # v3.0.0
+      - uses: shanegenschaw/pull-request-comment-trigger@447b2d08faa9eda4f4e5064b84538cebd8b5ca29 # v3.0.1
         id: trigger-on-comment
         if: ${{ steps.not-created-issue-comment.outputs.result != 'true' && inputs.trigger-on-comment }}
         with:

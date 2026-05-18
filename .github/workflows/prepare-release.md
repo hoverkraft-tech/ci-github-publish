@@ -52,7 +52,9 @@ permissions: {}
 jobs:
   prepare-release:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@2c8e24b416226074aea1e240468f043edefc5760 # 0.23.2
-    permissions: {}
+    permissions:
+      contents: read
+      pull-requests: write
     secrets:
       # GitHub token with following permissions:
       #

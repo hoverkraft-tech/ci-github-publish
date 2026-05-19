@@ -24,7 +24,7 @@
 
 ## Overview
 
-Create or publish a release with Release Drafter, with optional monorepo scoping.
+Create a GitHub release from Release Drafter or from an explicit tag, name, and target SHA.
 
 <!-- overview:end -->
 
@@ -33,15 +33,11 @@ Create or publish a release with Release Drafter, with optional monorepo scoping
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@2c8e24b416226074aea1e240468f043edefc5760 # 0.23.2
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@281fe4959997eea619bf3a4be4fde2f16b8b6d0c # 0.23.3
   with:
     # Whether the release is a prerelease
     # Default: `false`
     prerelease: "false"
-
-    # Whether to publish the release (false keeps it as a draft)
-    # Default: `true`
-    publish: "true"
 
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
@@ -53,6 +49,15 @@ Create or publish a release with Release Drafter, with optional monorepo scoping
     #
     # Default: `[]`
     include-paths: "[]"
+
+    # Tag name to associate with the GitHub release
+    tag: ""
+
+    # Name to use for the GitHub release
+    name: ""
+
+    # Commit SHA the GitHub release should target
+    target-sha: ""
 
     # GitHub Token for creating the release.
     # Permissions:
@@ -76,12 +81,14 @@ Create or publish a release with Release Drafter, with optional monorepo scoping
 | **Input**               | **Description**                                                                                                                                       | **Required** | **Default**           |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
 | **`prerelease`**        | Whether the release is a prerelease                                                                                                                   | **false**    | `false`               |
-| **`publish`**           | Whether to publish the release (false keeps it as a draft)                                                                                            | **false**    | `true`                |
 | **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                     | **false**    | -                     |
 |                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                 |              |                       |
 |                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file. |              |                       |
 | **`include-paths`**     | Additional paths to include in the release notes filtering (JSON array).                                                                              | **false**    | `[]`                  |
 |                         | These paths are added to the `include-paths` configuration of release-drafter.                                                                        |              |                       |
+| **`tag`**               | Tag name to associate with the GitHub release                                                                                                         | **false**    | -                     |
+| **`name`**              | Name to use for the GitHub release                                                                                                                    | **false**    | -                     |
+| **`target-sha`**        | Commit SHA the GitHub release should target                                                                                                           | **false**    | -                     |
 | **`github-token`**      | GitHub Token for creating the release.                                                                                                                | **false**    | `${{ github.token }}` |
 |                         | Permissions:                                                                                                                                          |              |                       |
 |                         | - contents: write                                                                                                                                     |              |                       |

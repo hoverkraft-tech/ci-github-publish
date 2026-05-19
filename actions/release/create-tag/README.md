@@ -1,6 +1,6 @@
 <!-- header:start -->
 
-# GitHub Action: Release - Create tag
+# ![Icon](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItdGFnIiBjb2xvcj0iYmx1ZSI+PHBhdGggZD0iTTIwLjU5IDEzLjQxbC03LjE3IDcuMTdhMiAyIDAgMCAxLTIuODMgMEwyIDEyVjJoMTBsOC41OSA4LjU5YTIgMiAwIDAgMSAwIDIuODJ6Ij48L3BhdGg+PGxpbmUgeDE9IjciIHkxPSI3IiB4Mj0iNy4wMSIgeTI9IjciPjwvbGluZT48L3N2Zz4=) GitHub Action: Release - Create tag
 
 <div align="center">
   <img src="../../../.github/logo.svg" width="60px" align="center" alt="Release - Create tag" />
@@ -26,8 +26,6 @@
 
 Create and push the final Git tag for a release.
 
-Use this action only after the final release commit is known.
-
 <!-- overview:end -->
 
 <!-- usage:start -->
@@ -35,12 +33,14 @@ Use this action only after the final release commit is known.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create-tag@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create-tag@281fe4959997eea619bf3a4be4fde2f16b8b6d0c # 0.23.3
   with:
     # Commit SHA to tag
+    # This input is required.
     release-sha: ""
 
     # Release tag to create
+    # This input is required.
     tag: ""
 
     # Annotated Git tag message. Defaults to the release tag.
@@ -60,14 +60,14 @@ Use this action only after the final release commit is known.
 
 ## Inputs
 
-| **Input**          | **Description**               | **Required** | **Default**           |
-| ------------------ | ----------------------------- | ------------ | --------------------- |
-| **`release-sha`**  | Commit SHA to tag             | **true**     | -                     |
-| **`tag`**          | Release tag to create         | **true**     | -                     |
-| **`message`**      | Annotated Git tag message     | **false**    | -                     |
-| **`github-token`** | GitHub Token for tag creation | **false**    | `${{ github.token }}` |
-|                    | Permissions:                  |              |                       |
-|                    | - contents: write             |              |                       |
+| **Input**          | **Description**                                         | **Required** | **Default**           |
+| ------------------ | ------------------------------------------------------- | ------------ | --------------------- |
+| **`release-sha`**  | Commit SHA to tag                                       | **true**     | -                     |
+| **`tag`**          | Release tag to create                                   | **true**     | -                     |
+| **`message`**      | Annotated Git tag message. Defaults to the release tag. | **false**    | -                     |
+| **`github-token`** | GitHub Token for tag creation.                          | **false**    | `${{ github.token }}` |
+|                    | Permissions:                                            |              |                       |
+|                    | - contents: write                                       |              |                       |
 
 <!-- inputs:end -->
 
@@ -106,7 +106,7 @@ This project is licensed under the MIT License.
 
 SPDX-License-Identifier: MIT
 
-Copyright © 2026 hoverkraft-tech
+Copyright © 2026 hoverkraft
 
 For more details, see the [license](http://choosealicense.com/licenses/mit/).
 

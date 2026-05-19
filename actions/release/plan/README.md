@@ -1,6 +1,6 @@
 <!-- header:start -->
 
-# GitHub Action: Release - Plan
+# ![Icon](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItYm9va21hcmsiIGNvbG9yPSJibHVlIj48cGF0aCBkPSJNMTkgMjFsLTctNS03IDVWNWEyIDIgMCAwIDEgMi0yaDEwYTIgMiAwIDAgMSAyIDJ6Ij48L3BhdGg+PC9zdmc+) GitHub Action: Release - Plan
 
 <div align="center">
   <img src="../../../.github/logo.svg" width="60px" align="center" alt="Release - Plan" />
@@ -26,8 +26,6 @@
 
 Plan a release identity without creating a Git tag or GitHub release.
 
-The action resolves the source commit, computes release metadata with Release Drafter in dry-run mode when no explicit tag is provided, and optionally fails when the planned tag already exists remotely.
-
 <!-- overview:end -->
 
 <!-- usage:start -->
@@ -35,7 +33,7 @@ The action resolves the source commit, computes release metadata with Release Dr
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@b56be562f38e0e3e712f09691a8fe930aae9db1b # 0.22.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@281fe4959997eea619bf3a4be4fde2f16b8b6d0c # 0.23.3
   with:
     # Branch, tag, or commit SHA to release. Defaults to the workflow SHA.
     source-ref: ""

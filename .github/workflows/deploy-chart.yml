@@ -162,7 +162,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@ff815105ba418bd0203868c8b52e0e02fea3f1a4 # 0.35.2
         if: inputs.tag == ''
         with:
           fetch-depth: 0
@@ -175,7 +175,7 @@ jobs:
 
       - id: get-issue-number
         if: inputs.tag == '' && github.event_name == 'issue_comment'
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@ff815105ba418bd0203868c8b52e0e02fea3f1a4 # 0.35.2
 
       - id: get-tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -240,7 +240,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@2b647ed6f11d50cb6beb6d56333e68ba2c804826 # 0.33.1
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@676925b78f1970281b3f087bc3829eb1c6a9f4dc # 0.34.1
     permissions:
       contents: read
       id-token: write
@@ -354,7 +354,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@2b647ed6f11d50cb6beb6d56333e68ba2c804826 # 0.33.1
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@676925b78f1970281b3f087bc3829eb1c6a9f4dc # 0.34.1
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}
@@ -460,7 +460,7 @@ jobs:
       # jscpd:ignore-end
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@ff815105ba418bd0203868c8b52e0e02fea3f1a4 # 0.35.2
         with:
           actions-path: actions
 

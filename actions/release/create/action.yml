@@ -1,5 +1,5 @@
 name: "Release - Create"
-description: "Create or publish a release with Release Drafter, with optional monorepo scoping."
+description: "Create a GitHub release from Release Drafter or from an explicit tag, name, and target SHA."
 author: hoverkraft
 branding:
   icon: bookmark
@@ -9,9 +9,6 @@ inputs:
   prerelease:
     description: "Whether the release is a prerelease"
     default: "false"
-  publish:
-    description: "Whether to publish the release (false keeps it as a draft)"
-    default: "true"
   working-directory:
     description: |
       Working directory used to scope release automation in a monorepo.
@@ -27,6 +24,15 @@ inputs:
     type: string
     required: false
     default: "[]"
+  tag:
+    description: "Tag name to associate with the GitHub release"
+    required: false
+  name:
+    description: "Name to use for the GitHub release"
+    required: false
+  target-sha:
+    description: "Commit SHA the GitHub release should target"
+    required: false
   github-token:
     description: |
       GitHub Token for creating the release.
@@ -39,44 +45,84 @@ inputs:
 outputs:
   tag:
     description: "The tag of the release"
-    value: ${{ steps.get-tag.outputs.tag }}
+    value: ${{ steps.collect-outputs.outputs.tag }}
 
 runs:
   using: "composite"
   steps:
-    - uses: hoverkraft-tech/ci-github-common/actions/checkout@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
+    - id: resolve-mode
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_TAG: ${{ inputs.tag }}
+        INPUT_NAME: ${{ inputs.name }}
+        INPUT_TARGET_SHA: ${{ inputs.target-sha }}
       with:
-        fetch-depth: "0"
+        script: |
+          const inputTag = (process.env.INPUT_TAG || '').trim();
+          const inputName = (process.env.INPUT_NAME || '').trim();
+          const inputTargetSha = (process.env.INPUT_TARGET_SHA || '').trim();
+          const explicitValues = [inputTag, inputName, inputTargetSha];
+
+          if (explicitValues.some(Boolean)) {
+            if (explicitValues.some((value) => !value)) {
+              return core.setFailed('tag, name, and target-sha must be provided together when using explicit release mode');
+            }
+
+            core.setOutput('mode', 'explicit');
+            return;
+          }
+
+          core.setOutput('mode', 'drafter');
 
     - id: local-actions
+      if: steps.resolve-mode.outputs.mode == 'drafter'
       uses: hoverkraft-tech/ci-github-common/actions/local-actions@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
       with:
         source-path: ${{ github.action_path }}/..
 
     - id: get-configuration
+      if: steps.resolve-mode.outputs.mode == 'drafter'
       uses: ./../self-actions/get-configuration
       with:
         working-directory: ${{ inputs.working-directory }}
         include-paths: ${{ inputs.include-paths }}
 
-    - id: release
+    - id: draft-release
+      if: steps.resolve-mode.outputs.mode == 'drafter'
       uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
       with:
         token: ${{ inputs.github-token }}
-        publish: ${{ inputs.publish }}
+        publish: "true"
         # config-path is relative to ".github" directory
         config-name: file:${{ steps.get-configuration.outputs.config-path }}
         prerelease: ${{ inputs.prerelease }}
         latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
 
-    - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      id: get-tag
+    - id: explicit-release
+      if: steps.resolve-mode.outputs.mode == 'explicit'
+      uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
+      with:
+        token: ${{ inputs.github-token }}
+        tag: ${{ inputs.tag }}
+        name: ${{ inputs.name }}
+        commitish: ${{ inputs.target-sha }}
+        publish: "true"
+        prerelease: ${{ inputs.prerelease }}
+        latest: ${{ inputs.prerelease != 'true' && 'true' || 'false' }}
+
+    - id: collect-outputs
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        MODE: ${{ steps.resolve-mode.outputs.mode }}
+        EXPLICIT_TAG: ${{ inputs.tag }}
+        DRAFTER_TAG: ${{ steps.draft-release.outputs.tag_name }}
       with:
         script: |
-          const tag = `${{ steps.release.outputs.tag_name }}`.trim();
-          if (tag.length) {
-            core.setOutput("tag", tag);
-            return;
+          const mode = process.env.MODE || 'drafter';
+          const tag = (mode === 'drafter' ? process.env.DRAFTER_TAG : process.env.EXPLICIT_TAG || '').trim();
+
+          if (!tag) {
+            return core.setFailed('No tag found from release-drafter outputs');
           }
 
-          core.setFailed("No tag found from release-drafter outputs");
+          core.setOutput('tag', tag);

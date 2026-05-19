@@ -25,12 +25,12 @@ inputs:
 outputs:
   config-path:
     description: "The effective configuration path relative to the .github directory"
-    value: ${{ steps.get-config.outputs.config-path }}
+    value: ${{ steps.local-config.outputs.config-path || steps.create-temp-config.outputs.config-path }}
 
 runs:
   using: "composite"
   steps:
-    - id: get-config
+    - id: resolve-config-paths
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         WORKING_DIRECTORY: ${{ inputs.working-directory }}
@@ -41,55 +41,72 @@ runs:
 
           const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
           const githubDirectory = path.join(workspace, '.github');
-          let workingDirectory = process.env.WORKING_DIRECTORY.trim();
-          let configRelativePath = 'release-config.yml';
+          const gitDirectory = path.join(workspace, '.git');
+          const runnerTemp = process.env.RUNNER_TEMP || path.join(workspace, '.runner-temp');
+          let workingDirectory = (process.env.WORKING_DIRECTORY || '').trim();
+          let repositoryConfigPath = 'release-config.yml';
           let configSlug = '';
 
           if (workingDirectory) {
-            // Get working directory absolute path
             const workingDirectoryFullPath = path.isAbsolute(workingDirectory)
               ? workingDirectory
               : path.join(workspace, workingDirectory);
 
             workingDirectory = path.relative(workspace, workingDirectoryFullPath);
-            core.setOutput("working-directory", workingDirectory);
-
-            // Convert path to slug: handle slashes, spaces, and special characters
             configSlug = path.basename(workingDirectoryFullPath)
               .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric chars with dashes
-              .replace(/^-+|-+$/g, '');     // Remove leading/trailing dashes
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '');
 
-            core.setOutput("config-slug", configSlug);
-            configRelativePath = `release-configs/${configSlug}.yml`;
+            repositoryConfigPath = `release-configs/${configSlug}.yml`;
           }
 
-          const repositoryConfigPath = path.join(githubDirectory, configRelativePath);
+          const tempDirectory = path.join(runnerTemp, 'release-drafter');
+          const tempConfigPath = path.join(tempDirectory, path.basename(repositoryConfigPath));
+          const tempConfigRelativePath = path.relative(githubDirectory, tempConfigPath).split(path.sep).join('/');
+          const repositoryConfigFullPath = path.join(githubDirectory, repositoryConfigPath);
+
+          core.setOutput('requires-checkout', fs.existsSync(gitDirectory) ? 'false' : 'true');
+          core.setOutput('working-directory', workingDirectory);
+          core.setOutput('config-slug', configSlug);
+          core.setOutput('repository-config-path', repositoryConfigPath);
+          core.setOutput('repository-config-full-path', repositoryConfigFullPath);
+          core.setOutput('temp-config-path', tempConfigRelativePath);
+
+    - if: steps.resolve-config-paths.outputs.requires-checkout == 'true'
+      uses: hoverkraft-tech/ci-github-common/actions/checkout@ff815105ba418bd0203868c8b52e0e02fea3f1a4 # 0.35.2
+      with:
+        fetch-depth: "1"
+        sparse-checkout: .github/${{ steps.resolve-config-paths.outputs.repository-config-path }}
+
+    - id: local-config
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        REPOSITORY_CONFIG_PATH: ${{ steps.resolve-config-paths.outputs.repository-config-path }}
+        REPOSITORY_CONFIG_FULL_PATH: ${{ steps.resolve-config-paths.outputs.repository-config-full-path }}
+      with:
+        script: |
+          const fs = require('node:fs');
+
+          const configRelativePath = process.env.REPOSITORY_CONFIG_PATH || 'release-config.yml';
+          const repositoryConfigPath = process.env.REPOSITORY_CONFIG_FULL_PATH || '';
+
           const configExists = fs.existsSync(repositoryConfigPath);
 
           if (configExists) {
-            core.setOutput('config-exists', true);
-            const relativeRepositoryConfigPath = path.relative(githubDirectory, repositoryConfigPath).split(path.sep).join('/');
-            core.debug(`Using repository config path: ${relativeRepositoryConfigPath}`);
-            core.setOutput('config-path', relativeRepositoryConfigPath);
+            core.debug(`Using repository config path: ${configRelativePath}`);
+            core.setOutput('config-path', configRelativePath);
             return;
           }
 
-          const runnerTemp = process.env.RUNNER_TEMP || path.join(workspace, '.runner-temp');
-          const tempDirectory = path.join(runnerTemp, 'release-drafter');
-          const tempConfigPath = path.join(tempDirectory, path.basename(configRelativePath));
-          const relativeTempConfigPath = path.relative(githubDirectory, tempConfigPath).split(path.sep).join('/');
-          core.debug(`Using generated config path: ${relativeTempConfigPath}`);
-          core.setOutput('config-path', relativeTempConfigPath);
-
     - id: create-temp-config
-      if: steps.get-config.outputs.config-exists != 'true'
+      if: steps.local-config.outputs.config-path == ''
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        CONFIG_SLUG: ${{ steps.get-config.outputs.config-slug }}
+        CONFIG_SLUG: ${{ steps.resolve-config-paths.outputs.config-slug }}
         INCLUDE_PATHS: ${{ inputs.include-paths }}
-        CONFIG_PATH: ${{ steps.get-config.outputs.config-path }}
-        WORKING_DIRECTORY: ${{ steps.get-config.outputs.working-directory }}
+        CONFIG_PATH: ${{ steps.resolve-config-paths.outputs.temp-config-path }}
+        WORKING_DIRECTORY: ${{ steps.resolve-config-paths.outputs.working-directory }}
       with:
         script: |
           const fs = require('node:fs');
@@ -197,3 +214,4 @@ runs:
 
           fs.mkdirSync(path.dirname(configPath), { recursive: true });
           fs.writeFileSync(configPath, configContent, 'utf8');
+          core.setOutput('config-path', process.env.CONFIG_PATH);

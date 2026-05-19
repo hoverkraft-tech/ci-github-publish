@@ -73,7 +73,13 @@ _Actions for managing deployments._
 
 _Actions for managing releases._
 
-#### - [Create](actions/release/create/README.md)
+#### - [Create or publish release](actions/release/create/README.md)
+
+#### - [Create tag](actions/release/create-tag/README.md)
+
+#### - [Plan](actions/release/plan/README.md)
+
+#### - [Recommended release workflow](.github/workflows/release.md)
 
 ### Workflow
 
@@ -108,8 +114,6 @@ _Actions for managing workflows._
 _Reusable workflows for managing release process._
 
 #### - [Prepare release](.github/workflows/prepare-release.md)
-
-#### - [Release](.github/workflows/release.md)
 
 #### - [Release actions](.github/workflows/release-actions.md)
 

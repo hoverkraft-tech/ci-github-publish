@@ -1,0 +1,65 @@
+name: Internal - Tests for "release/plan" action
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  tests:
+    name: Tests for "release/plan" action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Arrange - Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Act - Plan explicit release
+        id: explicit-plan
+        uses: ./actions/release/plan
+        with:
+          tag: test-explicit-release-tag
+          name: Test explicit release name
+          check-tag-exists: "false"
+
+      - name: Assert - Explicit release plan
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_TAG: ${{ steps.explicit-plan.outputs.tag }}
+          RELEASE_NAME: ${{ steps.explicit-plan.outputs.name }}
+          RELEASE_SHA: ${{ steps.explicit-plan.outputs.release-sha }}
+          EXPECTED_SHA: ${{ github.sha }}
+        with:
+          script: |
+            const assert = require('node:assert');
+
+            assert.equal(process.env.RELEASE_TAG, 'test-explicit-release-tag');
+            assert.equal(process.env.RELEASE_NAME, 'Test explicit release name');
+            assert.equal(process.env.RELEASE_SHA, process.env.EXPECTED_SHA);
+
+      - name: Act - Plan drafter release
+        id: drafter-plan
+        uses: ./actions/release/plan
+        with:
+          working-directory: actions/release/get-configuration
+
+      - name: Assert - Drafter release plan
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_TAG: ${{ steps.drafter-plan.outputs.tag }}
+          RELEASE_NAME: ${{ steps.drafter-plan.outputs.name }}
+          RELEASE_SHA: ${{ steps.drafter-plan.outputs.release-sha }}
+          EXPECTED_SHA: ${{ github.sha }}
+        with:
+          script: |
+            const assert = require('node:assert');
+
+            assert.ok(process.env.RELEASE_TAG, 'Expected planned tag to be set');
+            assert.ok(process.env.RELEASE_TAG.startsWith('get-configuration-'), `Expected tag to start with "get-configuration-", got "${process.env.RELEASE_TAG}"`);
+            assert.ok(process.env.RELEASE_NAME, 'Expected planned name to be set');
+            assert.ok(process.env.RELEASE_NAME.startsWith('Version get-configuration - '), `Expected name to start with "Version get-configuration - ", got "${process.env.RELEASE_NAME}"`);
+            assert.equal(process.env.RELEASE_SHA, process.env.EXPECTED_SHA);

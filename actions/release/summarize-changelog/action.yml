@@ -54,7 +54,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup Node.js
-      uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@47891dc49a31209a88949e081d97a010f8cd20c4 # 0.23.2
+      uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@6b74a8f070140f5c120f78026d58e4c00d1b1e37 # 0.24.2
       with:
         working-directory: ${{ github.action_path }}
 

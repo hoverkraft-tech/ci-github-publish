@@ -34,7 +34,7 @@ With optional changelog summarization prepended to the published notes.
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@df0e9230356043ce8c32061ceb42fd132819b003 # copilot/add-changelog-summary-action
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@6a2562a3f4409f39c7fab100636a90430ee0a8cf # 0.24.0
   with:
     # Whether the release is a prerelease
     # Default: `false`

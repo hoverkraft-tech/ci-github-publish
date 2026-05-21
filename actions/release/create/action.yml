@@ -43,6 +43,12 @@ inputs:
         - pull-requests: read
     required: false
     default: ${{ github.token }}
+  skip-if-no-changes:
+    description: |
+      Skip creating or publishing the release when no changes are detected since the latest relevant published release.
+      In Release Drafter mode, detection respects the configured release filters such as `working-directory` and `include-paths`.
+    required: false
+    default: "false"
   changelog-summary:
     description: |
       Optional JSON-serialized configuration used to generate and prepend a release summary to the published release notes.
@@ -73,6 +79,9 @@ outputs:
   tag:
     description: "The tag of the release"
     value: ${{ steps.resolve-release.outputs.tag }}
+  created:
+    description: "Whether the GitHub release was created or published"
+    value: ${{ steps.resolve-release.outputs.created }}
 
 runs:
   using: "composite"
@@ -167,20 +176,216 @@ runs:
           core.setOutput('summary-template', summaryTemplate);
 
     - id: local-actions
-      if: steps.resolve-mode.outputs.mode == 'drafter' || steps.resolve-changelog-summary.outputs.enabled == 'true'
       uses: hoverkraft-tech/ci-github-common/actions/local-actions@cacc6123a32780d507db04733e5a8c167917581d # 0.35.3
       with:
         source-path: ${{ github.action_path }}/..
 
     - id: get-configuration
-      if: steps.resolve-mode.outputs.mode == 'drafter'
       uses: ./../self-actions/get-configuration
       with:
         working-directory: ${{ inputs.working-directory }}
         include-paths: ${{ inputs.include-paths }}
 
+    - id: prepare-change-detection-configuration
+      if: steps.resolve-mode.outputs.mode == 'drafter' && inputs.skip-if-no-changes == 'true'
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        EFFECTIVE_CONFIG_PATH: ${{ steps.get-configuration.outputs.config-path }}
+      with:
+        script: |
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const NO_CHANGES_SENTINEL = '<!-- ci-release-create:no-changes -->';
+
+          const removeTopLevelKey = (lines, key) => {
+            const keyMatcher = new RegExp(`^${key}:\\s*`);
+            const startIndex = lines.findIndex((line) => keyMatcher.test(line));
+            if (startIndex === -1) {
+              return lines;
+            }
+
+            let endIndex = startIndex + 1;
+            if (/[>|]\s*$/.test(lines[startIndex])) {
+              for (; endIndex < lines.length; endIndex += 1) {
+                const line = lines[endIndex];
+                if (line.trim() === '') {
+                  continue;
+                }
+
+                if (/^\S/.test(line)) {
+                  break;
+                }
+              }
+            }
+
+            lines.splice(startIndex, endIndex - startIndex);
+            return lines;
+          };
+
+          try {
+            const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
+            const runnerTemp = process.env.RUNNER_TEMP || path.join(workspace, '.runner-temp');
+            const githubDirectory = path.join(workspace, '.github');
+            const effectiveConfigPath = (process.env.EFFECTIVE_CONFIG_PATH || '').trim();
+
+            if (!effectiveConfigPath) {
+              return core.setFailed('Configuration path is not specified.');
+            }
+
+            const effectiveConfigFullPath = path.resolve(githubDirectory, effectiveConfigPath);
+            if (!fs.existsSync(effectiveConfigFullPath)) {
+              return core.setFailed(`Configuration file not found: ${effectiveConfigPath}`);
+            }
+
+            const configLines = fs.readFileSync(effectiveConfigFullPath, 'utf8').split(/\r?\n/);
+            removeTopLevelKey(configLines, 'no-changes-template');
+            configLines.push(`no-changes-template: '${NO_CHANGES_SENTINEL}'`);
+
+            const tempDirectory = path.join(runnerTemp, 'release-drafter-create');
+            const tempConfigFullPath = path.join(tempDirectory, path.basename(effectiveConfigFullPath));
+            fs.mkdirSync(tempDirectory, { recursive: true });
+            fs.writeFileSync(tempConfigFullPath, `${configLines.join('\n')}\n`, 'utf8');
+
+            core.setOutput('config-path', path.relative(githubDirectory, tempConfigFullPath).split(path.sep).join('/'));
+            core.setOutput('no-changes-sentinel', NO_CHANGES_SENTINEL);
+          } catch (error) {
+            return core.setFailed(error.message);
+          }
+
+    - id: detect-drafter-changes
+      if: steps.resolve-mode.outputs.mode == 'drafter' && inputs.skip-if-no-changes == 'true'
+      uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
+      with:
+        token: ${{ inputs.github-token }}
+        dry-run: "true"
+        publish: "false"
+        # config-path is relative to ".github" directory
+        config-name: file:${{ steps.prepare-change-detection-configuration.outputs.config-path }}
+        prerelease: ${{ inputs.prerelease }}
+        latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
+
+    - id: resolve-create-condition
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        MODE: ${{ steps.resolve-mode.outputs.mode }}
+        PRERELEASE: ${{ inputs.prerelease }}
+        SKIP_IF_NO_CHANGES: ${{ inputs.skip-if-no-changes }}
+        TARGET_SHA: ${{ inputs.target-sha }}
+        DRAFTER_DETECTION_BODY: ${{ steps.detect-drafter-changes.outputs.body }}
+        NO_CHANGES_SENTINEL: ${{ steps.prepare-change-detection-configuration.outputs.no-changes-sentinel }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const setDecision = ({ hasChanges, shouldCreate, reason }) => {
+            core.info(reason);
+            core.setOutput('has-changes', hasChanges ? 'true' : 'false');
+            core.setOutput('should-create', shouldCreate ? 'true' : 'false');
+          };
+
+          const allowCreation = reason => setDecision({
+            hasChanges: true,
+            shouldCreate: true,
+            reason,
+          });
+
+          const skipIfNoChanges = () => process.env.SKIP_IF_NO_CHANGES === 'true';
+
+          const detectDrafterChanges = () => {
+            const detectionBody = process.env.DRAFTER_DETECTION_BODY || '';
+            const noChangesSentinel = (process.env.NO_CHANGES_SENTINEL || '').trim();
+
+            if (!detectionBody) {
+              throw new Error('Cannot determine whether the drafted release has changes because release-drafter did not return a body');
+            }
+
+            if (!noChangesSentinel) {
+              throw new Error('Cannot determine the no-changes sentinel for release detection');
+            }
+
+            const hasChanges = !detectionBody.includes(noChangesSentinel);
+            return {
+              hasChanges,
+              shouldCreate: hasChanges,
+              reason: hasChanges
+                ? 'Detected release changes since the latest relevant published release. Creating the release.'
+                : 'No release changes detected since the latest relevant published release. Skipping release creation.',
+            };
+          };
+
+          const findLatestComparableRelease = (releases, prerelease) => {
+            if (prerelease) {
+              return releases.find((release) => release.prerelease) || releases.find((release) => !release.prerelease);
+            }
+
+            return releases.find((release) => !release.prerelease);
+          };
+
+          const detectExplicitChanges = async () => {
+            const targetSha = (process.env.TARGET_SHA || '').trim();
+            if (!targetSha) {
+              throw new Error('target-sha is required to detect changes in explicit release mode');
+            }
+
+            const prerelease = process.env.PRERELEASE === 'true';
+            const publishedReleases = await github.paginate(github.rest.repos.listReleases, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+
+            const candidateReleases = publishedReleases.filter((release) => !release.draft);
+            const latestRelease = findLatestComparableRelease(candidateReleases, prerelease);
+            if (!latestRelease) {
+              return {
+                hasChanges: true,
+                shouldCreate: true,
+                reason: 'No comparable published release was found. Creating the release.',
+              };
+            }
+
+            const latestTag = (latestRelease.tag_name || '').trim();
+            if (!latestTag) {
+              return {
+                hasChanges: true,
+                shouldCreate: true,
+                reason: 'The latest comparable published release has no tag. Creating the release.',
+              };
+            }
+
+            const comparison = await github.rest.repos.compareCommitsWithBasehead({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              basehead: `${latestTag}...${targetSha}`,
+            });
+
+            const hasChanges = Number(comparison.data.ahead_by || 0) > 0;
+            return {
+              hasChanges,
+              shouldCreate: hasChanges,
+              reason: hasChanges
+                ? `Detected commits after ${latestTag}. Creating the release.`
+                : `No commits detected after ${latestTag}. Skipping release creation.`,
+            };
+          };
+
+          try {
+            if (!skipIfNoChanges()) {
+              return allowCreation('skip-if-no-changes is disabled. Creating the release.');
+            }
+
+            const mode = process.env.MODE || 'drafter';
+            const decision = mode === 'drafter'
+              ? detectDrafterChanges()
+              : await detectExplicitChanges();
+
+            return setDecision(decision);
+          } catch (error) {
+            return core.setFailed(error.message);
+          }
+
     - id: draft-release
-      if: steps.resolve-mode.outputs.mode == 'drafter'
+      if: steps.resolve-mode.outputs.mode == 'drafter' && steps.resolve-create-condition.outputs.should-create == 'true'
       uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
       with:
         token: ${{ inputs.github-token }}
@@ -191,7 +396,7 @@ runs:
         latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
 
     - id: explicit-release
-      if: steps.resolve-mode.outputs.mode == 'explicit'
+      if: steps.resolve-mode.outputs.mode == 'explicit' && steps.resolve-create-condition.outputs.should-create == 'true'
       uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
       with:
         token: ${{ inputs.github-token }}
@@ -199,6 +404,8 @@ runs:
         name: ${{ inputs.name }}
         commitish: ${{ inputs.target-sha }}
         publish: "true"
+        # config-path is relative to ".github" directory
+        config-name: file:${{ steps.get-configuration.outputs.config-path }}
         prerelease: ${{ inputs.prerelease }}
         latest: ${{ inputs.prerelease != 'true' && 'true' || 'false' }}
 
@@ -206,6 +413,7 @@ runs:
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         MODE: ${{ steps.resolve-mode.outputs.mode }}
+        SHOULD_CREATE: ${{ steps.resolve-create-condition.outputs.should-create }}
         EXPLICIT_TAG: ${{ inputs.tag }}
         EXPLICIT_BODY: ${{ steps.explicit-release.outputs.body }}
         DRAFTER_TAG: ${{ steps.draft-release.outputs.tag_name }}
@@ -213,6 +421,13 @@ runs:
         SUMMARY_ENABLED: ${{ steps.resolve-changelog-summary.outputs.enabled }}
       with:
         script: |
+          if (process.env.SHOULD_CREATE !== 'true') {
+            core.setOutput('created', 'false');
+            core.setOutput('tag', '');
+            core.setOutput('body', '');
+            return;
+          }
+
           const mode = process.env.MODE || 'drafter';
           const tag = (mode === 'drafter' ? process.env.DRAFTER_TAG : process.env.EXPLICIT_TAG || '').trim();
           const body = (mode === 'drafter' ? process.env.DRAFTER_BODY : process.env.EXPLICIT_BODY || '').trim();
@@ -225,11 +440,12 @@ runs:
             return core.setFailed('Cannot summarize release notes because release-drafter did not return a changelog body');
           }
 
+          core.setOutput('created', 'true');
           core.setOutput('tag', tag);
           core.setOutput('body', body);
 
     - id: summarize-changelog
-      if: steps.resolve-changelog-summary.outputs.enabled == 'true'
+      if: steps.resolve-changelog-summary.outputs.enabled == 'true' && steps.resolve-release.outputs.created == 'true'
       uses: ./../self-actions/summarize-changelog
       with:
         changelog-body: ${{ steps.resolve-release.outputs.body }}
@@ -241,7 +457,7 @@ runs:
         summary-template: ${{ steps.resolve-changelog-summary.outputs.summary-template }}
 
     - id: update-release-body
-      if: steps.resolve-changelog-summary.outputs.enabled == 'true'
+      if: steps.resolve-changelog-summary.outputs.enabled == 'true' && steps.resolve-release.outputs.created == 'true'
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         RELEASE_TAG: ${{ steps.resolve-release.outputs.tag }}

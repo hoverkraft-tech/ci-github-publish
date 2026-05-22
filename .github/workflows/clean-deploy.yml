@@ -118,7 +118,7 @@ jobs:
       pull-requests: write
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@cacc6123a32780d507db04733e5a8c167917581d # 0.35.3
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
         with:
           actions-path: actions
 
@@ -158,7 +158,7 @@ jobs:
           environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@cacc6123a32780d507db04733e5a8c167917581d # 0.35.3
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}
         with:
           title: "Deployment(s) have been deleted :wastebasket:."

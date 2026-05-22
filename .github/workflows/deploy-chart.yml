@@ -162,7 +162,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@cacc6123a32780d507db04733e5a8c167917581d # 0.35.3
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
         if: inputs.tag == ''
         with:
           fetch-depth: 0
@@ -175,7 +175,7 @@ jobs:
 
       - id: get-issue-number
         if: inputs.tag == '' && github.event_name == 'issue_comment'
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@cacc6123a32780d507db04733e5a8c167917581d # 0.35.3
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
 
       - id: get-tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -460,7 +460,7 @@ jobs:
       # jscpd:ignore-end
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@cacc6123a32780d507db04733e5a8c167917581d # 0.35.3
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
         with:
           actions-path: actions
 

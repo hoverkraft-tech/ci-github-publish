@@ -34,7 +34,7 @@ With optional changelog summarization prepended to the published notes.
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@6a2562a3f4409f39c7fab100636a90430ee0a8cf # 0.24.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@b27c38015a8265780329d229c841d057a18b8fae # 0.25.0
   with:
     # Whether the release is a prerelease
     # Default: `false`

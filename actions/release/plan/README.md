@@ -33,7 +33,7 @@ Plan a release identity without creating a Git tag or GitHub release.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@6a2562a3f4409f39c7fab100636a90430ee0a8cf # 0.24.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@b27c38015a8265780329d229c841d057a18b8fae # 0.25.0
   with:
     # Branch, tag, or commit SHA to release. Defaults to the workflow SHA.
     source-ref: ""

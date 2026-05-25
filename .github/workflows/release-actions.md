@@ -81,6 +81,10 @@ jobs:
       # List of extra documentation files to update (if any).
       documentation-files: ""
 
+      # JSON array of extra badges to include in generated documentation.
+      # Each badge should have `label`, `url`, and optional `linkUrl` properties.
+      extra-badges: ""
+
       # GitHub App Client ID to generate GitHub token in place of github-token.
       # See https://github.com/actions/create-github-app-token.
       github-app-client-id: ""
@@ -100,6 +104,8 @@ jobs:
 |                            | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |             |                     |
 | **`update-all`**           | Update all actions and workflows, regardless of changes.                           | **false**    | **boolean** | `false`             |
 | **`documentation-files`**  | List of extra documentation files to update (if any).                              | **false**    | **string**  | -                   |
+| **`extra-badges`**         | JSON array of extra badges to include in generated documentation.                  | **false**    | **string**  | -                   |
+|                            | Each badge should have `label`, `url`, and optional `linkUrl` properties.          |              |             |                     |
 | **`github-app-client-id`** | GitHub App Client ID to generate GitHub token in place of github-token.            | **false**    | **string**  | -                   |
 |                            | See <https://github.com/actions/create-github-app-token>.                          |              |             |                     |
 

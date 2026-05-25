@@ -30,6 +30,12 @@ on:
         description: "List of extra documentation files to update (if any)."
         required: false
         type: string
+      extra-badges:
+        description: |
+          JSON array of extra badges to include in generated documentation.
+          Each badge should have `label`, `url`, and optional `linkUrl` properties.
+        required: false
+        type: string
       github-app-client-id:
         description: |
           GitHub App Client ID to generate GitHub token in place of github-token.
@@ -270,6 +276,7 @@ jobs:
         uses: hoverkraft-tech/ci-dokumentor@3258ef0de948ec25e5939618d5ef510445aed869 # 0.3.1
         with:
           source: ${{ needs.get-documentation-changes.outputs.manifest-files }}
+          extra-badges: ${{ inputs.extra-badges }}
 
       # FIXME: Workaround to preserve full path to artifact, add a wildcard to the first folder of the absolute path
       - id: generated-documentation

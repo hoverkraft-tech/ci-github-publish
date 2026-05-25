@@ -24,8 +24,8 @@
 
 ## Overview
 
-Create a GitHub release from Release Drafter or from an explicit tag, name, and target SHA.
-With optional changelog summarization prepended to the published notes.
+Create or refresh a GitHub release from Release Drafter or from explicit release inputs.
+The release is published by default after optional changelog summarization and asset upload succeed.
 
 <!-- overview:end -->
 
@@ -51,16 +51,15 @@ With optional changelog summarization prepended to the published notes.
     # Default: `[]`
     include-paths: "[]"
 
-    # Tag name to associate with the GitHub release
+    # Release tag name to use in explicit mode
     tag: ""
 
-    # Name to use for the GitHub release
-    name: ""
-
-    # Commit SHA the GitHub release should target
+    # Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist.
+    # Forwarded to Release Drafter as `commitish`.
+    # Default: ``
     target-sha: ""
 
-    # GitHub Token for creating the release.
+    # GitHub Token for creating the draft release.
     # Permissions:
     # - contents: write
     # - pull-requests: read
@@ -68,14 +67,14 @@ With optional changelog summarization prepended to the published notes.
     # Default: `${{ github.token }}`
     github-token: ${{ github.token }}
 
-    # Skip creating or publishing the release when no changes are detected since the latest relevant published release.
+    # Skip creating or updating the draft release when no changes are detected since the latest relevant published release.
     # In Release Drafter mode, detection respects the configured release filters such as `working-directory` and `include-paths`.
     #
     # Default: `false`
     skip-if-no-changes: "false"
 
-    # Optional JSON-serialized configuration used to generate and prepend a release summary to the published release notes.
-    # When provided, the action summarizes the changelog body returned by release-drafter, then updates the created release body to include the summary above the full changelog.
+    # Optional JSON-serialized configuration used to generate and prepend a release summary to the drafted release notes.
+    # When provided, the action summarizes the changelog body returned by release-drafter, then updates the draft release body to include the summary above the full changelog.
     # Supported properties:
     # - llmAuth (required)
     # - llmProvider (optional, default: `openai`)
@@ -96,6 +95,15 @@ With optional changelog summarization prepended to the published notes.
     # }
     # ```
     changelog-summary: ""
+
+    # Optional workflow artifact id containing files to upload as GitHub release assets after the release is created or updated.
+    # The artifact is downloaded automatically before upload.
+    release-artifact-id: ""
+
+    # Whether to publish the release after changelog and asset updates succeed.
+    # When disabled, the release remains a draft.
+    # Default: `true`
+    publish: "true"
 ````
 
 <!-- usage:end -->
@@ -108,38 +116,42 @@ With optional changelog summarization prepended to the published notes.
 
 ## Inputs
 
-| **Input**                | **Description**                                                                                                                                                                             | **Required** | **Default**           |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`prerelease`**         | Whether the release is a prerelease                                                                                                                                                         | **false**    | `false`               |
-| **`working-directory`**  | Working directory used to scope release automation in a monorepo.                                                                                                                           | **false**    | -                     |
-|                          | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                       |              |                       |
-|                          | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.                                       |              |                       |
-| **`include-paths`**      | Additional paths to include in the release notes filtering (JSON array).                                                                                                                    | **false**    | `[]`                  |
-|                          | These paths are added to the `include-paths` configuration of release-drafter.                                                                                                              |              |                       |
-| **`tag`**                | Tag name to associate with the GitHub release                                                                                                                                               | **false**    | -                     |
-| **`name`**               | Name to use for the GitHub release                                                                                                                                                          | **false**    | -                     |
-| **`target-sha`**         | Commit SHA the GitHub release should target                                                                                                                                                 | **false**    | -                     |
-| **`github-token`**       | GitHub Token for creating the release.                                                                                                                                                      | **false**    | `${{ github.token }}` |
-|                          | Permissions:                                                                                                                                                                                |              |                       |
-|                          | - contents: write                                                                                                                                                                           |              |                       |
-|                          | - pull-requests: read                                                                                                                                                                       |              |                       |
-| **`skip-if-no-changes`** | Skip creating or publishing the release when no changes are detected since the latest relevant published release.                                                                           | **false**    | `false`               |
-|                          | In Release Drafter mode, detection respects the configured release filters such as `working-directory` and `include-paths`.                                                                 |              |                       |
-| **`changelog-summary`**  | Optional JSON-serialized configuration used to generate and prepend a release summary to the published release notes.                                                                       | **false**    | -                     |
-|                          | When provided, the action summarizes the changelog body returned by release-drafter, then updates the created release body to include the summary above the full changelog.                 |              |                       |
-|                          | Supported properties:                                                                                                                                                                       |              |                       |
-|                          | - llmAuth (required)                                                                                                                                                                        |              |                       |
-|                          | - llmProvider (optional, default: `openai`)                                                                                                                                                 |              |                       |
-|                          | - llmModel (optional, default: `gpt-5.4`)                                                                                                                                                   |              |                       |
-|                          | - llmConfig (optional object or JSON string forwarded to `release/summarize-changelog`)                                                                                                     |              |                       |
-|                          | - workingDirectory (optional, default: `working-directory` input or `.`)                                                                                                                    |              |                       |
-|                          | - summaryTemplate (optional template forwarded to `release/summarize-changelog`)                                                                                                            |              |                       |
-|                          |                                                                                                                                                                                             |              |                       |
-|                          | See: [`release/summarize-changelog` action inputs](../summarize-changelog/README.md) for details on the summarization configuration.                                                        |              |                       |
-|                          |                                                                                                                                                                                             |              |                       |
-|                          | Example value:                                                                                                                                                                              |              |                       |
-|                          |                                                                                                                                                                                             |              |                       |
-|                          | <!-- textlint-disable --><pre lang="json">{&#13; "llmAuth": "$\{{ secrets.OPENAI_API_KEY }}",&#13; "llmProvider": "openai",&#13; "llmModel": "gpt-5.4",&#13;}</pre><!-- textlint-enable --> |              |                       |
+| **Input**                 | **Description**                                                                                                                                                                             | **Required** | **Default**           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`prerelease`**          | Whether the release is a prerelease                                                                                                                                                         | **false**    | `false`               |
+| **`working-directory`**   | Working directory used to scope release automation in a monorepo.                                                                                                                           | **false**    | -                     |
+|                           | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                       |              |                       |
+|                           | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.                                       |              |                       |
+| **`include-paths`**       | Additional paths to include in the release notes filtering (JSON array).                                                                                                                    | **false**    | `[]`                  |
+|                           | These paths are added to the `include-paths` configuration of release-drafter.                                                                                                              |              |                       |
+| **`tag`**                 | Release tag name to use in explicit mode                                                                                                                                                    | **false**    | -                     |
+| **`target-sha`**          | Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist.                                                                    | **false**    | ``                    |
+|                           | Forwarded to Release Drafter as `commitish`.                                                                                                                                                |              |                       |
+| **`github-token`**        | GitHub Token for creating the draft release.                                                                                                                                                | **false**    | `${{ github.token }}` |
+|                           | Permissions:                                                                                                                                                                                |              |                       |
+|                           | - contents: write                                                                                                                                                                           |              |                       |
+|                           | - pull-requests: read                                                                                                                                                                       |              |                       |
+| **`skip-if-no-changes`**  | Skip creating or updating the draft release when no changes are detected since the latest relevant published release.                                                                       | **false**    | `false`               |
+|                           | In Release Drafter mode, detection respects the configured release filters such as `working-directory` and `include-paths`.                                                                 |              |                       |
+| **`changelog-summary`**   | Optional JSON-serialized configuration used to generate and prepend a release summary to the drafted release notes.                                                                         | **false**    | -                     |
+|                           | When provided, the action summarizes the changelog body returned by release-drafter, then updates the draft release body to include the summary above the full changelog.                   |              |                       |
+|                           | Supported properties:                                                                                                                                                                       |              |                       |
+|                           | - llmAuth (required)                                                                                                                                                                        |              |                       |
+|                           | - llmProvider (optional, default: `openai`)                                                                                                                                                 |              |                       |
+|                           | - llmModel (optional, default: `gpt-5.4`)                                                                                                                                                   |              |                       |
+|                           | - llmConfig (optional object or JSON string forwarded to `release/summarize-changelog`)                                                                                                     |              |                       |
+|                           | - workingDirectory (optional, default: `working-directory` input or `.`)                                                                                                                    |              |                       |
+|                           | - summaryTemplate (optional template forwarded to `release/summarize-changelog`)                                                                                                            |              |                       |
+|                           |                                                                                                                                                                                             |              |                       |
+|                           | See: [`release/summarize-changelog` action inputs](../summarize-changelog/README.md) for details on the summarization configuration.                                                        |              |                       |
+|                           |                                                                                                                                                                                             |              |                       |
+|                           | Example value:                                                                                                                                                                              |              |                       |
+|                           |                                                                                                                                                                                             |              |                       |
+|                           | <!-- textlint-disable --><pre lang="json">{&#13; "llmAuth": "$\{{ secrets.OPENAI_API_KEY }}",&#13; "llmProvider": "openai",&#13; "llmModel": "gpt-5.4",&#13;}</pre><!-- textlint-enable --> |              |                       |
+| **`release-artifact-id`** | Optional workflow artifact ID containing files to upload as GitHub release assets after the release is created or updated.                                                                  | **false**    | -                     |
+|                           | The artifact is downloaded automatically before upload.                                                                                                                                     |              |                       |
+| **`publish`**             | Whether to publish the release after changelog and asset updates succeed.                                                                                                                   | **false**    | `true`                |
+|                           | When disabled, the release remains a draft.                                                                                                                                                 |              |                       |
 
 <!-- inputs:end -->
 
@@ -147,14 +159,19 @@ With optional changelog summarization prepended to the published notes.
 
 ## Outputs
 
-| **Output**    | **Description**                                     |
-| ------------- | --------------------------------------------------- |
-| **`tag`**     | The tag of the release                              |
-| **`created`** | Whether the GitHub release was created or published |
+| **Output** | **Description**        |
+| ---------- | ---------------------- |
+| **`tag`**  | The tag of the release |
 
 <!-- outputs:end -->
 
-When `changelog-summary` is provided, the action summarizes the drafted changelog body with [release/summarize-changelog](../summarize-changelog/README.md) and prepends the generated summary above the full release notes.
+This action creates or refreshes the release as a draft first, then publishes it by default after all requested summary and asset updates succeed. Set `publish` to `false` to keep the release as a draft.
+
+When `changelog-summary` is provided, the action summarizes the drafted changelog body with [release/summarize-changelog](../summarize-changelog/README.md) and prepends the generated summary above the drafted release notes.
+
+When `release-artifact-id` is provided, the action uploads the downloaded artifact files as release assets during release creation or refresh.
+
+For mutating an existing release after creation, prefer [release/update](../update/README.md).
 
 <!-- secrets:start -->
 <!-- secrets:end -->

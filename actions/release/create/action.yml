@@ -1,7 +1,7 @@
 name: "Release - Create"
 description: |
-  Create a GitHub release from Release Drafter or from an explicit tag, name, and target SHA.
-  With optional changelog summarization prepended to the published notes.
+  Create or refresh a GitHub release from Release Drafter or from explicit release inputs.
+  The release is published by default after optional changelog summarization and asset upload succeed.
 author: hoverkraft
 branding:
   icon: bookmark
@@ -27,17 +27,17 @@ inputs:
     required: false
     default: "[]"
   tag:
-    description: "Tag name to associate with the GitHub release"
-    required: false
-  name:
-    description: "Name to use for the GitHub release"
+    description: "Release tag name to use in explicit mode"
     required: false
   target-sha:
-    description: "Commit SHA the GitHub release should target"
+    description: |
+      Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist.
+      Forwarded to Release Drafter as `commitish`.
     required: false
+    default: ""
   github-token:
     description: |
-      GitHub Token for creating the release.
+      GitHub Token for creating the draft release.
       Permissions:
         - contents: write
         - pull-requests: read
@@ -45,14 +45,14 @@ inputs:
     default: ${{ github.token }}
   skip-if-no-changes:
     description: |
-      Skip creating or publishing the release when no changes are detected since the latest relevant published release.
+      Skip creating or updating the draft release when no changes are detected since the latest relevant published release.
       In Release Drafter mode, detection respects the configured release filters such as `working-directory` and `include-paths`.
     required: false
     default: "false"
   changelog-summary:
     description: |
-      Optional JSON-serialized configuration used to generate and prepend a release summary to the published release notes.
-      When provided, the action summarizes the changelog body returned by release-drafter, then updates the created release body to include the summary above the full changelog.
+      Optional JSON-serialized configuration used to generate and prepend a release summary to the drafted release notes.
+      When provided, the action summarizes the changelog body returned by release-drafter, then updates the draft release body to include the summary above the full changelog.
       Supported properties:
         - llmAuth (required)
         - llmProvider (optional, default: `openai`)
@@ -74,41 +74,45 @@ inputs:
       ```
     required: false
     default: ""
+  release-artifact-id:
+    description: |
+      Optional workflow artifact ID containing files to upload as GitHub release assets after the draft release is created or updated.
+      The artifact is downloaded automatically before upload.
+      Prefer `actions/release/update` when you only need to mutate an existing release.
+    required: false
+    default: ""
+  publish:
+    description: |
+      Whether to publish the release after changelog and asset updates succeed.
+      When disabled, the release remains a draft.
+    required: false
+    default: "true"
 
 outputs:
   tag:
     description: "The tag of the release"
     value: ${{ steps.resolve-release.outputs.tag }}
-  created:
-    description: "Whether the GitHub release was created or published"
-    value: ${{ steps.resolve-release.outputs.created }}
 
 runs:
   using: "composite"
   steps:
-    - id: resolve-mode
+    - id: resolve-release-inputs
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         INPUT_TAG: ${{ inputs.tag }}
-        INPUT_NAME: ${{ inputs.name }}
         INPUT_TARGET_SHA: ${{ inputs.target-sha }}
       with:
         script: |
           const inputTag = (process.env.INPUT_TAG || '').trim();
-          const inputName = (process.env.INPUT_NAME || '').trim();
           const inputTargetSha = (process.env.INPUT_TARGET_SHA || '').trim();
-          const explicitValues = [inputTag, inputName, inputTargetSha];
 
-          if (explicitValues.some(Boolean)) {
-            if (explicitValues.some((value) => !value)) {
-              return core.setFailed('tag, name, and target-sha must be provided together when using explicit release mode');
-            }
-
-            core.setOutput('mode', 'explicit');
-            return;
+          if (!inputTag && inputTargetSha) {
+            return core.setFailed('target-sha requires tag in explicit mode');
           }
 
-          core.setOutput('mode', 'drafter');
+          core.setOutput('mode', inputTag ? 'explicit' : 'drafter');
+          core.setOutput('explicit-tag', inputTag);
+          core.setOutput('explicit-target-sha', inputTargetSha);
 
     - id: resolve-changelog-summary
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -186,8 +190,48 @@ runs:
         working-directory: ${{ inputs.working-directory }}
         include-paths: ${{ inputs.include-paths }}
 
+    - id: resolve-explicit-release-inputs
+      if: steps.resolve-release-inputs.outputs.mode == 'explicit'
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_TAG: ${{ steps.resolve-release-inputs.outputs.explicit-tag }}
+        INPUT_TARGET_SHA: ${{ steps.resolve-release-inputs.outputs.explicit-target-sha }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const inputTag = (process.env.INPUT_TAG || '').trim();
+          const inputTargetSha = (process.env.INPUT_TARGET_SHA || '').trim();
+          const { owner, repo } = context.repo;
+
+          if (!inputTag) {
+            return core.setFailed('tag is required in explicit release mode');
+          }
+
+          try {
+            await github.rest.git.getRef({
+              owner,
+              repo,
+              ref: `tags/${inputTag}`,
+            });
+
+            core.setOutput('compare-ref', `tags/${inputTag}`);
+            core.setOutput('commitish', inputTargetSha);
+          } catch (error) {
+            if (error.status === 404) {
+              if (!inputTargetSha) {
+                return core.setFailed(`target-sha is required when explicit release tag does not already exist: ${inputTag}`);
+              }
+
+              core.setOutput('compare-ref', inputTargetSha);
+              core.setOutput('commitish', inputTargetSha);
+              return;
+            }
+
+            throw error;
+          }
+
     - id: prepare-change-detection-configuration
-      if: steps.resolve-mode.outputs.mode == 'drafter' && inputs.skip-if-no-changes == 'true'
+      if: steps.resolve-release-inputs.outputs.mode == 'drafter' && inputs.skip-if-no-changes == 'true'
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         EFFECTIVE_CONFIG_PATH: ${{ steps.get-configuration.outputs.config-path }}
@@ -254,8 +298,8 @@ runs:
           }
 
     - id: detect-drafter-changes
-      if: steps.resolve-mode.outputs.mode == 'drafter' && inputs.skip-if-no-changes == 'true'
-      uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
+      if: steps.resolve-release-inputs.outputs.mode == 'drafter' && inputs.skip-if-no-changes == 'true'
+      uses: release-drafter/release-drafter@693d20e7c1ce1a81d3a41962f85914253b518449 # v7.3.1
       with:
         token: ${{ inputs.github-token }}
         dry-run: "true"
@@ -265,33 +309,22 @@ runs:
         prerelease: ${{ inputs.prerelease }}
         latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
 
-    - id: resolve-create-condition
+    - id: resolve-drafter-create-condition
+      if: steps.resolve-release-inputs.outputs.mode == 'drafter' && inputs.skip-if-no-changes == 'true'
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        MODE: ${{ steps.resolve-mode.outputs.mode }}
-        PRERELEASE: ${{ inputs.prerelease }}
-        SKIP_IF_NO_CHANGES: ${{ inputs.skip-if-no-changes }}
-        TARGET_SHA: ${{ inputs.target-sha }}
         DRAFTER_DETECTION_BODY: ${{ steps.detect-drafter-changes.outputs.body }}
         NO_CHANGES_SENTINEL: ${{ steps.prepare-change-detection-configuration.outputs.no-changes-sentinel }}
       with:
-        github-token: ${{ inputs.github-token }}
         script: |
           const setDecision = ({ hasChanges, shouldCreate, reason }) => {
             core.info(reason);
             core.setOutput('has-changes', hasChanges ? 'true' : 'false');
             core.setOutput('should-create', shouldCreate ? 'true' : 'false');
+            core.setOutput('reason', reason);
           };
 
-          const allowCreation = reason => setDecision({
-            hasChanges: true,
-            shouldCreate: true,
-            reason,
-          });
-
-          const skipIfNoChanges = () => process.env.SKIP_IF_NO_CHANGES === 'true';
-
-          const detectDrafterChanges = () => {
+          try {
             const detectionBody = process.env.DRAFTER_DETECTION_BODY || '';
             const noChangesSentinel = (process.env.NO_CHANGES_SENTINEL || '').trim();
 
@@ -304,13 +337,31 @@ runs:
             }
 
             const hasChanges = !detectionBody.includes(noChangesSentinel);
-            return {
+            return setDecision({
               hasChanges,
               shouldCreate: hasChanges,
               reason: hasChanges
-                ? 'Detected release changes since the latest relevant published release. Creating the release.'
-                : 'No release changes detected since the latest relevant published release. Skipping release creation.',
-            };
+                ? 'Detected release changes since the latest relevant published release. Creating the draft release.'
+                : 'No release changes detected since the latest relevant published release. Skipping draft release creation.',
+            });
+          } catch (error) {
+            return core.setFailed(error.message);
+          }
+
+    - id: resolve-explicit-create-condition
+      if: steps.resolve-release-inputs.outputs.mode == 'explicit' && inputs.skip-if-no-changes == 'true'
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        PRERELEASE: ${{ inputs.prerelease }}
+        EXPLICIT_COMPARE_REF: ${{ steps.resolve-explicit-release-inputs.outputs.compare-ref }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const setDecision = ({ hasChanges, shouldCreate, reason }) => {
+            core.info(reason);
+            core.setOutput('has-changes', hasChanges ? 'true' : 'false');
+            core.setOutput('should-create', shouldCreate ? 'true' : 'false');
+            core.setOutput('reason', reason);
           };
 
           const findLatestComparableRelease = (releases, prerelease) => {
@@ -321,10 +372,12 @@ runs:
             return releases.find((release) => !release.prerelease);
           };
 
-          const detectExplicitChanges = async () => {
-            const targetSha = (process.env.TARGET_SHA || '').trim();
-            if (!targetSha) {
-              throw new Error('target-sha is required to detect changes in explicit release mode');
+          const toCompareRef = (tagName) => `tags/${tagName}`;
+
+          try {
+            const explicitCompareRef = (process.env.EXPLICIT_COMPARE_REF || '').trim();
+            if (!explicitCompareRef) {
+              throw new Error('Cannot determine the explicit release tag reference for change detection');
             }
 
             const prerelease = process.env.PRERELEASE === 'true';
@@ -337,73 +390,101 @@ runs:
             const candidateReleases = publishedReleases.filter((release) => !release.draft);
             const latestRelease = findLatestComparableRelease(candidateReleases, prerelease);
             if (!latestRelease) {
-              return {
+              return setDecision({
                 hasChanges: true,
                 shouldCreate: true,
-                reason: 'No comparable published release was found. Creating the release.',
-              };
+                reason: 'No comparable published release was found. Creating the draft release.',
+              });
             }
 
             const latestTag = (latestRelease.tag_name || '').trim();
             if (!latestTag) {
-              return {
+              return setDecision({
                 hasChanges: true,
                 shouldCreate: true,
-                reason: 'The latest comparable published release has no tag. Creating the release.',
-              };
+                reason: 'The latest comparable published release has no tag. Creating the draft release.',
+              });
             }
 
             const comparison = await github.rest.repos.compareCommitsWithBasehead({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              basehead: `${latestTag}...${targetSha}`,
+              basehead: `${toCompareRef(latestTag)}...${explicitCompareRef}`,
             });
 
             const hasChanges = Number(comparison.data.ahead_by || 0) > 0;
-            return {
+            return setDecision({
               hasChanges,
               shouldCreate: hasChanges,
               reason: hasChanges
-                ? `Detected commits after ${latestTag}. Creating the release.`
-                : `No commits detected after ${latestTag}. Skipping release creation.`,
-            };
-          };
-
-          try {
-            if (!skipIfNoChanges()) {
-              return allowCreation('skip-if-no-changes is disabled. Creating the release.');
-            }
-
-            const mode = process.env.MODE || 'drafter';
-            const decision = mode === 'drafter'
-              ? detectDrafterChanges()
-              : await detectExplicitChanges();
-
-            return setDecision(decision);
+                ? `Detected commits after ${latestTag}. Creating the draft release.`
+                : `No commits detected after ${latestTag}. Skipping draft release creation.`,
+            });
           } catch (error) {
             return core.setFailed(error.message);
           }
 
-    - id: draft-release
-      if: steps.resolve-mode.outputs.mode == 'drafter' && steps.resolve-create-condition.outputs.should-create == 'true'
-      uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
+    - id: resolve-create-condition
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        MODE: ${{ steps.resolve-release-inputs.outputs.mode }}
+        SKIP_IF_NO_CHANGES: ${{ inputs.skip-if-no-changes }}
+        DRAFTER_HAS_CHANGES: ${{ steps.resolve-drafter-create-condition.outputs.has-changes }}
+        DRAFTER_SHOULD_CREATE: ${{ steps.resolve-drafter-create-condition.outputs.should-create }}
+        DRAFTER_REASON: ${{ steps.resolve-drafter-create-condition.outputs.reason }}
+        EXPLICIT_HAS_CHANGES: ${{ steps.resolve-explicit-create-condition.outputs.has-changes }}
+        EXPLICIT_SHOULD_CREATE: ${{ steps.resolve-explicit-create-condition.outputs.should-create }}
+        EXPLICIT_REASON: ${{ steps.resolve-explicit-create-condition.outputs.reason }}
+      with:
+        script: |
+          const setDecision = ({ hasChanges, shouldCreate, reason }) => {
+            core.info(reason);
+            core.setOutput('has-changes', hasChanges ? 'true' : 'false');
+            core.setOutput('should-create', shouldCreate ? 'true' : 'false');
+          };
+
+          const mode = process.env.MODE || 'drafter';
+          const skipIfNoChanges = process.env.SKIP_IF_NO_CHANGES === 'true';
+
+          if (!skipIfNoChanges) {
+            return setDecision({
+              hasChanges: true,
+              shouldCreate: true,
+              reason: 'skip-if-no-changes is disabled. Creating the draft release.',
+            });
+          }
+
+          const prefix = mode === 'explicit' ? 'EXPLICIT' : 'DRAFTER';
+          const reason = (process.env[`${prefix}_REASON`] || '').trim();
+          if (!reason) {
+            return core.setFailed(`Missing ${prefix.toLowerCase()} release decision`);
+          }
+
+          return setDecision({
+            hasChanges: process.env[`${prefix}_HAS_CHANGES`] === 'true',
+            shouldCreate: process.env[`${prefix}_SHOULD_CREATE`] === 'true',
+            reason,
+          });
+
+    - id: draft-drafter-release
+      if: steps.resolve-release-inputs.outputs.mode == 'drafter' && steps.resolve-create-condition.outputs.should-create == 'true'
+      uses: release-drafter/release-drafter@693d20e7c1ce1a81d3a41962f85914253b518449 # v7.3.1
       with:
         token: ${{ inputs.github-token }}
-        publish: "true"
+        publish: "false"
         # config-path is relative to ".github" directory
         config-name: file:${{ steps.get-configuration.outputs.config-path }}
         prerelease: ${{ inputs.prerelease }}
         latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
 
-    - id: explicit-release
-      if: steps.resolve-mode.outputs.mode == 'explicit' && steps.resolve-create-condition.outputs.should-create == 'true'
-      uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
+    - id: draft-explicit-release
+      if: steps.resolve-release-inputs.outputs.mode == 'explicit' && steps.resolve-create-condition.outputs.should-create == 'true'
+      uses: release-drafter/release-drafter@693d20e7c1ce1a81d3a41962f85914253b518449 # v7.3.1
       with:
         token: ${{ inputs.github-token }}
-        tag: ${{ inputs.tag }}
-        name: ${{ inputs.name }}
-        commitish: ${{ inputs.target-sha }}
-        publish: "true"
+        tag: ${{ steps.resolve-release-inputs.outputs.explicit-tag }}
+        commitish: ${{ steps.resolve-explicit-release-inputs.outputs.commitish }}
+        publish: "false"
         # config-path is relative to ".github" directory
         config-name: file:${{ steps.get-configuration.outputs.config-path }}
         prerelease: ${{ inputs.prerelease }}
@@ -412,12 +493,9 @@ runs:
     - id: resolve-release
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        MODE: ${{ steps.resolve-mode.outputs.mode }}
         SHOULD_CREATE: ${{ steps.resolve-create-condition.outputs.should-create }}
-        EXPLICIT_TAG: ${{ inputs.tag }}
-        EXPLICIT_BODY: ${{ steps.explicit-release.outputs.body }}
-        DRAFTER_TAG: ${{ steps.draft-release.outputs.tag_name }}
-        DRAFTER_BODY: ${{ steps.draft-release.outputs.body }}
+        RELEASE_TAG: ${{ steps.draft-drafter-release.outputs.tag_name || steps.draft-explicit-release.outputs.tag_name }}
+        RELEASE_BODY: ${{ steps.draft-drafter-release.outputs.body || steps.draft-explicit-release.outputs.body }}
         SUMMARY_ENABLED: ${{ steps.resolve-changelog-summary.outputs.enabled }}
       with:
         script: |
@@ -428,9 +506,8 @@ runs:
             return;
           }
 
-          const mode = process.env.MODE || 'drafter';
-          const tag = (mode === 'drafter' ? process.env.DRAFTER_TAG : process.env.EXPLICIT_TAG || '').trim();
-          const body = (mode === 'drafter' ? process.env.DRAFTER_BODY : process.env.EXPLICIT_BODY || '').trim();
+          const tag = (process.env.RELEASE_TAG || '').trim();
+          const body = (process.env.RELEASE_BODY || '').trim();
 
           if (!tag) {
             return core.setFailed('No tag found from release-drafter outputs');
@@ -456,24 +533,22 @@ runs:
         llm-config: ${{ steps.resolve-changelog-summary.outputs.llm-config }}
         summary-template: ${{ steps.resolve-changelog-summary.outputs.summary-template }}
 
-    - id: update-release-body
-      if: steps.resolve-changelog-summary.outputs.enabled == 'true' && steps.resolve-release.outputs.created == 'true'
+    - id: prepare-release-update
+      if: steps.resolve-release.outputs.created == 'true'
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        RELEASE_TAG: ${{ steps.resolve-release.outputs.tag }}
         RELEASE_BODY: ${{ steps.resolve-release.outputs.body }}
         RELEASE_SUMMARY: ${{ steps.summarize-changelog.outputs.summary }}
+        SUMMARY_ENABLED: ${{ steps.resolve-changelog-summary.outputs.enabled }}
       with:
-        github-token: ${{ inputs.github-token }}
         script: |
-          const releaseTag = (process.env.RELEASE_TAG || '').trim();
           const releaseBody = (process.env.RELEASE_BODY || '').trim();
-          const releaseSummary = (process.env.RELEASE_SUMMARY || '').trim();
-
-          if (!releaseTag) {
-            throw new Error('Expected a release tag before updating the release body');
+          if (process.env.SUMMARY_ENABLED !== 'true') {
+            core.setOutput('body', '');
+            return;
           }
 
+          const releaseSummary = (process.env.RELEASE_SUMMARY || '').trim();
           if (!releaseSummary) {
             throw new Error('Expected a changelog summary before updating the release body');
           }
@@ -482,15 +557,14 @@ runs:
             ? `${releaseSummary}\n\n---\n\n${releaseBody}`
             : releaseSummary;
 
-          const release = await github.rest.repos.getReleaseByTag({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            tag: releaseTag,
-          });
+          core.setOutput('body', updatedBody);
 
-          await github.rest.repos.updateRelease({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            release_id: release.data.id,
-            body: updatedBody,
-          });
+    - id: apply-release-update
+      if: steps.resolve-release.outputs.created == 'true' && (steps.resolve-changelog-summary.outputs.enabled == 'true' || inputs.release-artifact-id != '' || inputs.publish == 'true')
+      uses: ./../self-actions/update
+      with:
+        tag: ${{ steps.resolve-release.outputs.tag }}
+        body: ${{ steps.prepare-release-update.outputs.body }}
+        release-artifact-id: ${{ inputs.release-artifact-id }}
+        publish: ${{ inputs.publish }}
+        github-token: ${{ inputs.github-token }}

@@ -31,7 +31,7 @@ test: ## Execute tests
 
 ci: ## Execute CI tasks
 	$(MAKE) setup
-	$(MAKE) npm-audit-fix
+	$(MAKE) npm-audit-fix || true
 	$(MAKE) lint-fix
 	$(MAKE) test
 

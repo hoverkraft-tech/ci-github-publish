@@ -6,22 +6,6 @@ branding:
   color: blue
 
 inputs:
-  source-ref:
-    description: "Branch, tag, or commit SHA to release. Defaults to the workflow SHA."
-    required: false
-    default: ""
-  tag:
-    description: "Explicit release tag. When empty, Release Drafter computes the tag."
-    required: false
-    default: ""
-  name:
-    description: "Explicit release name. When empty, the Release Drafter name or release tag is used."
-    required: false
-    default: ""
-  check-tag-exists:
-    description: "Whether to fail when the planned release tag already exists remotely."
-    required: false
-    default: "true"
   prerelease:
     description: "Whether to plan the release as a prerelease"
     required: false
@@ -57,9 +41,6 @@ outputs:
   name:
     description: "The planned release name"
     value: ${{ steps.release-plan.outputs.name }}
-  release-sha:
-    description: "The commit SHA selected for release"
-    value: ${{ steps.release-plan.outputs.release-sha }}
 
 runs:
   using: "composite"
@@ -79,289 +60,25 @@ runs:
         working-directory: ${{ inputs.working-directory }}
         include-paths: ${{ inputs.include-paths }}
 
-    - id: prepare-plan-configuration
-      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      env:
-        EFFECTIVE_CONFIG_PATH: ${{ steps.get-configuration.outputs.config-path }}
-        EXPLICIT_RELEASE_NAME: ${{ inputs.name }}
-        EXPLICIT_RELEASE_TAG: ${{ inputs.tag }}
-      with:
-        script: |
-          const fs = require('node:fs');
-          const path = require('node:path');
-
-          const MARKER_KEYS = ['name', 'tag'];
-
-          const readYamlScalar = (yamlContent, key) => {
-            const match = yamlContent.match(new RegExp(`^${key}:\\s*(.+?)\\s*$`, 'm'));
-            if (!match) {
-              return '';
-            }
-
-            const value = match[1].trim();
-            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-              return value.slice(1, -1);
-            }
-
-            return value;
-          };
-
-          const getWorkspacePaths = () => {
-            const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
-            const runnerTemp = process.env.RUNNER_TEMP || path.join(workspace, '.runner-temp');
-
-            return {
-              workspace,
-              runnerTemp,
-              githubDirectory: path.join(workspace, '.github'),
-            };
-          };
-
-          const requireConfigPath = () => {
-            const effectiveConfigPath = (process.env.EFFECTIVE_CONFIG_PATH || '').trim();
-            if (!effectiveConfigPath) {
-              throw new Error('Configuration path is not specified.');
-            }
-
-            return effectiveConfigPath;
-          };
-
-          const loadConfig = (githubDirectory, effectiveConfigPath) => {
-            const fullPath = path.resolve(githubDirectory, effectiveConfigPath);
-            if (!fs.existsSync(fullPath)) {
-              throw new Error(`Configuration file not found: ${effectiveConfigPath}`);
-            }
-
-            const content = fs.readFileSync(fullPath, 'utf8');
-            return {
-              fullPath,
-              content,
-              lines: content.split(/\r?\n/),
-            };
-          };
-
-          const getTemplateIndex = lines => {
-            const templateIndex = lines.findIndex(line => /^template:\s*[>|]/.test(line));
-            if (templateIndex === -1) {
-              throw new Error('Template block not found in configuration.');
-            }
-
-            return templateIndex;
-          };
-
-          const getTemplateIndent = (lines, templateIndex) => {
-            for (let index = templateIndex + 1; index < lines.length; index += 1) {
-              const line = lines[index];
-              if (line.trim() === '') {
-                continue;
-              }
-
-              const indentMatch = line.match(/^(\s+)/);
-              return indentMatch ? indentMatch[1] : '  ';
-            }
-
-            return '  ';
-          };
-
-          const getMarkerTemplates = configContent => {
-            const explicitReleaseName = (process.env.EXPLICIT_RELEASE_NAME || '').trim();
-            const explicitReleaseTag = (process.env.EXPLICIT_RELEASE_TAG || '').trim();
-            const tagPrefix = readYamlScalar(configContent, 'tag-prefix');
-            const defaultTagTemplate = readYamlScalar(configContent, 'tag-template') || `${tagPrefix}$RESOLVED_VERSION`;
-            const tagTemplate = explicitReleaseTag || defaultTagTemplate;
-            const nameTemplate = explicitReleaseName || readYamlScalar(configContent, 'name-template') || tagTemplate;
-
-            return { nameTemplate, tagTemplate };
-          };
-
-          const hasMarkerLines = configContent => MARKER_KEYS.some(key => configContent.includes(`<!-- ci-release-plan:${key}:`));
-
-          const insertMarkerLines = ({ lines, templateIndex, blockIndent, markerTemplates, configContent }) => {
-            if (hasMarkerLines(configContent)) {
-              return lines;
-            }
-
-            const markerLines = [
-              `${blockIndent}<!-- ci-release-plan:name:${markerTemplates.nameTemplate} -->`,
-              `${blockIndent}<!-- ci-release-plan:tag:${markerTemplates.tagTemplate} -->`,
-            ];
-
-            let insertIndex = lines.length;
-            for (let index = templateIndex + 1; index < lines.length; index += 1) {
-              const line = lines[index];
-              if (line.trim() === '') {
-                continue;
-              }
-
-              if (!line.startsWith(blockIndent)) {
-                insertIndex = index;
-                break;
-              }
-            }
-
-            lines.splice(insertIndex, 0, ...markerLines);
-            return lines;
-          };
-
-          const writePreparedConfig = ({ runnerTemp, githubDirectory, effectiveConfigFullPath, lines }) => {
-            const tempDirectory = path.join(runnerTemp, 'release-drafter-plan');
-            const tempConfigFullPath = path.join(tempDirectory, path.basename(effectiveConfigFullPath));
-            fs.mkdirSync(tempDirectory, { recursive: true });
-            fs.writeFileSync(tempConfigFullPath, `${lines.join('\n')}\n`, 'utf8');
-
-            return path.relative(githubDirectory, tempConfigFullPath).split(path.sep).join('/');
-          };
-
-          try {
-            const { runnerTemp, githubDirectory } = getWorkspacePaths();
-            const effectiveConfigPath = requireConfigPath();
-            const { fullPath, content, lines } = loadConfig(githubDirectory, effectiveConfigPath);
-            const templateIndex = getTemplateIndex(lines);
-            const blockIndent = getTemplateIndent(lines, templateIndex);
-            const markerTemplates = getMarkerTemplates(content);
-            const preparedLines = insertMarkerLines({
-              lines,
-              templateIndex,
-              blockIndent,
-              markerTemplates,
-              configContent: content,
-            });
-
-            core.setOutput('config-path', writePreparedConfig({
-              runnerTemp,
-              githubDirectory,
-              effectiveConfigFullPath: fullPath,
-              lines: preparedLines,
-            }));
-          } catch (error) {
-            return core.setFailed(error.message);
-          }
-
     - id: release-drafter
-      if: inputs.tag == ''
-      uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
+      uses: release-drafter/release-drafter@693d20e7c1ce1a81d3a41962f85914253b518449 # v7.3.1
       with:
         token: ${{ inputs.github-token }}
         dry-run: "true"
         publish: "false"
         # config-path is relative to ".github" directory
-        config-name: file:${{ steps.prepare-plan-configuration.outputs.config-path }}
-        prerelease: ${{ inputs.prerelease }}
-        latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
-
-    - id: release-drafter-explicit-tag
-      if: inputs.tag != ''
-      uses: release-drafter/release-drafter@c2e2804cc59f45f57076a99af580d0fedb697927 # v7.3.0
-      with:
-        token: ${{ inputs.github-token }}
-        dry-run: "true"
-        publish: "false"
-        tag: ${{ inputs.tag }}
-        # config-path is relative to ".github" directory
-        config-name: file:${{ steps.prepare-plan-configuration.outputs.config-path }}
+        config-name: file:${{ steps.get-configuration.outputs.config-path }}
         prerelease: ${{ inputs.prerelease }}
         latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
 
     - id: release-plan
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        CHECK_TAG_EXISTS: ${{ inputs.check-tag-exists }}
-        EXPLICIT_RELEASE_NAME: ${{ inputs.name }}
-        EXPLICIT_RELEASE_TAG: ${{ inputs.tag }}
-        PLANNED_RELEASE_BODY: ${{ steps.release-drafter-explicit-tag.outputs.body || steps.release-drafter.outputs.body }}
-        RELEASE_CONFIG_PATH: ${{ steps.prepare-plan-configuration.outputs.config-path }}
-        PLANNED_RELEASE_NAME: ${{ steps.release-drafter-explicit-tag.outputs.name || steps.release-drafter.outputs.name }}
-        PLANNED_RELEASE_TAG: ${{ steps.release-drafter-explicit-tag.outputs.tag_name || steps.release-drafter.outputs.tag_name }}
-        RESOLVED_VERSION: ${{ steps.release-drafter-explicit-tag.outputs.resolved_version || steps.release-drafter.outputs.resolved_version }}
-        SOURCE_REF: ${{ inputs.source-ref || github.sha }}
+        PLANNED_RELEASE_NAME: ${{ steps.release-drafter.outputs.name }}
+        PLANNED_RELEASE_TAG: ${{ steps.release-drafter.outputs.tag_name }}
       with:
         script: |
-          const fs = require('node:fs');
-          const path = require('node:path');
-
-          const readYamlScalar = (yamlContent, key) => {
-            const match = yamlContent.match(new RegExp(`^${key}:\\s*(.+?)\\s*$`, 'm'));
-            if (!match) {
-              return '';
-            }
-
-            const value = match[1].trim();
-            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-              return value.slice(1, -1);
-            }
-
-            return value;
-          };
-
-          const renderResolvedVersion = template => template.replace(/\$RESOLVED_VERSION/g, process.env.RESOLVED_VERSION || '');
-          const extractBodyMarker = (body, key) => {
-            const match = body.match(new RegExp(`<!--\\s*ci-release-plan:${key}:(.*?)-->`, 's'));
-            return match ? match[1].trim() : '';
-          };
-
-          const resolveReleaseSha = async sourceRef => {
-            const { stdout } = await exec.getExecOutput(
-              'git',
-              ['rev-parse', '--verify', `${sourceRef}^{commit}`],
-              { silent: true }
-            );
-
-            return stdout.trim();
-          };
-
-          const readFallbackIdentityFromConfig = ({ releaseConfigPath, resolvedVersion }) => {
-            if (!resolvedVersion || !releaseConfigPath) {
-              return { name: '', tag: '' };
-            }
-
-            const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
-            const githubDirectory = path.join(workspace, '.github');
-            const fullConfigPath = path.resolve(githubDirectory, releaseConfigPath);
-
-            if (!fs.existsSync(fullConfigPath)) {
-              return { name: '', tag: '' };
-            }
-
-            const configContent = fs.readFileSync(fullConfigPath, 'utf8');
-            const tagTemplate = readYamlScalar(configContent, 'tag-template');
-            const tagPrefix = readYamlScalar(configContent, 'tag-prefix');
-            const nameTemplate = readYamlScalar(configContent, 'name-template');
-            const tag = renderResolvedVersion(tagTemplate || `${tagPrefix}$RESOLVED_VERSION`).trim();
-            const name = renderResolvedVersion(nameTemplate || tag).trim();
-
-            return { name, tag };
-          };
-
-          const resolvePlannedIdentity = () => {
-            const plannedBody = process.env.PLANNED_RELEASE_BODY || '';
-            let tag = (process.env.PLANNED_RELEASE_TAG || '').trim();
-            let name = (process.env.PLANNED_RELEASE_NAME || '').trim();
-
-            if (plannedBody) {
-              tag = tag || extractBodyMarker(plannedBody, 'tag');
-              name = name || extractBodyMarker(plannedBody, 'name');
-            }
-
-            if (tag && name) {
-              return { name, tag };
-            }
-
-            const fallbackIdentity = readFallbackIdentityFromConfig({
-              releaseConfigPath: (process.env.RELEASE_CONFIG_PATH || '').trim(),
-              resolvedVersion: (process.env.RESOLVED_VERSION || '').trim(),
-            });
-
-            return {
-              tag: tag || fallbackIdentity.tag,
-              name: name || fallbackIdentity.name,
-            };
-          };
-
           const assertTagDoesNotExist = async releaseTag => {
-            if (process.env.CHECK_TAG_EXISTS !== 'true') {
-              return;
-            }
-
             const remoteTag = await exec.getExecOutput(
               'git',
               ['ls-remote', '--exit-code', '--tags', 'origin', `refs/tags/${releaseTag}`],
@@ -378,24 +95,16 @@ runs:
           };
 
           try {
-            const sourceRef = process.env.SOURCE_REF.trim();
-            const releaseSha = await resolveReleaseSha(sourceRef);
-            if (!releaseSha) {
-              return core.setFailed(`Cannot resolve source ref: ${sourceRef}`);
-            }
-
-            const plannedIdentity = resolvePlannedIdentity();
-            const releaseTag = (process.env.EXPLICIT_RELEASE_TAG || plannedIdentity.tag).trim();
+            const releaseTag = (process.env.PLANNED_RELEASE_TAG || '').trim();
             if (!releaseTag) {
-              return core.setFailed('Cannot determine release tag. Provide tag or configure Release Drafter.');
+              return core.setFailed('Cannot determine release tag. Configure Release Drafter.');
             }
 
             await assertTagDoesNotExist(releaseTag);
 
-            const releaseName = (process.env.EXPLICIT_RELEASE_NAME || plannedIdentity.name || releaseTag).trim();
+            const releaseName = ((process.env.PLANNED_RELEASE_NAME || '').trim() || releaseTag).trim();
             core.setOutput('tag', releaseTag);
             core.setOutput('name', releaseName);
-            core.setOutput('release-sha', releaseSha);
           } catch (error) {
             return core.setFailed(error.message);
           }

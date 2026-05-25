@@ -24,7 +24,7 @@
 
 ## Overview
 
-Plan a release identity without creating a Git tag or GitHub release.
+Plan the release tag and release name for the current workflow commit without creating a Git tag or GitHub release.
 
 <!-- overview:end -->
 
@@ -35,19 +35,6 @@ Plan a release identity without creating a Git tag or GitHub release.
 ```yaml
 - uses: hoverkraft-tech/ci-github-publish/actions/release/plan@b27c38015a8265780329d229c841d057a18b8fae # 0.25.0
   with:
-    # Branch, tag, or commit SHA to release. Defaults to the workflow SHA.
-    source-ref: ""
-
-    # Explicit release tag. When empty, Release Drafter computes the tag.
-    tag: ""
-
-    # Explicit release name. When empty, the Release Drafter name or release tag is used.
-    name: ""
-
-    # Whether to fail when the planned release tag already exists remotely.
-    # Default: `true`
-    check-tag-exists: "true"
-
     # Whether to plan the release as a prerelease
     # Default: `false`
     prerelease: "false"
@@ -80,10 +67,6 @@ Plan a release identity without creating a Git tag or GitHub release.
 
 | **Input**               | **Description**                                                                                                                                       | **Required** | **Default**           |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`source-ref`**        | Branch, tag, or commit SHA to release. Defaults to the workflow SHA.                                                                                  | **false**    | -                     |
-| **`tag`**               | Explicit release tag. When empty, Release Drafter computes the tag.                                                                                   | **false**    | -                     |
-| **`name`**              | Explicit release name. When empty, the Release Drafter name or release tag is used.                                                                   | **false**    | -                     |
-| **`check-tag-exists`**  | Whether to fail when the planned release tag already exists remotely.                                                                                 | **false**    | `true`                |
 | **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                           | **false**    | `false`               |
 | **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                     | **false**    | -                     |
 |                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                 |              |                       |
@@ -101,11 +84,10 @@ Plan a release identity without creating a Git tag or GitHub release.
 
 ## Outputs
 
-| **Output**        | **Description**                     |
-| ----------------- | ----------------------------------- |
-| **`tag`**         | The planned release tag             |
-| **`name`**        | The planned release name            |
-| **`release-sha`** | The commit SHA selected for release |
+| **Output** | **Description**          |
+| ---------- | ------------------------ |
+| **`tag`**  | The planned release tag  |
+| **`name`** | The planned release name |
 
 <!-- outputs:end -->
 

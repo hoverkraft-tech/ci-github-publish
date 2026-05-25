@@ -1,0 +1,250 @@
+name: "Release - Update"
+description: "Update an existing GitHub release body, upload release assets, and optionally publish the release for a tag."
+author: hoverkraft
+branding:
+  icon: refresh-cw
+  color: blue
+
+inputs:
+  tag:
+    description: "Existing tag name of the GitHub release to update"
+    required: true
+  body:
+    description: |
+      Optional new release body content.
+      When provided, the action replaces the current release body.
+      Leave it empty to keep the current release body unchanged.
+    required: false
+  release-artifact-id:
+    description: |
+      Optional workflow artifact ID containing files to upload as GitHub release assets.
+      The artifact is downloaded automatically before upload.
+    required: false
+  publish:
+    description: |
+      Whether to publish the release after body and asset updates succeed.
+      When enabled, the action marks the release as non-draft at the end.
+    required: false
+    default: "false"
+  github-token:
+    description: |
+      GitHub Token for updating the release.
+      Permissions:
+        - contents: write
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: resolve-update-intent
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        RELEASE_TAG: ${{ inputs.tag }}
+        RELEASE_BODY: ${{ inputs.body }}
+        RELEASE_ARTIFACT_ID: ${{ inputs.release-artifact-id }}
+        PUBLISH_RELEASE: ${{ inputs.publish }}
+      with:
+        script: |
+          const releaseTag = (process.env.RELEASE_TAG || '').trim();
+          const releaseBody = process.env.RELEASE_BODY || '';
+          const releaseArtifactId = (process.env.RELEASE_ARTIFACT_ID || '').trim();
+          const publishRelease = (process.env.PUBLISH_RELEASE || 'false').trim().toLowerCase() || 'false';
+
+          if (!releaseTag) {
+            return core.setFailed('tag is required');
+          }
+
+          if (!['true', 'false'].includes(publishRelease)) {
+            return core.setFailed(`publish must be either true or false, got: ${publishRelease}`);
+          }
+
+          const shouldUpdateBody = releaseBody !== '';
+          const shouldUploadAssets = releaseArtifactId !== '';
+          const shouldPublish = publishRelease === 'true';
+          const shouldUpdate = shouldUpdateBody || shouldUploadAssets || shouldPublish;
+
+          if (!shouldUpdate) {
+            core.info('No release body update, asset upload, or publish was requested.');
+          }
+
+          core.setOutput('tag', releaseTag);
+          core.setOutput('should-update', shouldUpdate ? 'true' : 'false');
+          core.setOutput('should-update-body', shouldUpdateBody ? 'true' : 'false');
+          core.setOutput('should-upload-assets', shouldUploadAssets ? 'true' : 'false');
+          core.setOutput('should-publish', shouldPublish ? 'true' : 'false');
+
+    - id: download-release-artifact
+      if: inputs.release-artifact-id != ''
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        artifact-ids: ${{ inputs.release-artifact-id }}
+        path: ${{ runner.temp }}/release-update-assets
+
+    - id: resolve-release
+      if: steps.resolve-update-intent.outputs.should-update == 'true'
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        RELEASE_TAG: ${{ steps.resolve-update-intent.outputs.tag }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const releaseTag = (process.env.RELEASE_TAG || '').trim();
+
+          if (!releaseTag) {
+            return core.setFailed('Expected a release tag before resolving the release');
+          }
+
+          const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
+
+          const findReleaseByTag = async (tag) => {
+            const attempts = 5;
+
+            for (let attempt = 1; attempt <= attempts; attempt += 1) {
+              try {
+                return await github.rest.repos.getReleaseByTag({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+
+                const releases = await github.paginate(github.rest.repos.listReleases, {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  per_page: 100,
+                });
+
+                const matchingRelease = releases.find((release) => (release.tag_name || '').trim() === tag);
+                if (matchingRelease) {
+                  return { data: matchingRelease };
+                }
+
+                if (attempt === attempts) {
+                  throw error;
+                }
+
+                await wait(attempt * 1000);
+              }
+            }
+          };
+
+          const release = await findReleaseByTag(releaseTag);
+
+          core.setOutput('release-id', String(release.data.id));
+
+    - id: update-release-body
+      if: steps.resolve-update-intent.outputs.should-update-body == 'true'
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        RELEASE_ID: ${{ steps.resolve-release.outputs.release-id }}
+        RELEASE_BODY: ${{ inputs.body }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const releaseId = Number(process.env.RELEASE_ID || 0);
+
+          if (!releaseId) {
+            throw new Error('Expected a release id before updating the release body');
+          }
+
+          await github.rest.repos.updateRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: releaseId,
+            body: process.env.RELEASE_BODY || '',
+          });
+
+    - id: upload-release-artifact-files
+      if: steps.resolve-update-intent.outputs.should-upload-assets == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        RELEASE_TAG: ${{ steps.resolve-update-intent.outputs.tag }}
+        RELEASE_ARTIFACT_ID: ${{ inputs.release-artifact-id }}
+        DOWNLOADED_RELEASE_ASSETS_PATH: ${{ steps.download-release-artifact.outputs.download-path }}
+      run: |
+        set -euo pipefail
+
+        if ! command -v gh >/dev/null 2>&1; then
+          echo 'GitHub CLI (gh) is required to upload release assets.' >&2
+          exit 1
+        fi
+
+        shopt -s globstar
+
+        trim() {
+          local value="$1"
+          value="${value#"${value%%[![:space:]]*}"}"
+          value="${value%"${value##*[![:space:]]}"}"
+          printf '%s' "$value"
+        }
+
+        declare -A seen_assets=()
+        upload_assets=()
+
+        if [[ -z "$RELEASE_ARTIFACT_ID" ]]; then
+          echo 'No release artifact id was provided for asset upload.' >&2
+          exit 1
+        fi
+
+        if [[ -z "$DOWNLOADED_RELEASE_ASSETS_PATH" || ! -d "$DOWNLOADED_RELEASE_ASSETS_PATH" ]]; then
+          echo "Expected downloaded release artifact files for artifact id: $RELEASE_ARTIFACT_ID" >&2
+          exit 1
+        fi
+
+        artifact_matches=()
+        while IFS= read -r matched_file; do
+          [[ -z "$matched_file" ]] && continue
+          artifact_matches+=("$matched_file")
+        done < <(find "$DOWNLOADED_RELEASE_ASSETS_PATH" -type f -print)
+
+        if [[ ${#artifact_matches[@]} -eq 0 ]]; then
+          echo "No files were downloaded for release artifact id: $RELEASE_ARTIFACT_ID" >&2
+          exit 1
+        fi
+
+        for asset_file in "${artifact_matches[@]}"; do
+          if [[ -n "${seen_assets[$asset_file]:-}" ]]; then
+            continue
+          fi
+
+          seen_assets["$asset_file"]=1
+          upload_assets+=("$asset_file")
+        done
+
+        if [[ ${#upload_assets[@]} -eq 0 ]]; then
+          echo 'No release assets were resolved from the downloaded release artifact.'
+          exit 0
+        fi
+
+        upload_args=()
+        for asset_file in "${upload_assets[@]}"; do
+          upload_args+=("$asset_file")
+        done
+
+        gh release upload "$RELEASE_TAG" "${upload_args[@]}"
+
+    - id: publish-release
+      if: steps.resolve-update-intent.outputs.should-publish == 'true'
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        RELEASE_ID: ${{ steps.resolve-release.outputs.release-id }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const releaseId = Number(process.env.RELEASE_ID || 0);
+
+          if (!releaseId) {
+            throw new Error('Expected a release id before publishing the release');
+          }
+
+          await github.rest.repos.updateRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: releaseId,
+            draft: false,
+          });

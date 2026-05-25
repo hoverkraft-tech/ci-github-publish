@@ -59,6 +59,13 @@ jobs:
     permissions:
       contents: read
 
+  test-action-release-create:
+    needs: linter
+    uses: ./.github/workflows/__test-action-release-create.yml
+    permissions:
+      contents: write
+      pull-requests: read
+
   test-action-release-plan:
     needs: linter
     uses: ./.github/workflows/__test-action-release-plan.yml

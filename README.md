@@ -73,11 +73,11 @@ _Actions for managing deployments._
 
 _Actions for managing releases._
 
-#### - [Create or publish release](actions/release/create/README.md)
-
-#### - [Create tag](actions/release/create-tag/README.md)
+#### - [Create or refresh release](actions/release/create/README.md)
 
 #### - [Plan](actions/release/plan/README.md)
+
+#### - [Update](actions/release/update/README.md)
 
 #### - [Recommended release workflow](.github/workflows/release.md)
 

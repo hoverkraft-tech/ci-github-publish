@@ -1,0 +1,155 @@
+name: Internal - Tests for "release/create" action
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  tests:
+    name: Tests for "release/create" action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Arrange - Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Arrange - Build test release inputs
+        id: test-release
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const tag = `test-release-create-${context.runId}-${context.runAttempt}`;
+            core.setOutput('tag', tag);
+
+      - name: Act - Create explicit draft release
+        id: create-release
+        uses: ./actions/release/create
+        with:
+          tag: ${{ steps.test-release.outputs.tag }}
+          target-sha: ${{ github.sha }}
+          publish: "false"
+          github-token: ${{ github.token }}
+
+      - name: Assert - Created draft release
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          CREATED_TAG: ${{ steps.test-release.outputs.tag }}
+          OUTPUT_TAG: ${{ steps.create-release.outputs.tag }}
+          EXPECTED_RELEASE_SHA: ${{ github.sha }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const assert = require('node:assert');
+            const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
+
+            const findReleaseByTag = async (tag) => {
+              const attempts = 5;
+
+              for (let attempt = 1; attempt <= attempts; attempt += 1) {
+                try {
+                  return await github.rest.repos.getReleaseByTag({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    tag,
+                  });
+                } catch (error) {
+                  if (error.status !== 404) {
+                    throw error;
+                  }
+
+                  const releases = await github.paginate(github.rest.repos.listReleases, {
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    per_page: 100,
+                  });
+
+                  const matchingRelease = releases.find((release) => (release.tag_name || '').trim() === tag);
+                  if (matchingRelease) {
+                    return { data: matchingRelease };
+                  }
+
+                  if (attempt === attempts) {
+                    throw error;
+                  }
+
+                  await wait(attempt * 1000);
+                }
+              }
+            };
+
+            const createdTag = (process.env.CREATED_TAG || '').trim();
+            const outputTag = (process.env.OUTPUT_TAG || '').trim();
+            const expectedReleaseSha = (process.env.EXPECTED_RELEASE_SHA || '').trim();
+
+            assert.equal(outputTag, createdTag);
+
+            const releaseResponse = await findReleaseByTag(createdTag);
+
+            assert.equal(releaseResponse.data.tag_name, createdTag);
+            assert.ok((releaseResponse.data.name || '').trim());
+            assert.equal(releaseResponse.data.draft, true);
+            assert.equal(releaseResponse.data.target_commitish, expectedReleaseSha);
+
+      - name: Cleanup - Delete test release and tag
+        if: always()
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          CREATED_TAG: ${{ steps.test-release.outputs.tag }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const tag = (process.env.CREATED_TAG || '').trim();
+            if (!tag) {
+              return;
+            }
+
+            const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
+
+            const findReleaseByTag = async (releaseTag) => {
+              const attempts = 5;
+
+              for (let attempt = 1; attempt <= attempts; attempt += 1) {
+                try {
+                  return await github.rest.repos.getReleaseByTag({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    tag: releaseTag,
+                  });
+                } catch (error) {
+                  if (error.status !== 404) {
+                    throw error;
+                  }
+
+                  const releases = await github.paginate(github.rest.repos.listReleases, {
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    per_page: 100,
+                  });
+
+                  const matchingRelease = releases.find((release) => (release.tag_name || '').trim() === releaseTag);
+                  if (matchingRelease) {
+                    return { data: matchingRelease };
+                  }
+
+                  if (attempt === attempts) {
+                    return null;
+                  }
+
+                  await wait(attempt * 1000);
+                }
+              }
+            };
+
+            const release = await findReleaseByTag(tag);
+            if (release) {
+              await github.rest.repos.deleteRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.data.id,
+              });
+            }

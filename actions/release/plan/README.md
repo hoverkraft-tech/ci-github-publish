@@ -24,7 +24,7 @@
 
 ## Overview
 
-Plan the release tag and release name for the current workflow commit without creating a Git tag or GitHub release.
+Plan a release identity without creating a Git tag or GitHub release.
 
 <!-- overview:end -->
 

@@ -56,7 +56,6 @@ The release is published by default after optional changelog summarization and a
 
     # Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist.
     # Forwarded to Release Drafter as `commitish`.
-    # Default: ``
     target-sha: ""
 
     # GitHub Token for creating the draft release.
@@ -96,12 +95,14 @@ The release is published by default after optional changelog summarization and a
     # ```
     changelog-summary: ""
 
-    # Optional workflow artifact id containing files to upload as GitHub release assets after the release is created or updated.
+    # Optional workflow artifact ID containing files to upload as GitHub release assets after the draft release is created or updated.
     # The artifact is downloaded automatically before upload.
+    # Prefer `actions/release/update` when you only need to mutate an existing release.
     release-artifact-id: ""
 
     # Whether to publish the release after changelog and asset updates succeed.
     # When disabled, the release remains a draft.
+    #
     # Default: `true`
     publish: "true"
 ````
@@ -125,7 +126,7 @@ The release is published by default after optional changelog summarization and a
 | **`include-paths`**       | Additional paths to include in the release notes filtering (JSON array).                                                                                                                    | **false**    | `[]`                  |
 |                           | These paths are added to the `include-paths` configuration of release-drafter.                                                                                                              |              |                       |
 | **`tag`**                 | Release tag name to use in explicit mode                                                                                                                                                    | **false**    | -                     |
-| **`target-sha`**          | Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist.                                                                    | **false**    | ``                    |
+| **`target-sha`**          | Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist.                                                                    | **false**    | -                     |
 |                           | Forwarded to Release Drafter as `commitish`.                                                                                                                                                |              |                       |
 | **`github-token`**        | GitHub Token for creating the draft release.                                                                                                                                                | **false**    | `${{ github.token }}` |
 |                           | Permissions:                                                                                                                                                                                |              |                       |
@@ -148,8 +149,9 @@ The release is published by default after optional changelog summarization and a
 |                           | Example value:                                                                                                                                                                              |              |                       |
 |                           |                                                                                                                                                                                             |              |                       |
 |                           | <!-- textlint-disable --><pre lang="json">{&#13; "llmAuth": "$\{{ secrets.OPENAI_API_KEY }}",&#13; "llmProvider": "openai",&#13; "llmModel": "gpt-5.4",&#13;}</pre><!-- textlint-enable --> |              |                       |
-| **`release-artifact-id`** | Optional workflow artifact ID containing files to upload as GitHub release assets after the release is created or updated.                                                                  | **false**    | -                     |
+| **`release-artifact-id`** | Optional workflow artifact ID containing files to upload as GitHub release assets after the draft release is created or updated.                                                            | **false**    | -                     |
 |                           | The artifact is downloaded automatically before upload.                                                                                                                                     |              |                       |
+|                           | Prefer `actions/release/update` when you only need to mutate an existing release.                                                                                                           |              |                       |
 | **`publish`**             | Whether to publish the release after changelog and asset updates succeed.                                                                                                                   | **false**    | `true`                |
 |                           | When disabled, the release remains a draft.                                                                                                                                                 |              |                       |
 

@@ -77,6 +77,7 @@ runs:
         PLANNED_RELEASE_NAME: ${{ steps.release-drafter.outputs.name }}
         PLANNED_RELEASE_TAG: ${{ steps.release-drafter.outputs.tag_name }}
       with:
+        github-token: ${{ inputs.github-token }}
         script: |
           const assertTagDoesNotExist = async releaseTag => {
             const remoteTag = await exec.getExecOutput(

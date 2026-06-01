@@ -17,6 +17,7 @@
 [![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
 [![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+[![codecov](https://codecov.io/gh/hoverkraft-tech/compose-action/graph/badge.svg?token=90JXB7EIMA)](https://codecov.io/gh/hoverkraft-tech/compose-action)
 
 <!-- badges:end -->
 
@@ -54,7 +55,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/get-finished@2c8e24b416226074aea1e240468f043edefc5760 # 0.23.2
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/get-finished@84d583ba7b357f9476707f54cf5419d630ae0145 # 0.26.2
   with:
     # The ID of the GitHub deployment to wait for (numeric ID)
     # This input is required.

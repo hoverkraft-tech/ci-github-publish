@@ -16,6 +16,7 @@
 [![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
 [![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+[![codecov](https://codecov.io/gh/hoverkraft-tech/compose-action/graph/badge.svg?token=90JXB7EIMA)](https://codecov.io/gh/hoverkraft-tech/compose-action)
 
 <!-- badges:end -->
 
@@ -68,7 +69,7 @@ on:
 permissions: {}
 jobs:
   deploy-start:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-start.yml@b27c38015a8265780329d229c841d057a18b8fae # 0.25.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-start.yml@84d583ba7b357f9476707f54cf5419d630ae0145 # 0.26.2
     permissions:
       actions: read
       contents: read

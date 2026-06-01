@@ -16,6 +16,7 @@
 [![License](https://img.shields.io/github/license/hoverkraft-tech/ci-github-publish)](http://choosealicense.com/licenses/mit/)
 [![Stars](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)](https://img.shields.io/github/stars/hoverkraft-tech/ci-github-publish?style=social)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hoverkraft-tech/ci-github-publish/blob/main/CONTRIBUTING.md)
+[![codecov](https://codecov.io/gh/hoverkraft-tech/compose-action/graph/badge.svg?token=90JXB7EIMA)](https://codecov.io/gh/hoverkraft-tech/compose-action)
 
 <!-- badges:end -->
 <!-- overview:start -->
@@ -30,7 +31,7 @@ Update an existing GitHub release body, upload release assets, and optionally pu
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/update@f4d97144451975ac621d55b40d9b91d340713bca # feat/release-actions-extra-badges
+- uses: hoverkraft-tech/ci-github-publish/actions/release/update@84d583ba7b357f9476707f54cf5419d630ae0145 # 0.26.2
   with:
     # Existing tag name of the GitHub release to update
     # This input is required.

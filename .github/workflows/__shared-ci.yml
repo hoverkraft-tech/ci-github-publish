@@ -70,7 +70,7 @@ jobs:
     needs: linter
     uses: ./.github/workflows/__test-action-release-plan.yml
     permissions:
-      contents: read
+      contents: write
       pull-requests: read
 
   test-action-release-summarize-changelog:

@@ -10,7 +10,7 @@ jobs:
     name: Tests for "release/plan" action
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pull-requests: read
     steps:
       - name: Arrange - Checkout
@@ -37,3 +37,79 @@ jobs:
             assert.ok(process.env.RELEASE_TAG.startsWith('get-configuration-'), `Expected tag to start with "get-configuration-", got "${process.env.RELEASE_TAG}"`);
             assert.ok(process.env.RELEASE_NAME, 'Expected planned name to be set');
             assert.ok(process.env.RELEASE_NAME.startsWith('Version get-configuration - '), `Expected name to start with "Version get-configuration - ", got "${process.env.RELEASE_NAME}"`);
+
+      - name: Arrange - Create colliding tag
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_TAG: ${{ steps.drafter-plan.outputs.tag }}
+          TARGET_SHA: ${{ github.sha }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const releaseTag = (process.env.RELEASE_TAG || '').trim();
+            const targetSha = (process.env.TARGET_SHA || '').trim();
+
+            if (!releaseTag) {
+              throw new Error('Expected planned release tag before creating a colliding tag');
+            }
+
+            if (!targetSha) {
+              throw new Error('Expected target sha before creating a colliding tag');
+            }
+
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${releaseTag}`,
+              sha: targetSha,
+            });
+
+      - name: Act - Plan drafter release with existing tag
+        id: existing-tag-plan
+        continue-on-error: true
+        uses: ./actions/release/plan
+        with:
+          working-directory: actions/release/get-configuration
+
+      - name: Assert - Existing remote tag blocks release plan
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_TAG: ${{ steps.drafter-plan.outputs.tag }}
+          STEP_OUTCOME: ${{ steps.existing-tag-plan.outcome }}
+        with:
+          script: |
+            const assert = require('node:assert');
+
+            const releaseTag = (process.env.RELEASE_TAG || '').trim();
+            const stepOutcome = (process.env.STEP_OUTCOME || '').trim();
+
+            assert.ok(releaseTag, 'Expected colliding tag to be set');
+            assert.equal(stepOutcome, 'failure', `Expected plan action to fail when tag already exists, got "${stepOutcome}"`);
+
+      - name: Cleanup - Delete colliding tag
+        if: always()
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_TAG: ${{ steps.drafter-plan.outputs.tag }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const releaseTag = (process.env.RELEASE_TAG || '').trim();
+
+            if (!releaseTag) {
+              return;
+            }
+
+            try {
+              await github.rest.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${releaseTag}`,
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                return;
+              }
+
+              throw error;
+            }

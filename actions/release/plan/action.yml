@@ -80,19 +80,21 @@ runs:
         github-token: ${{ inputs.github-token }}
         script: |
           const assertTagDoesNotExist = async releaseTag => {
-            const remoteTag = await exec.getExecOutput(
-              'git',
-              ['ls-remote', '--exit-code', '--tags', 'origin', `refs/tags/${releaseTag}`],
-              { ignoreReturnCode: true, silent: true }
-            );
+            try {
+              await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${releaseTag}`,
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                return;
+              }
 
-            if (remoteTag.exitCode === 0) {
-              throw new Error(`Remote tag already exists: ${releaseTag}`);
+              throw new Error(`Cannot check remote tag ${releaseTag}: ${error.message}`);
             }
 
-            if (remoteTag.exitCode !== 2) {
-              throw new Error(`Cannot check remote tag ${releaseTag}: ${remoteTag.stderr}`);
-            }
+            throw new Error(`Remote tag already exists: ${releaseTag}`);
           };
 
           try {

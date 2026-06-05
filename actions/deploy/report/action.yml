@@ -58,7 +58,7 @@ runs:
   using: "composite"
   steps:
     - id: local-actions
-      uses: hoverkraft-tech/ci-github-common/actions/local-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+      uses: hoverkraft-tech/ci-github-common/actions/local-actions@4bb7594b1bf3696c54b2bbae970376056853f8ea # 0.36.0
       with:
         source-path: ${{ github.action_path }}/../..
 
@@ -114,7 +114,7 @@ runs:
         update-log-url: ${{ inputs.repository == github.event.repository.name && 'true' || 'false' }}
         github-token: ${{ inputs.github-token }}
 
-    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@4bb7594b1bf3696c54b2bbae970376056853f8ea # 0.36.0
       if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       with:
         title: "## ${{ steps.get-deployment-result.outputs.title }}"

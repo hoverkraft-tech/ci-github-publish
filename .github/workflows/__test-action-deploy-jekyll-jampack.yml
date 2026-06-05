@@ -8,7 +8,7 @@ permissions: {}
 jobs:
   continuous-integration:
     name: Continuous integration for "deploy/jekyll" action
-    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@6b74a8f070140f5c120f78026d58e4c00d1b1e37 # 0.24.2
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@37a362e984a1841a2be36e2f85b68755dc01d056 # 0.24.3
     permissions:
       contents: read
       id-token: write
@@ -30,7 +30,7 @@ jobs:
       build-path: ${{ steps.deploy-jekyll.outputs.build-path }}
     steps:
       - name: Arrange - Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 

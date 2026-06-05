@@ -68,7 +68,7 @@ jobs:
       documentation-files: ${{ steps.get-changed-files.outputs.documentation-files }}
       all-documentation-files: ${{ steps.get-documentation-files.outputs.paths }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -267,7 +267,7 @@ jobs:
       artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
       documentation-files: ${{ steps.generate-documentation.outputs.destination }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -308,7 +308,7 @@ jobs:
     if: needs.generate-documentation.outputs.artifact-id
     runs-on: ${{ fromJson(inputs.runs-on) }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -328,7 +328,7 @@ jobs:
 
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@4bb7594b1bf3696c54b2bbae970376056853f8ea # 0.36.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
           branch: docs/actions-workflows-documentation-update
@@ -347,7 +347,7 @@ jobs:
     outputs:
       artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 

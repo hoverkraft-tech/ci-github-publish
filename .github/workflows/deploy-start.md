@@ -44,7 +44,7 @@ Trigger:
 
 Environment:
 
-- Support dynamic env when comming from issue or pull-request event
+- Support dynamic env when coming from issue or pull-request event
 
 ### Permissions
 

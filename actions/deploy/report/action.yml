@@ -58,7 +58,7 @@ runs:
   using: "composite"
   steps:
     - id: local-actions
-      uses: hoverkraft-tech/ci-github-common/actions/local-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+      uses: hoverkraft-tech/ci-github-common/actions/local-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
       with:
         source-path: ${{ github.action_path }}/../..
 
@@ -114,7 +114,7 @@ runs:
         update-log-url: ${{ inputs.repository == github.event.repository.name && 'true' || 'false' }}
         github-token: ${{ inputs.github-token }}
 
-    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
       if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       with:
         title: "## ${{ steps.get-deployment-result.outputs.title }}"
@@ -124,10 +124,13 @@ runs:
 
     - if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_REPOSITORY: ${{ inputs.repository }}
+        STEP_REACTION: ${{ steps.get-deployment-result.outputs.reaction }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const repository = `${{ inputs.repository }}` || context.repo.repo;
+          const repository = process.env.INPUT_REPOSITORY || context.repo.repo;
 
           const issueCommentPayload = {
               owner: context.repo.owner,
@@ -146,5 +149,5 @@ runs:
 
           await github.rest.reactions.createForIssueComment({
               ...issueCommentPayload,
-              content: "${{ steps.get-deployment-result.outputs.reaction }}"
+              content: process.env.STEP_REACTION
           });

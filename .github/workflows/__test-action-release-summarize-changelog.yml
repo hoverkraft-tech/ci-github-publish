@@ -8,7 +8,7 @@ permissions: {}
 jobs:
   continuous-integration:
     name: Continuous integration for "release/summarize-changelog" action
-    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@6b74a8f070140f5c120f78026d58e4c00d1b1e37 # 0.24.2
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@df348077afa4e79725151d50606e9dc63f86dcb6 # 0.24.4
     permissions:
       contents: read
       id-token: write
@@ -33,7 +33,7 @@ jobs:
           - 11434:8080
     steps:
       - name: Arrange - Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -186,6 +186,9 @@ jobs:
 
       - name: Assert - Validate summarized changelog
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SUMMARY: ${{ steps.summarize.outputs.summary }}
+          LLM_PROMPT: ${{ steps.summarize.outputs.llm-prompt }}
         with:
           script: |
             const assert = require('node:assert/strict');
@@ -233,8 +236,8 @@ jobs:
               });
             };
 
-            const summary = ${{ toJSON(steps.summarize.outputs.summary) }};
-            const llmPrompt = ${{ toJSON(steps.summarize.outputs.llm-prompt) }};
+            const summary = process.env.SUMMARY;
+            const llmPrompt = process.env.LLM_PROMPT;
             const requestJournal = JSON.parse(await makeWireMockRequest('/__admin/requests'));
             const llmRequestEntry = requestJournal.requests.find(({ request }) => {
               return request.url === '/v1/chat/completions' || request.absoluteUrl?.includes('/v1/chat/completions');

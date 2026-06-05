@@ -41,12 +41,15 @@ runs:
           ${{ runner.os }}-jampack-
 
     - shell: bash
+      env:
+        JAMPACK_CACHE_FOLDER: "${{ runner.temp }}/.jampack/cache"
+        INPUT_PATH: ${{ inputs.path }}
       run: |
         # Create a cache directory for Jampack
-        mkdir -p "${{ runner.temp }}/.jampack/cache"
+        mkdir -p "${JAMPACK_CACHE_FOLDER}"
 
         # Run Jampack on the specified path
-        npx @divriots/jampack --cache_folder "${{ runner.temp }}/.jampack/cache" "${{ inputs.path }}"
+        npx @divriots/jampack --cache_folder "${JAMPACK_CACHE_FOLDER}" "${INPUT_PATH}"
 
         # Clean up the Jampack cache directory
-        rm -rf "${{ inputs.path }}/_jampack"
+        rm -rf "${INPUT_PATH}/_jampack"

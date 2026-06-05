@@ -44,12 +44,12 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         with:
           actions-path: actions
 
@@ -61,6 +61,6 @@ jobs:
       - uses: release-drafter/release-drafter/autolabeler@693d20e7c1ce1a81d3a41962f85914253b518449 # v7.3.1
         if: github.event_name == 'pull_request'
         with:
-          token: ${{ secrets.github-token || secrets.GITHUB_TOKEN || github.token }}
+          token: ${{ secrets.github-token || secrets.GITHUB_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           # config-path is relative to ".github" directory
           config-name: file:${{ steps.get-configuration.outputs.config-path }}

@@ -7,8 +7,8 @@ description: |
   Action to get the environment to deploy regarding the workflow context.
 
   - If the workflow is triggered by an issue event (or pull-request):
-    If an environement is given, the environment will be set to `environment:issue_number`.
-    If no environment is given, the environment will be set to `review-apps:issue_number`.
+    If an environment is given, the environment will be set to `<environment>:pr-<issue_number>`.
+    If no environment is given, the environment will be set to `review-apps:pr-<issue_number>`.
   - Else if no environment is given, the action will fail.
 
 inputs:
@@ -26,14 +26,17 @@ runs:
   steps:
     - id: get-issue-number
       if: ${{ github.event_name == 'issue_comment' || github.event_name == 'pull_request' }}
-      uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+      uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
 
     - id: get-environment
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        STEP_ISSUE_NUMBER: ${{ steps.get-issue-number.outputs.issue-number }}
       with:
         script: |
-          let environment = ${{ toJSON(inputs.environment) }};
-          const issueNumber = ${{ toJSON(steps.get-issue-number.outputs.issue-number) }};
+          let environment = process.env.INPUT_ENVIRONMENT;
+          const issueNumber = process.env.STEP_ISSUE_NUMBER;
 
           if (issueNumber) {
             if (!environment) {

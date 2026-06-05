@@ -8,7 +8,7 @@ permissions: {}
 jobs:
   continuous-integration:
     name: Continuous integration for "deploy/jekyll" action
-    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@6b74a8f070140f5c120f78026d58e4c00d1b1e37 # 0.24.2
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@df348077afa4e79725151d50606e9dc63f86dcb6 # 0.24.4
     permissions:
       contents: read
       id-token: write
@@ -30,7 +30,7 @@ jobs:
       build-path: ${{ steps.deploy-jekyll.outputs.build-path }}
     steps:
       - name: Arrange - Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -61,13 +61,15 @@ jobs:
 
       - name: Assert - Check outputs
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          BUILD_PATH: ${{ steps.deploy-jekyll.outputs.build-path }}
         with:
           script: |
             const assert = require("assert");
             const { existsSync, readFileSync } = require("fs");
             const path = require("path");
 
-            const buildPathOutput = ${{ toJSON(steps.deploy-jekyll.outputs.build-path) }};
+            const buildPathOutput = process.env.BUILD_PATH;
             assert(buildPathOutput, `"build-path" output is empty`);
 
             const workspacePath = process.env.GITHUB_WORKSPACE;
@@ -131,13 +133,15 @@ jobs:
 
       - name: Assert - Check packed assets
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          BUILD_PATH: ${{ steps.deploy-jekyll.outputs.build-path }}
         with:
           # jscpd:ignore-start
           script: |
             const assert = require("assert");
             const { existsSync } = require("fs");
 
-            const buildPathOutput = ${{ toJSON(steps.deploy-jekyll.outputs.build-path) }};
+            const buildPathOutput = process.env.BUILD_PATH;
             assert(buildPathOutput, `"build-path" output is empty`);
 
             // Check if the build assets path exists

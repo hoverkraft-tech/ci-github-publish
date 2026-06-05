@@ -7,6 +7,8 @@ updates:
       interval: weekly
       day: friday
       time: "04:00"
+    cooldown:
+      default-days: 7
     groups:
       docker-dependencies:
         patterns:
@@ -21,6 +23,8 @@ updates:
       interval: weekly
       day: friday
       time: "04:00"
+    cooldown:
+      default-days: 7
     groups:
       github-actions-dependencies:
         patterns:
@@ -34,6 +38,8 @@ updates:
       interval: weekly
       day: friday
       time: "04:00"
+    cooldown:
+      default-days: 7
     groups:
       npm-dependencies:
         patterns:
@@ -46,3 +52,5 @@ updates:
       interval: weekly
       day: friday
       time: "04:00"
+    cooldown:
+      default-days: 7

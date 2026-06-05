@@ -98,7 +98,7 @@ on:
           Accept placeholders:          
           - `{{ tag }}`: will be replaced by the tag.
           - `{{ url }}`: will be replaced by the URL.
-          If "path" starts with "deploy", the chart value wil be passed to the deploy action.
+          If "path" starts with "deploy", the chart value will be passed to the deploy action.
           Example:
           ```json
           [
@@ -162,7 +162,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         if: inputs.tag == ''
         with:
           fetch-depth: 0
@@ -175,7 +175,7 @@ jobs:
 
       - id: get-issue-number
         if: inputs.tag == '' && github.event_name == 'issue_comment'
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
 
       - id: get-tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -240,7 +240,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@77f98ab8773b824eca7ed3f94e3e9c8b8af5875c # 0.36.1
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@5396e1258d209f9af18e55da8692361508e3338c # 0.36.2
     permissions:
       contents: read
       id-token: write
@@ -354,14 +354,14 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@77f98ab8773b824eca7ed3f94e3e9c8b8af5875c # 0.36.1
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@5396e1258d209f9af18e55da8692361508e3338c # 0.36.2
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}
           tag: ${{ needs.prepare-deploy.outputs.tag }}
           values: ${{ steps.set-chart-values.outputs.chart-values }}
           oci-registry: ${{ inputs.oci-registry }}
-          oci-registry-password: ${{ secrets.oci-registry-password }}
+          oci-registry-password: ${{ secrets.oci-registry-password }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
   deploy-chart:
     name: Deploy chart
@@ -455,12 +455,12 @@ jobs:
         id: generate-token
         with:
           client-id: ${{ inputs.github-app-client-id }}
-          private-key: ${{ secrets.github-app-key }}
+          private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           owner: ${{ steps.prepare-deployment.outputs.owner }}
       # jscpd:ignore-end
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         with:
           actions-path: actions
 
@@ -473,7 +473,7 @@ jobs:
           environment: ${{ needs.deploy-start.outputs.environment }}
           url: ${{ steps.prepare-deployment.outputs.url }}
           repository: ${{ steps.prepare-deployment.outputs.repository }}
-          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           initiated-by: ${{ github.actor }}
 
   deploy-finish:

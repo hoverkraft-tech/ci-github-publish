@@ -14,7 +14,7 @@
 #
 # Environment:
 #
-# - Support dynamic env when comming from issue or pull-request event
+# - Support dynamic env when coming from issue or pull-request event
 
 name: Deploy - Start
 
@@ -97,7 +97,7 @@ jobs:
             }
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         with:
           actions-path: actions
 
@@ -121,7 +121,7 @@ jobs:
       deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         with:
           actions-path: actions
 

@@ -56,7 +56,7 @@ jobs:
       environment: ${{ steps.get-finished-deployment.outputs.environment }}
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         with:
           actions-path: actions
 
@@ -64,7 +64,7 @@ jobs:
         if: ${{ inputs.deployment-id }}
         uses: ./../self-workflow/actions/workflow/get-workflow-failure
         with:
-          github-token: ${{ secrets.github-token || github.token }}
+          github-token: ${{ secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
       - id: get-finished-deployment
         if: ${{ inputs.deployment-id && steps.get-workflow-failure.outputs.has-failed != 'true' }}
@@ -153,7 +153,7 @@ jobs:
             return core.setOutput("extra", JSON.stringify(extra));
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         with:
           actions-path: actions
 
@@ -163,4 +163,4 @@ jobs:
           environment: ${{ needs.get-finished-deployment.outputs.environment }}
           url: ${{ needs.get-finished-deployment.outputs.url }}
           extra: ${{ steps.get-extra.outputs.extra }}
-          github-token: ${{ secrets.github-token || github.token }}
+          github-token: ${{ secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional

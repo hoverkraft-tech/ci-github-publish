@@ -45,12 +45,16 @@ runs:
   steps:
     - id: get-deployment-status
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_DEPLOYMENT_ID: ${{ inputs.deployment-id }}
+        INPUT_TIMEOUT: ${{ inputs.timeout }}
+        INPUT_ALLOW_FAILURE: ${{ inputs.allow-failure }}
       with:
         script: |
-          const deploymentId = `${{ inputs.deployment-id }}`;
+          const deploymentId = process.env.INPUT_DEPLOYMENT_ID;
           const finishedStatuses = ["success", "failure", "error"];
 
-          const timeout = parseInt(`${{ inputs.timeout }}`, 10);
+          const timeout = parseInt(process.env.INPUT_TIMEOUT, 10);
           if (isNaN(timeout) || timeout <= 0) {
             core.setFailed(`Invalid timeout value: ${timeout}`);
             return;
@@ -112,7 +116,7 @@ runs:
           core.setOutput("status", deploymentStatus.state);
           core.setOutput("environment", deploymentStatus.environment);
 
-          const allowFailure = `${{ inputs.allow-failure }}`.toLowerCase() === "true";
+          const allowFailure = process.env.INPUT_ALLOW_FAILURE.toLowerCase() === "true";
           if (!allowFailure && deploymentStatus.state !== "success") {
             core.setFailed(`Deployment ${deploymentId} failed with status: ${deploymentStatus.state}`);
           }

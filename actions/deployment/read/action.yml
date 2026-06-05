@@ -35,19 +35,22 @@ runs:
   steps:
     - id: get-deployment
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_DEPLOYMENT_ID: ${{ inputs.deployment-id }}
+        INPUT_REPOSITORY: ${{ inputs.repository }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const repository = `${{ inputs.repository }}`.trim();           
+          const repository = process.env.INPUT_REPOSITORY || context.repo.repo;
 
           const { data: deployment } = await github.rest.repos.getDeployment({
             owner: context.repo.owner,
             repo: repository,
-            deployment_id: `${{ inputs.deployment-id }}`
+            deployment_id: process.env.INPUT_DEPLOYMENT_ID
           });
 
           if (!deployment) {
-            core.setFailed(`Deployment with id "${{ inputs.deployment-id }}" not found in repository "${repository}"`);
+            core.setFailed(`Deployment with id "${process.env.INPUT_DEPLOYMENT_ID}" not found in repository "${repository}"`);
             return;
           }
 

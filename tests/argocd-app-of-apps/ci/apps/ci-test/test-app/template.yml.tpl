@@ -1,11 +1,11 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: # Will be updated by deploy worklfow
+  name: # Will be updated by deploy workflow
   namespace: argocd
   annotations:
-    argocd.argoproj.io/deployment-id: # Will be updated by deploy worklfow
-    argocd.argoproj.io/application-repository: # Will be updated by deploy worklfow
+    argocd.argoproj.io/deployment-id: # Will be updated by deploy workflow
+    argocd.argoproj.io/application-repository: # Will be updated by deploy workflow
     argocd.argoproj.io/sync-wave: "4"
   labels:
     team: application
@@ -16,7 +16,7 @@ metadata:
 spec:
   project: default
   destination:
-    namespace: # Will be updated by deploy worklfow
+    namespace: # Will be updated by deploy workflow
     server: https://test.com
   syncPolicy:
     syncOptions:
@@ -28,12 +28,12 @@ spec:
   sources:
     - chart: test-app
       repoURL: ghcr.io/my-org/test-app/charts
-      targetRevision: # Will be updated by deploy worklfow
+      targetRevision: # Will be updated by deploy workflow
       helm:
         values: |
-          deploymentId: # Will be updated by deploy worklfow
+          deploymentId: # Will be updated by deploy workflow
           application:
-            appUri: # Will be updated by deploy worklfow
+            appUri: # Will be updated by deploy workflow
             dbMigrate: true
             dbSeed: true
           ingress:
@@ -46,7 +46,7 @@ spec:
               alb.ingress.kubernetes.io/target-group-attributes: |
                 deregistration_delay.timeout_seconds=30
             hosts:
-              - host: # Will be updated by deploy worklfow
+              - host: # Will be updated by deploy workflow
                 paths:
                   - path: ''
                     pathType: Prefix
@@ -54,7 +54,7 @@ spec:
             admission.datadoghq.com/enabled: "true"
             tags.datadoghq.com/env: "review-app"
             tags.datadoghq.com/service: "test-app"
-            tags.datadoghq.com/version: # Will be updated by deploy worklfow
+            tags.datadoghq.com/version: # Will be updated by deploy workflow
           redis:
             enabled: true
             master:
@@ -67,7 +67,7 @@ spec:
                 enabled: false
     - chart: test-app
       repoURL: ghcr.io/my-org/test-app/charts
-      targetRevision: # Will be updated by deploy worklfow
+      targetRevision: # Will be updated by deploy workflow
       plugin:
         name: hoverkraft-deployment
         env:

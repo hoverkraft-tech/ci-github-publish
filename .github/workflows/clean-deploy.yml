@@ -77,7 +77,6 @@ jobs:
     outputs:
       trigger: ${{ steps.trigger.outputs.trigger }}
     steps:
-      # jscpd:ignore-start
       - id: not-created-issue-comment
         if: github.event_name != 'issue_comment'
         run: echo "result=true" >> "$GITHUB_OUTPUT"
@@ -94,17 +93,17 @@ jobs:
 
       - id: trigger
         if: ${{ steps.not-created-issue-comment.outputs.result == 'true' || steps.trigger-on-comment.outputs.triggered == 'true' }}
-        run: |
-          if [ "${{ steps.not-created-issue-comment.outputs.result }}" = "true" ]; then
-            echo "trigger=${{ github.event_name }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [ "${{ steps.trigger-on-comment.outputs.triggered }}" = "true" ]; then
-            echo "trigger=${{ github.event_name }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-      # jscpd:ignore-end
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          NOT_CREATED_ISSUE_COMMENT: ${{ steps.not-created-issue-comment.outputs.result }}
+          TRIGGERED: ${{ steps.trigger-on-comment.outputs.triggered }}
+          EVENT_NAME: ${{ github.event_name }}
+        with:
+          script: |
+            const shouldTrigger = process.env.NOT_CREATED_ISSUE_COMMENT === 'true' || process.env.TRIGGERED === 'true';
+            if(shouldTrigger) {
+              core.setOutput("trigger", process.env.EVENT_NAME);              
+            }
 
   clean-deploy:
     name: Clean deploy
@@ -118,7 +117,7 @@ jobs:
       pull-requests: write
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         with:
           actions-path: actions
 
@@ -143,22 +142,22 @@ jobs:
         id: generate-token
         with:
           client-id: ${{ inputs.github-app-client-id }}
-          private-key: ${{ secrets.github-app-key }}
+          private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           owner: ${{ steps.prepare-cleaning.outputs.owner }}
 
       - id: delete-deployment
         uses: ./../self-workflow/actions/deployment/delete
         with:
-          token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
       - uses: ./../self-workflow/actions/clean-deploy/repository-dispatch
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' && inputs.clean-deploy-type == 'repository-dispatch' }}
         with:
           repository: ${{ steps.prepare-cleaning.outputs.repository }}
           environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
-          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}
         with:
           title: "Deployment(s) have been deleted :wastebasket:."

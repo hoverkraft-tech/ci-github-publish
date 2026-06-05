@@ -65,29 +65,34 @@ jobs:
       url: ${{ steps.check-client-payload.outputs.url }}
       state: ${{ steps.get-state-from-status.outputs.state }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
       - id: check-client-payload
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          INPUT_CLIENT_PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+
         with:
           script: |
-            core.debug(`Client payload: ${JSON.stringify(${{ toJSON(github.event.client_payload) }})}`);
+            core.debug(`Client payload: ${process.env.INPUT_CLIENT_PAYLOAD}`);
 
-            const deploymentId = ${{ toJSON(github.event.client_payload['deployment-id']) }};
+            const clientPayload = JSON.parse(process.env.INPUT_CLIENT_PAYLOAD);
+
+            const deploymentId = clientPayload['deployment-id'];
             if (!deploymentId) {
               return core.setFailed('"deployment-id" is not defined in the client payload');
             }
             core.setOutput("deployment-id", deploymentId);
 
-            const repository = ${{ toJSON(github.event.client_payload['application-repository']) }};
+            const repository = clientPayload['application-repository'];
             if (!repository) {
               return core.setFailed('"application-repository" is not defined in the client payload');
             }
             core.setOutput("repository", repository);
 
-            let urls = ${{ toJSON(github.event.client_payload['urls']) }};
+            let urls = clientPayload['urls'];
             if (urls) {
               if( !Array.isArray(urls)) {
                 core.setFailed("URLs is not an array");
@@ -105,13 +110,13 @@ jobs:
               }
             }
 
-            const status = ${{ toJSON(github.event.client_payload['status']) }};
+            const status = clientPayload['status'];
             if (!status) {
               return core.setFailed('"status" is not defined in the client payload');
             }
             core.setOutput("status", status);
 
-            const description = ${{ toJSON(github.event.client_payload['description']) }};
+            const description = clientPayload['description'];
             if (!description) {
               return core.setFailed('"description" is not defined in the client payload');
             }
@@ -119,9 +124,11 @@ jobs:
 
       - id: get-state-from-status
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          STATUS: ${{ steps.check-client-payload.outputs.status }}
         with:
           script: |
-            const status = ${{ toJSON(steps.check-client-payload.outputs.status) }};
+            const status = process.env.STATUS;
 
             const statesStatuses = {
               "error": [],
@@ -148,11 +155,11 @@ jobs:
         id: generate-token
         with:
           client-id: ${{ inputs.github-app-client-id }}
-          private-key: ${{ secrets.github-app-key }}
+          private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           owner: ${{ github.repository_owner }}
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         with:
           actions-path: actions
 
@@ -163,7 +170,7 @@ jobs:
           url: ${{ steps.check-client-payload.outputs.url }}
           description: ${{ steps.check-client-payload.outputs.description }}
           state: ${{ steps.get-state-from-status.outputs.state }}
-          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           update-log-url: "false"
 
       - uses: ./../self-workflow/actions/deploy/report
@@ -171,7 +178,7 @@ jobs:
         with:
           deployment-id: ${{ github.event.client_payload['deployment-id'] }}
           repository: ${{ github.event.client_payload['application-repository'] }}
-          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           url: ${{ steps.check-client-payload.outputs.url }}
           extra: |
             {

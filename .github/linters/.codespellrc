@@ -1,0 +1,5 @@
+[codespell]
+skip = *.svg
+ignore-words-list =
+    # commitish is the input name used by release-drafter
+    commitish,

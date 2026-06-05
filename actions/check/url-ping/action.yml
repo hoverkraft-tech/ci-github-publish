@@ -45,6 +45,13 @@ runs:
   steps:
     - id: check-url
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_PING_URL: ${{ inputs.url }}
+        INPUT_PING_FOLLOW_REDIRECT: ${{ inputs['follow-redirect'] }}
+        INPUT_PING_TIMEOUT: ${{ inputs.timeout }}
+        INPUT_PING_RETRIES: ${{ inputs.retries }}
+        INPUT_PING_EXPECTED_STATUSES: ${{ inputs['expected-statuses'] }}
+        INPUT_PING_AUTHORIZATION: ${{ inputs.authorization }}
       with:
         script: |
           const path = require('path');
@@ -53,11 +60,11 @@ runs:
           await run({
             core,
             inputs: {
-              url: ${{ toJson(inputs.url ) }},
-              followRedirect: ${{ toJson(inputs['follow-redirect']) }},
-              timeout: ${{ toJson(inputs.timeout) }},
-              retries: ${{ toJson(inputs.retries) }},
-              expectedStatuses: ${{ toJson(inputs['expected-statuses']) }},
-              authorization: ${{ toJson(inputs.authorization) }},
+              url: process.env.INPUT_PING_URL,
+              followRedirect: process.env.INPUT_PING_FOLLOW_REDIRECT,
+              timeout: process.env.INPUT_PING_TIMEOUT,
+              retries: process.env.INPUT_PING_RETRIES,
+              expectedStatuses: process.env.INPUT_PING_EXPECTED_STATUSES,
+              authorization: process.env.INPUT_PING_AUTHORIZATION,
             },
           });

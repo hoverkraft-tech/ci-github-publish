@@ -23,7 +23,7 @@ jobs:
           - 1080:8080
     steps:
       - name: Arrange - Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -106,15 +106,16 @@ jobs:
       - name: Assert - Test 1 success
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STEP_ID: test-success
           EXPECTED_STATUS: "200"
           TEST_NAME: "Test 1 - Successful URL check"
+          STATUS_CODE: ${{ steps.test-success.outputs.status-code }}
+          ATTEMPT_COUNT: ${{ steps.test-success.outputs.attempt-count }}
         with:
           script: |
             const assert = require("assert");
-            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            const statusCode = process.env.STATUS_CODE;
             assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS}, got: ${statusCode}`);
-            const attemptCountRaw = ${{ toJSON(steps[env.STEP_ID].outputs.attempt-count) }};
+            const attemptCountRaw = process.env.ATTEMPT_COUNT;
             if (attemptCountRaw === null) {
               throw new Error('Attempt count output missing');
             }
@@ -135,13 +136,13 @@ jobs:
       - name: Assert - Test 2 multiple status codes
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STEP_ID: test-multiple-status
           EXPECTED_STATUS: "404"
           TEST_NAME: "Test 2 - Multiple expected status codes"
+          STATUS_CODE: ${{ steps.test-multiple-status.outputs.status-code }}
         with:
           script: |
             const assert = require("assert");
-            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            const statusCode = process.env.STATUS_CODE;
             assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS}, got: ${statusCode}`);
             console.log(`✅ ${process.env.TEST_NAME} passed`);
 
@@ -159,11 +160,11 @@ jobs:
       - name: Assert - Test 3 timeout
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STEP_ID: test-timeout
           TEST_NAME: "Test 3 - Timeout handling"
+          OUTCOME: ${{ steps.test-timeout.outcome }}
         with:
           script: |
-            const outcome = `${{ steps[env.STEP_ID].outcome }}`;
+            const outcome = process.env.OUTCOME;
             if (outcome !== 'failure') {
               throw new Error(`Expected ${process.env.TEST_NAME} to fail, but outcome was: ${outcome}`);
             }
@@ -265,16 +266,17 @@ jobs:
       - name: Assert - Test 4 retry success
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STEP_ID: test-retry
           EXPECTED_STATUS: "200"
           TEST_NAME: "Test 4 - Retry with exponential backoff"
+          STATUS_CODE: ${{ steps.test-retry.outputs.status-code }}
+          ATTEMPT_COUNT: ${{ steps.test-retry.outputs.attempt-count }}
         with:
           script: |
             const assert = require("assert");
-            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            const statusCode = process.env.STATUS_CODE;
             assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS} after retry, got: ${statusCode}`);
             console.log(`✅ ${process.env.TEST_NAME} passed`);
-            const attemptCountRaw = ${{ toJSON(steps[env.STEP_ID].outputs.attempt-count) }};
+            const attemptCountRaw = process.env.ATTEMPT_COUNT;
             if (attemptCountRaw === null) {
               throw new Error('Attempt count output missing');
             }
@@ -295,13 +297,13 @@ jobs:
       - name: Assert - Test 5 redirect disabled
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STEP_ID: test-redirect-disabled
           EXPECTED_STATUS: "301"
           TEST_NAME: "Test 5 - Redirect handling (follow disabled)"
+          STATUS_CODE: ${{ steps.test-redirect-disabled.outputs.status-code }}
         with:
           script: |
             const assert = require("assert");
-            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            const statusCode = process.env.STATUS_CODE;
             assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS}, got: ${statusCode}`);
             console.log(`✅ ${process.env.TEST_NAME} passed`);
 
@@ -319,13 +321,13 @@ jobs:
       - name: Assert - Test 6 redirect enabled
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STEP_ID: test-redirect-enabled
           EXPECTED_STATUS: "200"
           TEST_NAME: "Test 6 - Redirect handling (follow enabled)"
+          STATUS_CODE: ${{ steps.test-redirect-enabled.outputs.status-code }}
         with:
           script: |
             const assert = require("assert");
-            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            const statusCode = process.env.STATUS_CODE;
             assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS}, got: ${statusCode}`);
             console.log(`✅ ${process.env.TEST_NAME} passed`);
 
@@ -343,11 +345,12 @@ jobs:
       - name: Assert - Test 7 invalid URL
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STEP_ID: test-invalid-url
           TEST_NAME: "Test 7 - Invalid URL handling"
+          OUTCOME: ${{ steps.test-invalid-url.outcome }}
+          ATTEMPT_COUNT: ${{ steps.test-invalid-url.outputs.attempt-count }}
         with:
           script: |
-            const outcome = `${{ steps[env.STEP_ID].outcome }}`;
+            const outcome = process.env.OUTCOME;
             if (outcome !== 'failure') {
               throw new Error(`Expected ${process.env.TEST_NAME} to fail, but outcome was: ${outcome}`);
             }
@@ -366,13 +369,13 @@ jobs:
       - name: Assert - Test 8 real-world
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STEP_ID: test-real-world
           EXPECTED_STATUS: "200"
           TEST_NAME: "Test 8 - Real-world endpoint check"
+          STATUS_CODE: ${{ steps.test-real-world.outputs.status-code }}
         with:
           script: |
             const assert = require("assert");
-            const statusCode = ${{ toJSON(steps[env.STEP_ID].outputs.status-code) }};
+            const statusCode = process.env.STATUS_CODE;
             assert.equal(statusCode, process.env.EXPECTED_STATUS, `Expected ${process.env.EXPECTED_STATUS}, got: ${statusCode}`);
             console.log(`✅ ${process.env.TEST_NAME} passed`);
 
@@ -433,16 +436,17 @@ jobs:
       - name: Assert - Test 9 max retries
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STEP_ID: test-max-retries
           TEST_NAME: "Test 9 - Max retries exhausted"
           EXPECTED_MIN_ATTEMPTS: "2"
+          OUTCOME: ${{ steps.test-max-retries.outcome }}
+          ATTEMPT_COUNT: ${{ steps.test-max-retries.outputs.attempt-count }}
         with:
           script: |
-            const outcome = `${{ steps[env.STEP_ID].outcome }}`;
+            const outcome = process.env.OUTCOME;
             if (outcome !== 'failure') {
               throw new Error(`Expected ${process.env.TEST_NAME} to fail, but outcome was: ${outcome}`);
             }
-            const attemptCountRaw = ${{ toJSON(steps[env.STEP_ID].outputs.attempt-count) }};
+            const attemptCountRaw = process.env.ATTEMPT_COUNT;
             if (attemptCountRaw === null) {
               throw new Error('Attempt count output missing');
             }

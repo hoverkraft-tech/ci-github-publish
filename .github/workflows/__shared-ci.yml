@@ -3,12 +3,16 @@ name: Internal - Common Continuous Integration tasks
 
 on: # yamllint disable-line rule:truthy
   workflow_call:
+    secrets:
+      CI_BOT_APP_PRIVATE_KEY:
+        description: "Private key of the CI Bot GitHub App used for authentication in tests that require it."
+        required: true
 
 permissions: {}
 
 jobs:
   linter:
-    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
     permissions:
       actions: read
       contents: read
@@ -36,7 +40,6 @@ jobs:
   test-action-deploy-jekyll-jampack:
     needs: linter
     uses: ./.github/workflows/__test-action-deploy-jekyll-jampack.yml
-    secrets: inherit
     permissions:
       contents: read
       id-token: write
@@ -47,11 +50,12 @@ jobs:
   test-action-deployment:
     needs: linter
     uses: ./.github/workflows/__test-action-deployment.yml
+    secrets:
+      CI_BOT_APP_PRIVATE_KEY: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
     permissions:
       contents: read
       deployments: write
       pull-requests: read
-    secrets: inherit
 
   test-action-release-get-configuration:
     needs: linter

@@ -168,15 +168,20 @@ runs:
   steps:
     - id: common-chart-yq-updates
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_CHART_VALUES: ${{ inputs.chart-values }}
+        INPUT_DEPLOYMENT_ID: ${{ inputs.deployment-id }}
       with:
         script: |
-          const chartValuesInput = ${{ toJSON(inputs.chart-values) }};
-          let chartValues = null;
-          try {
-            chartValues = JSON.parse(chartValuesInput);
-          } catch (error) {
-            core.setFailed(`"chart-values" input is not a valid JSON: ${error}`);
-            return;
+          const chartValuesInput = (process.env.INPUT_CHART_VALUES ?? '').trim();
+          let chartValues = [];
+          if (chartValuesInput !== '') {
+            try {
+              chartValues = JSON.parse(chartValuesInput);
+            } catch (error) {
+              core.setFailed(`"chart-values" input is not a valid JSON: ${error}`);
+              return;
+            }
           }
 
           if (!Array.isArray(chartValues)) {
@@ -188,7 +193,7 @@ runs:
           for (const key in chartValues) {
             // Check mandatory properties
             for (const property of ['path', 'value']) {
-              if (!chartValues[key].hasOwnProperty(property)) {
+              if (!Object.prototype.hasOwnProperty.call(chartValues[key], property)) {
                 core.setFailed(`"chart-values[${key}].${property}" is missing`);
                 return;
               }
@@ -198,116 +203,133 @@ runs:
           // Add deployment ID to each chart value
           chartValues.push({
             path: ".deploymentId",
-            value: "${{ inputs.deployment-id }}"
+            value: process.env.INPUT_DEPLOYMENT_ID
           });
 
-          const yqUpdates = chartValues.map(chartValue => `${chartValue.path} = "${chartValue.value}" |`).join("\n");
+          const yqUpdates = chartValues
+            .map((chartValue) => `${chartValue.path} = ${JSON.stringify(chartValue.value)}`)
+            .join(' | ');
 
           core.setOutput('cmd', yqUpdates);
 
     - id: vendor-specific-chart-yq-updates
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_CHART_VERSION: ${{ inputs.chart-version }}
       with:
         script: |
           // Datadog
-          const yqUpdates = `(.. | select(has("tags.datadoghq.com/version")))."tags.datadoghq.com/version" = "${{ inputs.chart-version }}" |`;
+          const yqUpdates = `(.. | select(has("tags.datadoghq.com/version")))."tags.datadoghq.com/version" = ${JSON.stringify(process.env.INPUT_CHART_VERSION)}`;
 
           core.setOutput('cmd', yqUpdates);
 
     - id: update-application-file
       uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c # v4.53.2
+      env:
+        INPUT_NAMESPACE: ${{ inputs.namespace }}
+        INPUT_APPLICATION_REPOSITORY: ${{ inputs.application-repository }}
+        INPUT_APPLICATION_FILE: ${{ inputs.application-file }}
+        INPUT_DEPLOYMENT_ID: ${{ inputs.deployment-id }}
+        INPUT_CHART_NAME: ${{ inputs.chart-name }}
+        INPUT_CHART_REPOSITORY: ${{ inputs.chart-repository }}
+        INPUT_CHART_VERSION: ${{ inputs.chart-version }}
+        INPUT_COMMON_CHART_YQ_UPDATES: ${{ steps.common-chart-yq-updates.outputs.cmd }}
+        INPUT_VENDOR_SPECIFIC_CHART_YQ_UPDATES: ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
       with:
         cmd: |
           # Update ArgoCD Application manifest file
           yq -i '
-            .metadata.name = "${{ inputs.namespace }}" |
-            .metadata.annotations["argocd.argoproj.io/application-repository"] = "${{ inputs.application-repository }}" |
-            .metadata.annotations["argocd.argoproj.io/deployment-id"] = "${{ inputs.deployment-id }}" |
-            .spec.destination.namespace = "${{ inputs.namespace }}"
-          ' ${{ inputs.application-file }}
+            .metadata.name = strenv(INPUT_NAMESPACE) |
+            .metadata.annotations["argocd.argoproj.io/application-repository"] = strenv(INPUT_APPLICATION_REPOSITORY) |
+            .metadata.annotations["argocd.argoproj.io/deployment-id"] = strenv(INPUT_DEPLOYMENT_ID) |
+            .spec.destination.namespace = strenv(INPUT_NAMESPACE)
+          ' "$INPUT_APPLICATION_FILE"
 
           # Detect whether the manifest uses singular 'source' or 'sources' array
-          if [ "$(yq eval '.spec | has("source")' ${{ inputs.application-file }})" = "true" ]; then
+          if [ "$(yq eval '.spec | has("source")' "$INPUT_APPLICATION_FILE")" = "true" ]; then
             # Singular source format
-            current_chart=$(yq eval -r '.spec.source.chart // ""' ${{ inputs.application-file }})
-            if [ "$current_chart" != "${{ inputs.chart-name }}" ]; then
-              echo "::error::ArgoCD manifest chart ('$current_chart') does not match input chart-name ('${{ inputs.chart-name }}')"
+            current_chart=$(yq eval -r '.spec.source.chart // ""' "$INPUT_APPLICATION_FILE")
+            if [ "$current_chart" != "$INPUT_CHART_NAME" ]; then
+              echo "::error::ArgoCD manifest chart ('$current_chart') does not match input chart-name ('$INPUT_CHART_NAME')"
               exit 1
             fi
 
-            current_repo=$(yq eval -r '.spec.source.repoURL // ""' ${{ inputs.application-file }})
-            if [ "$current_repo" != "${{ inputs.chart-repository }}" ]; then
-              echo "::error::ArgoCD manifest repoURL ('$current_repo') does not match input chart-repository ('${{ inputs.chart-repository }}')"
+            current_repo=$(yq eval -r '.spec.source.repoURL // ""' "$INPUT_APPLICATION_FILE")
+            if [ "$current_repo" != "$INPUT_CHART_REPOSITORY" ]; then
+              echo "::error::ArgoCD manifest repoURL ('$current_repo') does not match input chart-repository ('$INPUT_CHART_REPOSITORY')"
               exit 1
             fi
 
             yq -i '
-              .spec.source.targetRevision = "${{ inputs.chart-version }}" |
+              .spec.source.targetRevision = strenv(INPUT_CHART_VERSION) |
               .spec.source.helm.values |= (
                   from_yaml |
-                  ${{ steps.common-chart-yq-updates.outputs.cmd }}
-                  ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
+                  eval(strenv(INPUT_COMMON_CHART_YQ_UPDATES)) |
+                  eval(strenv(INPUT_VENDOR_SPECIFIC_CHART_YQ_UPDATES)) |
                   to_yaml
               )
-            ' ${{ inputs.application-file }}
+            ' "$INPUT_APPLICATION_FILE"
 
             # Update plugin env if it exists on source and plugin name is "hoverkraft-deployment"
-            if [ "$(yq eval '.spec.source.plugin.name' ${{ inputs.application-file }})" = "hoverkraft-deployment" ]; then
+            if [ "$(yq eval '.spec.source.plugin.name' "$INPUT_APPLICATION_FILE")" = "hoverkraft-deployment" ]; then
               yq -i '
-                (.spec.source.plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = "${{ inputs.deployment-id }}" |
+                (.spec.source.plugin.env[] | select(.name == "HOVERKRAFT_DEPLOYMENT_ID") | .value) = strenv(INPUT_DEPLOYMENT_ID) |
                 (.spec.source.plugin.env[] | select(.name == "ARGOCD_MULTI_SOURCES") | .value) = "0"
-              ' ${{ inputs.application-file }}
+              ' "$INPUT_APPLICATION_FILE"
             fi
           else
             # Multiple sources array format
             matching_source_count=$(yq eval '
               (.spec.sources // [])
-              | map(select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}"))
+              | map(select(.chart == strenv(INPUT_CHART_NAME) and .repoURL == strenv(INPUT_CHART_REPOSITORY)))
               | length
-            ' ${{ inputs.application-file }})
+            ' "$INPUT_APPLICATION_FILE")
 
             if [ "$matching_source_count" -eq 0 ]; then
-              echo "::error::No entry in spec.sources matches chart '${{ inputs.chart-name }}' and repoURL '${{ inputs.chart-repository }}'"
+              echo "::error::No entry in spec.sources matches chart '$INPUT_CHART_NAME' and repoURL '$INPUT_CHART_REPOSITORY'"
               exit 1
             fi
 
             yq -i '
-              (.spec.sources[] | select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}") | .targetRevision) = "${{ inputs.chart-version }}" |
-              (.spec.sources[] | select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}" and has("helm")) | .helm.values) |= (
+              (.spec.sources[] | select(.chart == strenv(INPUT_CHART_NAME) and .repoURL == strenv(INPUT_CHART_REPOSITORY)) | .targetRevision) = strenv(INPUT_CHART_VERSION) |
+              (.spec.sources[] | select(.chart == strenv(INPUT_CHART_NAME) and .repoURL == strenv(INPUT_CHART_REPOSITORY) and has("helm")) | .helm.values) |= (
                   from_yaml |
-                  ${{ steps.common-chart-yq-updates.outputs.cmd }}
-                  ${{ steps.vendor-specific-chart-yq-updates.outputs.cmd }}
+                  eval(strenv(INPUT_COMMON_CHART_YQ_UPDATES)) |
+                  eval(strenv(INPUT_VENDOR_SPECIFIC_CHART_YQ_UPDATES)) |
                   to_yaml
               )
-            ' ${{ inputs.application-file }}
+            ' "$INPUT_APPLICATION_FILE"
 
             # Update plugin env only for matching sources where plugin name is "hoverkraft-deployment"
             yq -i '
               (
                 .spec.sources[]
-                | select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}")
+                | select(.chart == strenv(INPUT_CHART_NAME) and .repoURL == strenv(INPUT_CHART_REPOSITORY))
                 | select(.plugin.name == "hoverkraft-deployment")
                 | .plugin.env[]
                 | select(.name == "HOVERKRAFT_DEPLOYMENT_ID")
                 | .value
-              ) = "${{ inputs.deployment-id }}" |
+              ) = strenv(INPUT_DEPLOYMENT_ID) |
               (
                 .spec.sources[]
-                | select(.chart == "${{ inputs.chart-name }}" and .repoURL == "${{ inputs.chart-repository }}")
+                | select(.chart == strenv(INPUT_CHART_NAME) and .repoURL == strenv(INPUT_CHART_REPOSITORY))
                 | select(.plugin.name == "hoverkraft-deployment")
                 | .plugin.env[]
                 | select(.name == "ARGOCD_MULTI_SOURCES")
                 | .value
               ) = "1"
-            ' ${{ inputs.application-file }}
+            ' "$INPUT_APPLICATION_FILE"
           fi
 
     - id: update-manifest-file
       uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c # v4.53.2
+      env:
+        INPUT_NAMESPACE: ${{ inputs.namespace }}
+        INPUT_MANIFEST_FILE: ${{ inputs.manifest-file }}
       with:
         cmd: |
           yq -i '
-            (select(has("metadata") and .metadata | has("name")) | .metadata.name) = "${{ inputs.namespace }}" |
-            (select(has("metadata") and .metadata | has("namespace")) | .metadata.namespace) = "${{ inputs.namespace }}" |
-            (select(has("metadata") and .metadata | has("annotations") and .metadata.annotations | has("app.kubernetes.io/instance")) | .metadata.annotations["app.kubernetes.io/instance"]) = "${{ inputs.namespace }}"
-          ' ${{ inputs.manifest-file }}
+            (select(has("metadata") and .metadata | has("name")) | .metadata.name) = strenv(INPUT_NAMESPACE) |
+            (select(has("metadata") and .metadata | has("namespace")) | .metadata.namespace) = strenv(INPUT_NAMESPACE) |
+            (select(has("metadata") and .metadata | has("annotations") and .metadata.annotations | has("app.kubernetes.io/instance")) | .metadata.annotations["app.kubernetes.io/instance"]) = strenv(INPUT_NAMESPACE)
+          ' "$INPUT_MANIFEST_FILE"

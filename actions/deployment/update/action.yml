@@ -40,15 +40,21 @@ runs:
   steps:
     - id: create-deployment
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_DEPLOYMENT_ID: ${{ inputs.deployment-id }}
+        INPUT_REPOSITORY: ${{ inputs.repository }}
+        INPUT_STATE: ${{ inputs.state }}
+        INPUT_URL: ${{ inputs.url }}
+        INPUT_UPDATE_LOG_URL: ${{ inputs.update-log-url }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const repository = `${{ inputs.repository }}`.trim();
+          const repository = process.env.INPUT_REPOSITORY || context.repo.repo;
 
           let logUrl = null;
 
-          const shouldUpdateLogUrl = `${{ inputs.update-log-url }}`.trim();
-          if (shouldUpdateLogUrl === "true") {
+          const shouldUpdateLogUrl = process.env.INPUT_UPDATE_LOG_URL.toLowerCase() === "true";
+          if (shouldUpdateLogUrl) {
             const { data: { html_url } } = await github.rest.actions.getWorkflowRun({
               owner: context.repo.owner,
               repo: repository,
@@ -61,9 +67,9 @@ runs:
           await github.rest.repos.createDeploymentStatus({
             owner: context.repo.owner,
             repo: repository,
-            deployment_id: `${{ inputs.deployment-id }}`,
-            state: `${{ inputs.state }}`,
-            environment_url: `${{ inputs.url }}`,
+            deployment_id: process.env.INPUT_DEPLOYMENT_ID,
+            state: process.env.INPUT_STATE,
+            environment_url: process.env.INPUT_URL,
             log_url: logUrl ?? undefined,
             auto_inactive: true,
           });

@@ -102,9 +102,12 @@ runs:
 
     - id: summary
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        ARTIFACT_LINKS: ${{ steps.lighthouse.outputs.artifactLinks }}
+        MANIFEST: ${{ steps.lighthouse.outputs.manifest }}
       with:
         script: |
-          const linksOutput = ${{ toJSON(steps.lighthouse.outputs.artifactLinks) }};
+          const linksOutput = process.env.ARTIFACT_LINKS?.trim();
           let links = null;
           if (linksOutput) {
             // Check if is valid JSON
@@ -121,7 +124,7 @@ runs:
             core.setOutput("report-url", reportUrl);
           }
 
-          const manifestOutput = ${{ toJSON(steps.lighthouse.outputs.manifest) }};
+          const manifestOutput = process.env.MANIFEST?.trim();
           let manifest = null;
           if (manifestOutput) {
             // Check if is valid JSON

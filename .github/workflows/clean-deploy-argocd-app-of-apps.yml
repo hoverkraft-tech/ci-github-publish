@@ -53,28 +53,31 @@ jobs:
     steps:
       - id: check-client-payload
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          CLIENT_PAYLOAD: ${{ toJSON(github.event.client_payload) }}
         with:
           script: |
-            const environment = ${{ toJSON(github.event.client_payload.environment) }};
+            const clientPayload = JSON.parse(process.env.CLIENT_PAYLOAD);
+            const environment = clientPayload.environment;
             if (!environment) {
               core.setFailed("Environment is not defined in the client payload");
               return;
             }
             core.setOutput("environment", environment);
 
-            const repository = ${{ toJSON(github.event.client_payload.repository) }};
+            const repository = clientPayload.repository;
             if (!repository) {
               core.setFailed("Repository is not defined in the client payload");
               return;
             }
             core.setOutput("repository", repository);
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         with:
           actions-path: actions
 
@@ -86,19 +89,22 @@ jobs:
 
       - id: remove-files
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          APPLICATION_FILE: ${{ steps.get-manifest-files.outputs.application-file }}
+          MANIFEST_FILE: ${{ steps.get-manifest-files.outputs.manifest-file }}
         with:
           script: |
             const fs = require("node:fs");
 
             let hasChanges = false;
 
-            const applicationFile = ${{ toJSON(steps.get-manifest-files.outputs.application-file) }};
+            const applicationFile = process.env.APPLICATION_FILE;
             if (fs.existsSync(applicationFile)) {
               fs.unlinkSync(applicationFile);
               hasChanges = true;
             }
 
-            const manifestFile = ${{ toJSON(steps.get-manifest-files.outputs.manifest-file) }};
+            const manifestFile = process.env.MANIFEST_FILE;
             if (fs.existsSync(manifestFile)) {
               fs.unlinkSync(manifestFile);
               hasChanges = true;
@@ -112,13 +118,13 @@ jobs:
         id: generate-token
         with:
           client-id: ${{ inputs.github-app-client-id }}
-          private-key: ${{ secrets.github-app-key }}
+          private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
         if: steps.remove-files.outputs.has-changes == 'true'
         with:
-          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }}
+          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           branch: chore/clean-review-apps-${{ github.event.client_payload.repository }}
           title: "feat(${{ github.event.client_payload.repository }}): clean review apps"
           body: Clean review apps of ${{ github.event.client_payload.repository }}

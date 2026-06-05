@@ -67,6 +67,12 @@ runs:
   steps:
     - id: prepare-site
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_THEME: ${{ inputs.theme }}
+        INPUT_PAGES: ${{ inputs.pages }}
+        INPUT_ASSETS: ${{ inputs.assets }}
+        INPUT_SITE_PATH: ${{ inputs.site-path }}
+        INPUT_BUILD_PATH: ${{ inputs.build-path }}
       with:
         script: |
           const path = require('path');
@@ -76,11 +82,11 @@ runs:
             io,
             glob,
             inputs: {
-              theme: ${{ toJson(inputs.theme) }},
-              pages: ${{ toJson(inputs.pages) }},
-              assets: ${{ toJson(inputs.assets) }},
-              "site-path": ${{ toJson(inputs.site-path) }},
-              "build-path": ${{ toJson(inputs.build-path) }}
+              theme: process.env.INPUT_THEME,
+              pages: process.env.INPUT_PAGES,
+              assets: process.env.INPUT_ASSETS,
+              "site-path": process.env.INPUT_SITE_PATH,
+              "build-path": process.env.INPUT_BUILD_PATH
             }
           });
 
@@ -93,4 +99,6 @@ runs:
         destination: ${{ steps.prepare-site.outputs.jekyll-destination }}
 
     - shell: bash
-      run: sudo chown -R $(whoami) "${{ steps.prepare-site.outputs.jekyll-destination }}"
+      env:
+        JEKYLL_DESTINATION: ${{ steps.prepare-site.outputs.jekyll-destination }}
+      run: sudo chown -R $(whoami) "${JEKYLL_DESTINATION}"

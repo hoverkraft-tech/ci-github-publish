@@ -2,6 +2,10 @@ name: Internal - Tests for "deployment" actions
 
 on:
   workflow_call:
+    secrets:
+      CI_BOT_APP_PRIVATE_KEY:
+        description: "Private key of the CI Bot GitHub App used for authentication in tests that require it."
+        required: true
 
 permissions: {}
 
@@ -14,7 +18,7 @@ jobs:
       deployments: write
       pull-requests: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -24,8 +28,10 @@ jobs:
           environment: "review-apps"
 
       - name: Check create outputs
+        env:
+          DEPLOYMENT_ID: ${{ steps.create-deployment.outputs.deployment-id }}
         run: |
-          if [ -z "${{ steps.create-deployment.outputs.deployment-id }}" ]; then
+          if [ -z "${DEPLOYMENT_ID}" ]; then
             echo "Create deployment id output is not set"
             exit 1
           fi
@@ -37,18 +43,21 @@ jobs:
           repository: ${{ github.event.repository.name }}
 
       - name: Check get outputs
+        env:
+          ENVIRONMENT: ${{ steps.get-deployment.outputs.environment }}
+          URL: ${{ steps.get-deployment.outputs.url }}
         run: |
-          if [ -z "${{ steps.get-deployment.outputs.environment }}" ]; then
+          if [ -z "${ENVIRONMENT}" ]; then
             echo "Get deployment environment output is not set"
             exit 1
           fi
 
-          if [ "${{ steps.get-deployment.outputs.environment }}" != "review-apps" ]; then
-            echo "Get deployment environment output is not 'review-apps': '${{ steps.get-deployment.outputs.environment }}'"
+          if [ "${ENVIRONMENT}" != "review-apps" ]; then
+            echo "Get deployment environment output is not 'review-apps': '${ENVIRONMENT}'"
             exit 1
           fi
 
-          if [ -z "${{ steps.get-deployment.outputs.url }}" ]; then
+          if [ -z "${URL}" ]; then
             echo "Get deployment url output is not set"
             exit 1
           fi
@@ -62,8 +71,8 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: generate-token
         with:
-          client-id: ${{ vars.CI_BOT_APP_ID }}
-          private-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
+          client-id: ${{ vars.CI_BOT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
       - id: delete-deployment
         uses: ./actions/deployment/delete
@@ -71,8 +80,10 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Check delete outputs
+        env:
+          DEPLOYMENT_IDS: ${{ steps.delete-deployment.outputs.deployment-ids }}
         run: |
-          if [ -z "${{ steps.delete-deployment.outputs.deployment-ids }}" ]; then
+          if [ -z "${DEPLOYMENT_IDS}" ]; then
             echo "Delete deployment ids output is not set"
             exit 1
           fi

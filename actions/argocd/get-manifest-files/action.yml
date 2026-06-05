@@ -29,9 +29,11 @@ runs:
   steps:
     - id: parse-environment
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
       with:
         script: |
-          let environment = ${{ toJSON(inputs.environment) }};
+          const environment = process.env.INPUT_ENVIRONMENT;
           if (!environment) {
             return core.setFailed(`"environment" input is not defined`);
           }
@@ -47,12 +49,15 @@ runs:
 
     - id: get-directories
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_REPOSITORY: ${{ inputs.repository }}
+        INPUT_ENVIRONMENT: ${{ steps.parse-environment.outputs.environment }}
       with:
         script: |
           const fs = require("node:fs");
           const path = require("node:path");
 
-          const environment = ${{ toJSON(steps.parse-environment.outputs.environment) }};
+          const environment = process.env.INPUT_ENVIRONMENT;
 
           const globber = await glob.create(`./*/apps/${environment}/`,{ implicitDescendants: false, matchDirectories: true });
           const paths = await globber.glob();
@@ -66,7 +71,7 @@ runs:
 
           const environmentDir = paths[0];
 
-          const repository = ${{ toJSON(inputs.repository) }};
+          const repository = process.env.INPUT_REPOSITORY;
           if (!repository) {
             return core.setFailed("Repository is not defined in the client payload");
           }
@@ -85,27 +90,32 @@ runs:
             return core.setFailed(`No manifest dir found in "${manifestDir}"`);
           }
 
-          core.setOutput("manifest-dir", path.relative(${{ toJSON(github.workspace) }}, manifestDir));
+          core.setOutput("manifest-dir", path.relative(process.env.GITHUB_WORKSPACE, manifestDir));
 
     - id: get-files
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_REPOSITORY: ${{ inputs.repository }}
+        INPUT_ENVIRONMENT_SUFFIX: ${{ steps.parse-environment.outputs.environment-suffix }}
+        INPUT_APPLICATION_DIR: ${{ steps.get-directories.outputs.application-dir }}
+        INPUT_MANIFEST_DIR: ${{ steps.get-directories.outputs.manifest-dir }}
       with:
         script: |
           const fs = require("node:fs");
           const path = require("node:path");
 
-          const repository = ${{ toJSON(inputs.repository) }};
-          const environmentSuffix = ${{ toJSON(steps.parse-environment.outputs.environment-suffix) }};
-          const applicationDir = ${{ toJSON(steps.get-directories.outputs.application-dir) }};
-          const manifestDir = ${{ toJSON(steps.get-directories.outputs.manifest-dir) }};
+          const repository = process.env.INPUT_REPOSITORY;
+          const environmentSuffix = process.env.INPUT_ENVIRONMENT_SUFFIX;
+          const applicationDir = process.env.INPUT_APPLICATION_DIR;
+          const manifestDir = process.env.INPUT_MANIFEST_DIR;
 
           // Templatable application
           if (environmentSuffix) {
             const applicationFile = `${applicationDir}/${environmentSuffix}.yml`;
-            core.setOutput("application-file", path.relative(${{ toJSON(github.workspace) }}, applicationFile));
+            core.setOutput("application-file", path.relative(process.env.GITHUB_WORKSPACE, applicationFile));
 
             const manifestFile = `${manifestDir}/${environmentSuffix}.yml`;
-            core.setOutput("manifest-file", path.relative(${{ toJSON(github.workspace) }}, manifestFile));
+            core.setOutput("manifest-file", path.relative(process.env.GITHUB_WORKSPACE, manifestFile));
 
             return;
           }
@@ -114,10 +124,10 @@ runs:
           if (!fs.existsSync(applicationFile)) {
             return core.setFailed(`No application file found in "${applicationFile}"`);
           }
-          core.setOutput("application-file", path.relative(${{ toJSON(github.workspace) }}, applicationFile));
+          core.setOutput("application-file", path.relative(process.env.GITHUB_WORKSPACE, applicationFile));
 
           const manifestFile = `${manifestDir}/${repository}.yml`;
           if(!fs.existsSync(manifestFile)) {
             return core.setFailed(`No manifest file found in "${manifestFile}"`);
           }
-          core.setOutput("manifest-file", path.relative(${{ toJSON(github.workspace) }}, manifestFile));
+          core.setOutput("manifest-file", path.relative(process.env.GITHUB_WORKSPACE, manifestFile));

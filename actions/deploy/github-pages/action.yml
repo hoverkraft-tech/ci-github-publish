@@ -59,18 +59,22 @@ runs:
 
     - id: prepare-variables
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        DOWNLOAD_PATH: ${{ steps.download-artifact.outputs.download-path }}
+        INPUT_BUILD_PATH: ${{ inputs.build-path }}
+
       with:
         script: |
           const { isAbsolute, join } = require("path");
           const { lstatSync } = require("fs");
           const { randomUUID } = require('crypto');
 
-          let downloadPath = ${{ toJSON(steps.download-artifact.outputs.download-path) }};
+          let downloadPath = process.env.DOWNLOAD_PATH;
           if (!downloadPath || downloadPath === "/") {
-            downloadPath = ${{ toJSON(github.workspace) }};
+            downloadPath = process.env.GITHUB_WORKSPACE;
           }
 
-          let buildPath = ${{ toJSON(inputs.build-path) }};
+          let buildPath = process.env.INPUT_BUILD_PATH;
           if (!buildPath || !isAbsolute(buildPath)) {
             buildPath = join(downloadPath.trim(), buildPath.trim());
           }
@@ -85,11 +89,13 @@ runs:
           // Define a unique artifact name
           const uniquid = randomUUID();
           const timestamp = Date.now();
-          const artifactName = `${{ github.run_id }}-${{ github.run_number }}-github-pages-${timestamp}-${uniquid}`;
+          const runId = process.env.GITHUB_RUN_ID;
+          const runNumber = process.env.GITHUB_RUN_NUMBER;
+          const artifactName = `${runId}-${runNumber}-github-pages-${timestamp}-${uniquid}`;
           core.setOutput("artifact-name", artifactName);
 
     - id: local-actions
-      uses: hoverkraft-tech/ci-github-common/actions/local-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+      uses: hoverkraft-tech/ci-github-common/actions/local-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
       with:
         source-path: ${{ github.action_path }}/../..
 

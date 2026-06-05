@@ -16,23 +16,19 @@ inputs:
       Working directory used to scope release automation in a monorepo.
       If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
       If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.
-    type: string
     required: false
     default: ""
   include-paths:
     description: |
       Additional paths to include in the release notes filtering (JSON array).
       These paths are added to the `include-paths` configuration of release-drafter.
-    type: string
     required: false
     default: "[]"
   tag:
     description: "Release tag name to use in explicit mode"
     required: false
   target-sha:
-    description: |
-      Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist.
-      Forwarded to Release Drafter as `commitish`.
+    description: "Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist. Forwarded to Release Drafter as `commitish`." # codespell:ignore commitish
     required: false
     default: ""
   github-token:
@@ -180,7 +176,7 @@ runs:
           core.setOutput('summary-template', summaryTemplate);
 
     - id: local-actions
-      uses: hoverkraft-tech/ci-github-common/actions/local-actions@b553a696531fbd36743ccbb0c76c717971b8acdb # 0.35.4
+      uses: hoverkraft-tech/ci-github-common/actions/local-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
       with:
         source-path: ${{ github.action_path }}/..
 
@@ -483,7 +479,7 @@ runs:
       with:
         token: ${{ inputs.github-token }}
         tag: ${{ steps.resolve-release-inputs.outputs.explicit-tag }}
-        commitish: ${{ steps.resolve-explicit-release-inputs.outputs.commitish }}
+        commitish: ${{ steps.resolve-explicit-release-inputs.outputs.commitish }} # codespell:ignore commitish
         publish: "false"
         # config-path is relative to ".github" directory
         config-name: file:${{ steps.get-configuration.outputs.config-path }}

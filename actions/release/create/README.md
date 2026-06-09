@@ -55,8 +55,7 @@ The release is published by default after optional changelog summarization and a
     # Release tag name to use in explicit mode
     tag: ""
 
-    # Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist.
-    # Forwarded to Release Drafter as `commitish`.
+    # Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist. Forwarded to Release Drafter as `commitish`.
     target-sha: ""
 
     # GitHub Token for creating the draft release.
@@ -127,8 +126,7 @@ The release is published by default after optional changelog summarization and a
 | **`include-paths`**       | Additional paths to include in the release notes filtering (JSON array).                                                                                                                    | **false**    | `[]`                  |
 |                           | These paths are added to the `include-paths` configuration of release-drafter.                                                                                                              |              |                       |
 | **`tag`**                 | Release tag name to use in explicit mode                                                                                                                                                    | **false**    | -                     |
-| **`target-sha`**          | Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist.                                                                    | **false**    | -                     |
-|                           | Forwarded to Release Drafter as `commitish`.                                                                                                                                                |              |                       |
+| **`target-sha`**          | Optional commit SHA or branch name to target when explicit mode creates a release for a tag that does not already exist. Forwarded to Release Drafter as `commitish`.                       | **false**    | -                     |
 | **`github-token`**        | GitHub Token for creating the draft release.                                                                                                                                                | **false**    | `${{ github.token }}` |
 |                           | Permissions:                                                                                                                                                                                |              |                       |
 |                           | - contents: write                                                                                                                                                                           |              |                       |

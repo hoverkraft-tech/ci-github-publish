@@ -40,6 +40,7 @@ Set permissions to write deployments.
 ```yaml
 permissions:
   deployments: write
+  pull-requests: read
 ```
 
 <!-- usage:start -->

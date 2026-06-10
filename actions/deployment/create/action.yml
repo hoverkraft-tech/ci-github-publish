@@ -10,7 +10,7 @@ inputs:
     description: "The environment to deploy to"
     required: true
   token:
-    description: "The token to use to fetch pull request data. It needs the `pull-requests:read` permission."
+    description: "The token to use to fetch pull request data. It needs the `deployments: write, pull-requests: read` permissions."
     required: false
     default: ${{ github.token }}
 

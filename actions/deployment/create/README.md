@@ -48,13 +48,13 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/create@84d583ba7b357f9476707f54cf5419d630ae0145 # 0.26.2
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/create@b2562b46714e535a0113f90f554b55e1248212c1 # 0.26.3
   with:
     # The environment to deploy to
     # This input is required.
     environment: ""
 
-    # The token to use to fetch pull request data. It needs the `pull-requests:read` permission.
+    # The token to use to fetch pull request data. It needs the `deployments: write, pull-requests: read` permissions.
     # Default: `${{ github.token }}`
     token: ${{ github.token }}
 ```
@@ -65,10 +65,10 @@ permissions:
 
 ## Inputs
 
-| **Input**         | **Description**                                                                            | **Required** | **Default**           |
-| ----------------- | ------------------------------------------------------------------------------------------ | ------------ | --------------------- |
-| **`environment`** | The environment to deploy to                                                               | **true**     | -                     |
-| **`token`**       | The token to use to fetch pull request data. It needs the `pull-requests:read` permission. | **false**    | `${{ github.token }}` |
+| **Input**         | **Description**                                                                                                  | **Required** | **Default**           |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`environment`** | The environment to deploy to                                                                                     | **true**     | -                     |
+| **`token`**       | The token to use to fetch pull request data. It needs the `deployments: write, pull-requests: read` permissions. | **false**    | `${{ github.token }}` |
 
 <!-- inputs:end -->
 

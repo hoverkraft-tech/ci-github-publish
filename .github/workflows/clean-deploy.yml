@@ -117,7 +117,7 @@ jobs:
       pull-requests: write
     steps:
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@624be17604ee0a7378488191aacb35851e7cf001 # 0.37.1
         with:
           actions-path: actions
 
@@ -157,7 +157,7 @@ jobs:
           environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@6718ae98e8b6e009f8f2790af074daa1a06946c2 # 0.36.2
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@624be17604ee0a7378488191aacb35851e7cf001 # 0.37.1
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}
         with:
           title: "Deployment(s) have been deleted :wastebasket:."

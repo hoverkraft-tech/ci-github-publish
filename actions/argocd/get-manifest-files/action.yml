@@ -33,15 +33,15 @@ runs:
         INPUT_ENVIRONMENT: ${{ inputs.environment }}
       with:
         script: |
-          const environment = process.env.INPUT_ENVIRONMENT;
-          if (!environment) {
+          const environmentInput = process.env.INPUT_ENVIRONMENT;
+          if (!environmentInput) {
             return core.setFailed(`"environment" input is not defined`);
           }
 
           // Get suffix from environment
-          const environmentParts = environment.split(":");
+          const environmentParts = environmentInput.split(":");
 
-          environment = environmentParts[0];
+          const environment = environmentParts[0];
           const environmentSuffix = environmentParts[1];
 
           core.setOutput("environment", environment);

@@ -64,7 +64,7 @@ on:
 permissions: {}
 jobs:
   clean-deploy-argocd-app-of-apps:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@84d583ba7b357f9476707f54cf5419d630ae0145 # 0.26.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@b2562b46714e535a0113f90f554b55e1248212c1 # 0.26.3
     permissions:
       contents: read
       pull-requests: write
@@ -146,7 +146,7 @@ concurrency:
 
 jobs:
   deploy:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@84d583ba7b357f9476707f54cf5419d630ae0145 # 0.26.2
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/clean-deploy-argocd-app-of-apps.yml@b2562b46714e535a0113f90f554b55e1248212c1 # 0.26.3
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
       github-app-key: ${{ secrets.GITHUB_APP_KEY }}

@@ -224,7 +224,7 @@ runs:
           core.setOutput('cmd', yqUpdates);
 
     - id: update-application-file
-      uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c # v4.53.2
+      uses: mikefarah/yq@1b9b4ac5187171d2e5e3129be0cfa827c7f9d53d # v4.53.3
       env:
         INPUT_NAMESPACE: ${{ inputs.namespace }}
         INPUT_APPLICATION_REPOSITORY: ${{ inputs.application-repository }}
@@ -322,7 +322,7 @@ runs:
           fi
 
     - id: update-manifest-file
-      uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c # v4.53.2
+      uses: mikefarah/yq@1b9b4ac5187171d2e5e3129be0cfa827c7f9d53d # v4.53.3
       env:
         INPUT_NAMESPACE: ${{ inputs.namespace }}
         INPUT_MANIFEST_FILE: ${{ inputs.manifest-file }}

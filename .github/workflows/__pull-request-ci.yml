@@ -20,6 +20,7 @@ jobs:
       contents: write
       deployments: write
       id-token: write
+      issues: write
       packages: read
       pull-requests: write
       security-events: write

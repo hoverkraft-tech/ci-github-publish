@@ -19,11 +19,11 @@
 	"author": "hoverkraft",
 	"license": "MIT",
 	"dependencies": {
-		"@langchain/anthropic": "1.4.0",
+		"@langchain/anthropic": "1.4.1",
 		"@langchain/google-genai": "2.1.31",
 		"@langchain/openai": "1.4.7",
 		"html-to-text": "^10.0.0",
-		"langchain": "1.4.4"
+		"langchain": "1.4.5"
 	},
 	"engines": {
 		"node": ">=24.0.0"

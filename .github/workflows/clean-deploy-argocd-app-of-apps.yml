@@ -72,12 +72,12 @@ jobs:
             }
             core.setOutput("repository", repository);
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
       - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@624be17604ee0a7378488191aacb35851e7cf001 # 0.37.1
+        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@7034f6ae5bae1ec46a0108e8efb60d102e88961d # 0.37.2
         with:
           actions-path: actions
 
@@ -121,7 +121,7 @@ jobs:
           private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@624be17604ee0a7378488191aacb35851e7cf001 # 0.37.1
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@7034f6ae5bae1ec46a0108e8efb60d102e88961d # 0.37.2
         if: steps.remove-files.outputs.has-changes == 'true'
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional

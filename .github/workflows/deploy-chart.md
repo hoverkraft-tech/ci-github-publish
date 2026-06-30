@@ -87,7 +87,7 @@ on:
 permissions: {}
 jobs:
   deploy-chart:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@5ecd2fc186b55220581879d996a311c9bb875c58 # 0.26.4
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@607069025f6c1312680ed0864c4d9f4338b82dfe # 0.26.5
     permissions:
       actions: read
       contents: read
@@ -188,9 +188,9 @@ jobs:
       # Example:
       # ```json
       # {
-      #   "cache-type": "registry",
-      #   "sign": false,
-      #   "buildkitd-config-inline": "[registry.\"my-registry.local:5000\"]\nhttp = true\ninsecure = true"
+      # "cache-type": "registry",
+      # "sign": false,
+      # "buildkitd-config-inline": "[registry.\"my-registry.local:5000\"]\nhttp = true\ninsecure = true"
       # }
       # ```
       #
@@ -270,7 +270,16 @@ jobs:
 |                             | See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/.github/workflows/docker-build-images.md>.                                                                                                                                                        |              |            |                            |
 | **`build-parameters`**      | Additional parameters forwarded to the image build workflow.                                                                                                                                                                                                            | **false**    | **string** | `{}`                       |
 |                             | JSON object using the image build workflow input names as keys.                                                                                                                                                                                                         |              |            |                            |
-|                             | Supported keys: `lfs`, `build-secret-github-app-token-env`, `build-secret-github-app-client-id`, `build-secret-github-app-owner`, `cache-type`, `buildkitd-config-inline`, `sign`.                                                                                      |              |            |                            |
+|                             | Supported keys:                                                                                                                                                                                                                                                         |              |            |                            |
+|                             | - `lfs`                                                                                                                                                                                                                                                                 |              |            |                            |
+|                             | - `build-secret-github-app-token-env`                                                                                                                                                                                                                                   |              |            |                            |
+|                             | - `build-secret-github-app-client-id`                                                                                                                                                                                                                                   |              |            |                            |
+|                             | - `build-secret-github-app-owner`                                                                                                                                                                                                                                       |              |            |                            |
+|                             | - `cache-type`                                                                                                                                                                                                                                                          |              |            |                            |
+|                             | - `buildkitd-config-inline`                                                                                                                                                                                                                                             |              |            |                            |
+|                             | - `sign`                                                                                                                                                                                                                                                                |              |            |                            |
+|                             | Example:                                                                                                                                                                                                                                                                |              |            |                            |
+|                             | <!-- textlint-disable --><pre lang="json">{&#13; "cache-type": "registry",&#13; "sign": false,&#13; "buildkitd-config-inline": "[registry.\"my-registry.local:5000\"]\nhttp = true\ninsecure = true"&#13;}</pre><!-- textlint-enable -->                                |              |            |                            |
 | **`chart-name`**            | Chart name to release.                                                                                                                                                                                                                                                  | **false**    | **string** | `application`              |
 |                             | See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.                                                                                                                                                            |              |            |                            |
 | **`chart-path`**            | Path to the chart to release.                                                                                                                                                                                                                                           | **false**    | **string** | `charts/application`       |
@@ -292,18 +301,18 @@ jobs:
 
 ## Secrets
 
-| **Secret**                        | **Description**                                                                                        | **Required** |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------ |
-| **`oci-registry-password`**       | OCI registry password.                                                                                 | **true**     |
-| **`build-secrets`**               | List of secrets to expose to the build.                                                                | **false**    |
-|                                   | See <https://docs.docker.com/build/ci/github-actions/secrets/>.                                        |              |
-| **`build-secret-github-app-key`** | GitHub App private key to generate a token to be passed to the image build as secret env.              | **false**    |
-|                                   | See <https://github.com/actions/create-github-app-token>. Falls back to `github-app-key` when omitted. |              |
-| **`github-token`**                | GitHub token for deploying.                                                                            | **false**    |
-|                                   | Permissions:                                                                                           |              |
-|                                   | - contents: write                                                                                      |              |
-| **`github-app-key`**              | GitHub App private key to generate GitHub token in place of github-token.                              | **false**    |
-|                                   | See <https://github.com/actions/create-github-app-token>.                                              |              |
+| **Secret**                        | **Description**                                                                           | **Required** |
+| --------------------------------- | ----------------------------------------------------------------------------------------- | ------------ |
+| **`oci-registry-password`**       | OCI registry password.                                                                    | **true**     |
+| **`build-secrets`**               | List of secrets to expose to the build.                                                   | **false**    |
+|                                   | See <https://docs.docker.com/build/ci/github-actions/secrets/>.                           |              |
+| **`build-secret-github-app-key`** | GitHub App private key to generate a token to be passed to the image build as secret env. | **false**    |
+|                                   | See <https://github.com/actions/create-github-app-token>.                                 |              |
+| **`github-token`**                | GitHub token for deploying.                                                               | **false**    |
+|                                   | Permissions:                                                                              |              |
+|                                   | - contents: write                                                                         |              |
+| **`github-app-key`**              | GitHub App private key to generate GitHub token in place of github-token.                 | **false**    |
+|                                   | See <https://github.com/actions/create-github-app-token>.                                 |              |
 
 <!-- secrets:end -->
 
@@ -348,7 +357,7 @@ permissions:
 jobs:
   deploy:
     name: Deploy
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@5ecd2fc186b55220581879d996a311c9bb875c58 # 0.26.4
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@607069025f6c1312680ed0864c4d9f4338b82dfe # 0.26.5
     secrets:
       oci-registry-password: ${{ secrets.GITHUB_TOKEN }}
       github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}

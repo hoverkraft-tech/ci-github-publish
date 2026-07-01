@@ -62,7 +62,7 @@ on:
 permissions: {}
 jobs:
   deploy-finish:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@2d72bc5fabd9f74402b62915a21582cdc22e654b # 0.27.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@de91953dd118099667dcfccaeead703889ae33d8 # 0.27.0
     permissions:
       actions: read
       contents: read
@@ -88,6 +88,18 @@ jobs:
       # Default: `./budget.json`
       budget-path: ./budget.json
 
+      # Maximum time to wait for the deployment to reach a terminal state, in seconds.
+      # See [`get-finished`](../../actions/deployment/get-finished/README.md).
+      #
+      # Default: `300`
+      deployment-timeout: "300"
+
+      # Timeout in seconds for the URL ping check.
+      # See [`url-ping`](../../actions/check/url-ping/README.md).
+      #
+      # Default: `60`
+      ping-timeout: "60"
+
       # Extra information to send to the deployment summary.
       # Should be a JSON object.
       extra: ""
@@ -101,16 +113,20 @@ jobs:
 
 ### Workflow Call Inputs
 
-| **Input**           | **Description**                                                                                       | **Required** | **Type**   | **Default**         |
-| ------------------- | ----------------------------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
-| **`runs-on`**       | JSON array of runner(s) to use.                                                                       | **false**    | **string** | `["ubuntu-latest"]` |
-|                     | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                    |              |            |                     |
-| **`deployment-id`** | Deployment ID to use for the deployment.                                                              | **true**     | **string** | -                   |
-|                     | See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments>. |              |            |                     |
-| **`budget-path`**   | Path to the budget file to use for the Lighthouse check.                                              | **false**    | **string** | `./budget.json`     |
-|                     | See [`url-lighthouse`](../../actions/check/url-lighthouse/README.md).                                 |              |            |                     |
-| **`extra`**         | Extra information to send to the deployment summary.                                                  | **false**    | **string** | -                   |
-|                     | Should be a JSON object.                                                                              |              |            |                     |
+| **Input**                | **Description**                                                                                       | **Required** | **Type**   | **Default**         |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
+| **`runs-on`**            | JSON array of runner(s) to use.                                                                       | **false**    | **string** | `["ubuntu-latest"]` |
+|                          | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                    |              |            |                     |
+| **`deployment-id`**      | Deployment ID to use for the deployment.                                                              | **true**     | **string** | -                   |
+|                          | See <https://docs.github.com/en/rest/deployments/deployments?apiVersion=2022-11-28#list-deployments>. |              |            |                     |
+| **`budget-path`**        | Path to the budget file to use for the Lighthouse check.                                              | **false**    | **string** | `./budget.json`     |
+|                          | See [`url-lighthouse`](../../actions/check/url-lighthouse/README.md).                                 |              |            |                     |
+| **`deployment-timeout`** | Maximum time to wait for the deployment to reach a terminal state, in seconds.                        | **false**    | **string** | `300`               |
+|                          | See [`get-finished`](../../actions/deployment/get-finished/README.md).                                |              |            |                     |
+| **`ping-timeout`**       | Timeout in seconds for the URL ping check.                                                            | **false**    | **string** | `60`                |
+|                          | See [`url-ping`](../../actions/check/url-ping/README.md).                                             |              |            |                     |
+| **`extra`**              | Extra information to send to the deployment summary.                                                  | **false**    | **string** | -                   |
+|                          | Should be a JSON object.                                                                              |              |            |                     |
 
 <!-- inputs:end -->
 

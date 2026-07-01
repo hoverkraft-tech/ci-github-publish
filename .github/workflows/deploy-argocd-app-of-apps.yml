@@ -143,7 +143,7 @@ jobs:
             core.setOutput("initiated-by", initiatedBy);
 
       - id: chart-variables
-        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@efcd61f6ea80f89aab6fcf8d2e552c3336198e14 # 0.38.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@f8255a6a37eb141fa331527f5aed9b9e1d598c77 # 0.38.0
         with:
           uri: ${{ steps.check-client-payload.outputs.chart }}
 

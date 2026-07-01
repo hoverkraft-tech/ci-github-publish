@@ -42,7 +42,7 @@ Action to get the environment to deploy regarding the workflow context.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/get-environment@b2562b46714e535a0113f90f554b55e1248212c1 # 0.26.3
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/get-environment@2d72bc5fabd9f74402b62915a21582cdc22e654b # 0.27.0
   with:
     # Environment where to deploy.
     environment: ""

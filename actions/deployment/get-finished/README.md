@@ -55,15 +55,15 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/get-finished@2d72bc5fabd9f74402b62915a21582cdc22e654b # 0.27.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/get-finished@de91953dd118099667dcfccaeead703889ae33d8 # 0.27.0
   with:
     # The ID of the GitHub deployment to wait for (numeric ID)
     # This input is required.
     deployment-id: ""
 
     # Maximum time to wait for a terminal deployment status, in seconds
-    # Default: `240`
-    timeout: "240"
+    # Default: `300`
+    timeout: "300"
 
     # If "true", the action will not mark the step as failed when the deployment finishes with a non-success terminal state
     # (for example `failure` or `error`).
@@ -82,7 +82,7 @@ permissions:
 | **Input**           | **Description**                                                                                                       | **Required** | **Default** |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
 | **`deployment-id`** | The ID of the GitHub deployment to wait for (numeric ID)                                                              | **true**     | -           |
-| **`timeout`**       | Maximum time to wait for a terminal deployment status, in seconds                                                     | **false**    | `240`       |
+| **`timeout`**       | Maximum time to wait for a terminal deployment status, in seconds                                                     | **false**    | `300`       |
 | **`allow-failure`** | If "true", the action will not mark the step as failed when the deployment finishes with a non-success terminal state | **false**    | `false`     |
 |                     | (for example `failure` or `error`).                                                                                   |              |             |
 |                     | When `false` (default), the step fails if the final deployment status is not `success`.                               |              |             |

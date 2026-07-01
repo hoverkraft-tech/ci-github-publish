@@ -45,7 +45,7 @@ Key features:
 
 ### Permissions
 
-- **`actions`**: `write`
+- **`actions`**: `read`
 - **`contents`**: `read`
 - **`deployments`**: `write`
 - **`id-token`**: `write`
@@ -89,7 +89,7 @@ jobs:
   deploy-chart:
     uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@2d72bc5fabd9f74402b62915a21582cdc22e654b # 0.27.0
     permissions:
-      actions: write
+      actions: read
       contents: read
       deployments: write
       id-token: write

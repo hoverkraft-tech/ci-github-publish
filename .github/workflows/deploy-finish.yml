@@ -35,6 +35,20 @@ on:
         type: string
         required: false
         default: "./budget.json"
+      deployment-timeout:
+        description: |
+          Maximum time to wait for the deployment to reach a terminal state, in seconds.
+          See [`get-finished`](../../actions/deployment/get-finished/README.md).
+        type: string
+        required: false
+        default: "300"
+      ping-timeout:
+        description: |
+          Timeout in seconds for the URL ping check.
+          See [`url-ping`](../../actions/check/url-ping/README.md).
+        type: string
+        required: false
+        default: "60"
       extra:
         description: |
           Extra information to send to the deployment summary.
@@ -71,6 +85,7 @@ jobs:
         uses: ./../self-workflow/actions/deployment/get-finished
         with:
           deployment-id: ${{ inputs.deployment-id }}
+          timeout: ${{ inputs.deployment-timeout }}
 
   deploy-checks:
     name: Deploy checks
@@ -83,6 +98,7 @@ jobs:
       runs-on: ${{ inputs.runs-on }}
       url: ${{ needs.get-finished-deployment.outputs.url }}
       budget-path: ${{ inputs.budget-path }}
+      ping-timeout: ${{ inputs.ping-timeout }}
       print-summary: false
 
   deploy-result:

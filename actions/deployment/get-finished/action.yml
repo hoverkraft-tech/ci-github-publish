@@ -20,7 +20,7 @@ inputs:
   timeout:
     description: "Maximum time to wait for a terminal deployment status, in seconds"
     required: false
-    default: "240"
+    default: "300"
   allow-failure:
     description: |
       If "true", the action will not mark the step as failed when the deployment finishes with a non-success terminal state

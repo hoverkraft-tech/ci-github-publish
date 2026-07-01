@@ -30,6 +30,13 @@ on:
         type: string
         required: false
         default: "./budget.json"
+      ping-timeout:
+        description: |
+          Timeout in seconds for the URL ping check.
+          See [`url-ping`](../../actions/check/url-ping/README.md).
+        type: string
+        required: false
+        default: "60"
       print-summary:
         description: "Whether to print a summary of the checks."
         type: boolean
@@ -79,6 +86,7 @@ jobs:
         id: ping
         with:
           url: ${{ inputs.url }}
+          timeout: ${{ inputs['ping-timeout'] }}
 
       - id: lighthouse
         uses: ./../self-workflow/actions/check/url-lighthouse

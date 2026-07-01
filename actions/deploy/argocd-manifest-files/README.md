@@ -151,7 +151,7 @@ metadata:
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/argocd-manifest-files@b2562b46714e535a0113f90f554b55e1248212c1 # 0.26.3
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/argocd-manifest-files@2d72bc5fabd9f74402b62915a21582cdc22e654b # 0.27.0
   with:
     # Deployment ID to be used in the ArgoCD application manifest
     # This input is required.

@@ -31,7 +31,7 @@ Action to get the release configuration details
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@b2562b46714e535a0113f90f554b55e1248212c1 # 0.26.3
+- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@2d72bc5fabd9f74402b62915a21582cdc22e654b # 0.27.0
   with:
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.

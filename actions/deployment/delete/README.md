@@ -48,7 +48,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/delete@84d583ba7b357f9476707f54cf5419d630ae0145 # 0.26.2
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/delete@2d72bc5fabd9f74402b62915a21582cdc22e654b # 0.27.0
   with:
     # The token to use to delete the review apps environment(s). It needs the `repo` scope.
     token: ""

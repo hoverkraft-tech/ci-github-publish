@@ -34,7 +34,7 @@ Plan a release identity without creating a Git tag or GitHub release.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@2d72bc5fabd9f74402b62915a21582cdc22e654b # 0.27.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@ed354ada70b9f518c2bb663e18a80041c2cf5156 # 0.27.1
   with:
     # Whether to plan the release as a prerelease
     # Default: `false`

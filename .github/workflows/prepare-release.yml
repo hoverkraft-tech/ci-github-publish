@@ -58,7 +58,7 @@ jobs:
         with:
           working-directory: ${{ inputs.working-directory }}
 
-      - uses: release-drafter/release-drafter/autolabeler@4d75298e00d9e34c483e5ff8c68d0ea1c1940c1e # v7.5.1
+      - uses: release-drafter/release-drafter/autolabeler@eada3c96a64734dd381cfbda23511034e328ddb0 # v7.6.0
         if: github.event_name == 'pull_request'
         with:
           token: ${{ secrets.github-token || secrets.GITHUB_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional

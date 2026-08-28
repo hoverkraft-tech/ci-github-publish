@@ -176,7 +176,7 @@ runs:
           core.setOutput('summary-template', summaryTemplate);
 
     - id: local-actions
-      uses: hoverkraft-tech/ci-github-common/actions/local-actions@2334d395217f9811699dbd4ace9d8559e4d99e0d # 0.37.3
+      uses: hoverkraft-tech/ci-github-common/actions/local-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
       with:
         source-path: ${{ github.action_path }}/..
 
@@ -295,7 +295,7 @@ runs:
 
     - id: detect-drafter-changes
       if: steps.resolve-release-inputs.outputs.mode == 'drafter' && inputs.skip-if-no-changes == 'true'
-      uses: release-drafter/release-drafter@4d75298e00d9e34c483e5ff8c68d0ea1c1940c1e # v7.5.1
+      uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
       with:
         token: ${{ inputs.github-token }}
         dry-run: "true"
@@ -464,7 +464,7 @@ runs:
 
     - id: draft-drafter-release
       if: steps.resolve-release-inputs.outputs.mode == 'drafter' && steps.resolve-create-condition.outputs.should-create == 'true'
-      uses: release-drafter/release-drafter@4d75298e00d9e34c483e5ff8c68d0ea1c1940c1e # v7.5.1
+      uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
       with:
         token: ${{ inputs.github-token }}
         publish: "false"
@@ -475,7 +475,7 @@ runs:
 
     - id: draft-explicit-release
       if: steps.resolve-release-inputs.outputs.mode == 'explicit' && steps.resolve-create-condition.outputs.should-create == 'true'
-      uses: release-drafter/release-drafter@4d75298e00d9e34c483e5ff8c68d0ea1c1940c1e # v7.5.1
+      uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
       with:
         token: ${{ inputs.github-token }}
         tag: ${{ steps.resolve-release-inputs.outputs.explicit-tag }}

@@ -1,0 +1,134 @@
+name: "Release - Delete"
+description: "Delete an existing GitHub release for a tag, with optional draft-only cleanup behavior."
+author: hoverkraft
+branding:
+  icon: trash-2
+  color: blue
+
+inputs:
+  tag:
+    description: "Existing tag name of the GitHub release to delete"
+    required: true
+  draft-only:
+    description: |
+      Whether to delete the release only when it is still a draft.
+      When enabled and the resolved release is already published, the action exits without deleting it.
+    required: false
+    default: "false"
+  github-token:
+    description: |
+      GitHub Token for deleting the release.
+      Permissions:
+        - contents: write
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  deleted:
+    description: "Whether the release was deleted"
+    value: ${{ steps.delete-release.outputs.deleted }}
+  release-id:
+    description: "The resolved release id when a release was found"
+    value: ${{ steps.delete-release.outputs.release-id }}
+  release-draft:
+    description: "Whether the resolved release was a draft"
+    value: ${{ steps.delete-release.outputs.release-draft }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: delete-release
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        RELEASE_TAG: ${{ inputs.tag }}
+        DRAFT_ONLY: ${{ inputs.draft-only }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const releaseTag = (process.env.RELEASE_TAG || '').trim();
+          const draftOnly = (process.env.DRAFT_ONLY || 'false').trim().toLowerCase() || 'false';
+
+          if (!releaseTag) {
+            return core.setFailed('tag is required');
+          }
+
+          if (!['true', 'false'].includes(draftOnly)) {
+            return core.setFailed(`draft-only must be either true or false, got: ${draftOnly}`);
+          }
+
+          const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
+
+          const findReleaseByTag = async (tag) => {
+            const attempts = 5;
+
+            for (let attempt = 1; attempt <= attempts; attempt += 1) {
+              try {
+                return await github.rest.repos.getReleaseByTag({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+
+                const releases = await github.paginate(github.rest.repos.listReleases, {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  per_page: 100,
+                });
+
+                const matchingRelease = releases.find((release) => (release.tag_name || '').trim() === tag);
+                if (matchingRelease) {
+                  return { data: matchingRelease };
+                }
+
+                if (attempt === attempts) {
+                  return null;
+                }
+
+                await wait(attempt * 1000);
+              }
+            }
+          };
+
+          const release = await findReleaseByTag(releaseTag);
+
+          if (!release) {
+            core.info(`No GitHub release found for tag ${releaseTag}. Nothing to delete.`);
+            core.setOutput('deleted', 'false');
+            core.setOutput('release-id', '');
+            core.setOutput('release-draft', '');
+            return;
+          }
+
+          const releaseId = String(release.data.id);
+          const isDraft = release.data.draft === true;
+
+          core.setOutput('release-id', releaseId);
+          core.setOutput('release-draft', isDraft ? 'true' : 'false');
+
+          if (draftOnly === 'true' && !isDraft) {
+            core.info(`Release ${releaseTag} is already published. Skipping draft-only deletion.`);
+            core.setOutput('deleted', 'false');
+            return;
+          }
+
+          try {
+            await github.rest.repos.deleteRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: Number(releaseId),
+            });
+          } catch (error) {
+            if (error.status === 404) {
+              core.info(`Release ${releaseTag} was already deleted.`);
+              core.setOutput('deleted', 'false');
+              return;
+            }
+
+            throw error;
+          }
+
+          core.setOutput('deleted', 'true');

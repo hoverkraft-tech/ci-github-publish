@@ -18,6 +18,7 @@ That means:
 - update and merge release-owned files before drafting the final release when they belong in the released source tree
 - prefer a single `actions/release/create` step for the simplest validate-and-release flow
 - publish the GitHub release only after draft updates and asset uploads are complete
+- when a workflow keeps a temporary draft across later jobs, delete that draft if an intermediate job fails before publication
 
 ## Release Actions
 
@@ -134,6 +135,19 @@ jobs:
           name: release-assets
           path: dist/
           if-no-files-found: error
+
+  cleanup-draft-release:
+    runs-on: ubuntu-latest
+    needs: [draft-release, publish-release-artifacts]
+    if: ${{ failure() && needs.draft-release.result == 'success' && needs.publish-release-artifacts.result == 'failure' }}
+    permissions:
+      contents: write
+    steps:
+      - uses: hoverkraft-tech/ci-github-publish/actions/release/delete@<sha> # x.y.z
+        with:
+          tag: ${{ needs.draft-release.outputs.tag }}
+          draft-only: "true"
+          github-token: ${{ github.token }}
 
   publish-release:
     runs-on: ubuntu-latest
@@ -256,6 +270,19 @@ jobs:
           name: release-assets
           path: dist/
           if-no-files-found: error
+
+  cleanup-draft-release:
+    runs-on: ubuntu-latest
+    needs: [draft-release, publish-release-artifacts]
+    if: ${{ failure() && needs.draft-release.result == 'success' && needs.publish-release-artifacts.result == 'failure' }}
+    permissions:
+      contents: write
+    steps:
+      - uses: hoverkraft-tech/ci-github-publish/actions/release/delete@<sha> # x.y.z
+        with:
+          tag: ${{ needs.draft-release.outputs.tag }}
+          draft-only: "true"
+          github-token: ${{ github.token }}
 
   publish-release:
     runs-on: ubuntu-latest

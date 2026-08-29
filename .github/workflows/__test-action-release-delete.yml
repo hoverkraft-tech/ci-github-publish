@@ -1,0 +1,225 @@
+name: Internal - Tests for "release/delete" action
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  tests:
+    name: Tests for "release/delete" action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Arrange - Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Arrange - Build test release inputs
+        id: test-releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            core.setOutput('draft-tag', `test-release-delete-draft-${context.runId}-${context.runAttempt}`);
+            core.setOutput('published-tag', `test-release-delete-published-${context.runId}-${context.runAttempt}`);
+
+      - name: Arrange - Create explicit draft release
+        uses: ./actions/release/create
+        with:
+          tag: ${{ steps.test-releases.outputs.draft-tag }}
+          target-sha: ${{ github.sha }}
+          publish: "false"
+          github-token: ${{ github.token }}
+
+      - name: Act - Delete explicit draft release
+        id: delete-draft-release
+        uses: ./actions/release/delete
+        with:
+          tag: ${{ steps.test-releases.outputs.draft-tag }}
+          draft-only: "true"
+          github-token: ${{ github.token }}
+
+      - name: Assert - Deleted explicit draft release
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_TAG: ${{ steps.test-releases.outputs.draft-tag }}
+          RELEASE_DELETED: ${{ steps.delete-draft-release.outputs.deleted }}
+          RELEASE_DRAFT: ${{ steps.delete-draft-release.outputs.release-draft }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const assert = require('node:assert');
+            const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
+
+            const findReleaseByTag = async (tag) => {
+              const attempts = 5;
+
+              for (let attempt = 1; attempt <= attempts; attempt += 1) {
+                try {
+                  return await github.rest.repos.getReleaseByTag({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    tag,
+                  });
+                } catch (error) {
+                  if (error.status !== 404) {
+                    throw error;
+                  }
+
+                  const releases = await github.paginate(github.rest.repos.listReleases, {
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    per_page: 100,
+                  });
+
+                  const matchingRelease = releases.find((release) => (release.tag_name || '').trim() === tag);
+                  if (matchingRelease) {
+                    return { data: matchingRelease };
+                  }
+
+                  if (attempt === attempts) {
+                    return null;
+                  }
+
+                  await wait(attempt * 1000);
+                }
+              }
+            };
+
+            assert.equal(process.env.RELEASE_DELETED, 'true');
+            assert.equal(process.env.RELEASE_DRAFT, 'true');
+
+            const release = await findReleaseByTag((process.env.RELEASE_TAG || '').trim());
+            assert.equal(release, null);
+
+      - name: Arrange - Create explicit published release
+        uses: ./actions/release/create
+        with:
+          tag: ${{ steps.test-releases.outputs.published-tag }}
+          target-sha: ${{ github.sha }}
+          publish: "true"
+          github-token: ${{ github.token }}
+
+      - name: Act - Skip deleting published release in draft-only mode
+        id: delete-published-release-draft-only
+        uses: ./actions/release/delete
+        with:
+          tag: ${{ steps.test-releases.outputs.published-tag }}
+          draft-only: "true"
+          github-token: ${{ github.token }}
+
+      - name: Assert - Draft-only mode keeps published release
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_TAG: ${{ steps.test-releases.outputs.published-tag }}
+          RELEASE_DELETED: ${{ steps.delete-published-release-draft-only.outputs.deleted }}
+          RELEASE_DRAFT: ${{ steps.delete-published-release-draft-only.outputs.release-draft }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const assert = require('node:assert');
+            const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
+
+            const findReleaseByTag = async (tag) => {
+              const attempts = 5;
+
+              for (let attempt = 1; attempt <= attempts; attempt += 1) {
+                try {
+                  return await github.rest.repos.getReleaseByTag({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    tag,
+                  });
+                } catch (error) {
+                  if (error.status !== 404) {
+                    throw error;
+                  }
+
+                  const releases = await github.paginate(github.rest.repos.listReleases, {
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    per_page: 100,
+                  });
+
+                  const matchingRelease = releases.find((release) => (release.tag_name || '').trim() === tag);
+                  if (matchingRelease) {
+                    return { data: matchingRelease };
+                  }
+
+                  if (attempt === attempts) {
+                    return null;
+                  }
+
+                  await wait(attempt * 1000);
+                }
+              }
+            };
+
+            assert.equal(process.env.RELEASE_DELETED, 'false');
+            assert.equal(process.env.RELEASE_DRAFT, 'false');
+
+            const release = await findReleaseByTag((process.env.RELEASE_TAG || '').trim());
+            assert.ok(release, 'Expected published release to still exist');
+            assert.equal(release.data.draft, false);
+
+      - name: Cleanup - Delete test releases
+        if: always()
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DRAFT_TAG: ${{ steps.test-releases.outputs.draft-tag }}
+          PUBLISHED_TAG: ${{ steps.test-releases.outputs.published-tag }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
+
+            const findReleaseByTag = async (tag) => {
+              const attempts = 5;
+
+              for (let attempt = 1; attempt <= attempts; attempt += 1) {
+                try {
+                  return await github.rest.repos.getReleaseByTag({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    tag,
+                  });
+                } catch (error) {
+                  if (error.status !== 404) {
+                    throw error;
+                  }
+
+                  const releases = await github.paginate(github.rest.repos.listReleases, {
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    per_page: 100,
+                  });
+
+                  const matchingRelease = releases.find((release) => (release.tag_name || '').trim() === tag);
+                  if (matchingRelease) {
+                    return { data: matchingRelease };
+                  }
+
+                  if (attempt === attempts) {
+                    return null;
+                  }
+
+                  await wait(attempt * 1000);
+                }
+              }
+            };
+
+            for (const tag of [process.env.DRAFT_TAG, process.env.PUBLISHED_TAG].map((value) => (value || '').trim()).filter(Boolean)) {
+              const release = await findReleaseByTag(tag);
+              if (!release) {
+                continue;
+              }
+
+              await github.rest.repos.deleteRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.data.id,
+              });
+            }

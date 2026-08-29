@@ -76,6 +76,8 @@ _Actions for managing releases._
 
 #### - [Create or refresh release](actions/release/create/README.md)
 
+#### - [Delete](actions/release/delete/README.md)
+
 #### - [Plan](actions/release/plan/README.md)
 
 #### - [Update](actions/release/update/README.md)

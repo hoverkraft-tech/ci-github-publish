@@ -168,6 +168,8 @@ The release is published by default after optional changelog summarization and a
 
 This action creates or refreshes the release as a draft first, then publishes it by default after all requested summary and asset updates succeed. Set `publish` to `false` to keep the release as a draft.
 
+If you set `publish` to `false` and perform additional jobs before a later `actions/release/update` publish step, add a fallback cleanup job with [release/delete](../delete/README.md) and `draft-only: "true"`. That avoids leaving a temporary dangling draft release behind.
+
 When `changelog-summary` is provided, the action summarizes the drafted changelog body with [release/summarize-changelog](../summarize-changelog/README.md) and prepends the generated summary above the drafted release notes.
 
 When `release-artifact-id` is provided, the action uploads the downloaded artifact files as release assets during release creation or refresh.

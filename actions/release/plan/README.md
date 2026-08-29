@@ -43,6 +43,9 @@ Plan a release identity without creating a Git tag or GitHub release.
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
     # If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.
+    # The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
+    # They also define Conventional Commit labels.
+    # They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
     working-directory: ""
 
     # Additional paths to include in the release notes filtering (JSON array).
@@ -66,18 +69,21 @@ Plan a release identity without creating a Git tag or GitHub release.
 
 ## Inputs
 
-| **Input**               | **Description**                                                                                                                                       | **Required** | **Default**           |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                           | **false**    | `false`               |
-| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                     | **false**    | -                     |
-|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                 |              |                       |
-|                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file. |              |                       |
-| **`include-paths`**     | Additional paths to include in the release notes filtering (JSON array).                                                                              | **false**    | `[]`                  |
-|                         | These paths are added to the `include-paths` configuration of release-drafter.                                                                        |              |                       |
-| **`github-token`**      | GitHub Token for planning the release.                                                                                                                | **false**    | `${{ github.token }}` |
-|                         | Permissions:                                                                                                                                          |              |                       |
-|                         | - contents: read                                                                                                                                      |              |                       |
-|                         | - pull-requests: read                                                                                                                                 |              |                       |
+| **Input**               | **Description**                                                                                                                                                               | **Required** | **Default**           |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                                                   | **false**    | `false`               |
+| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                             | **false**    | -                     |
+|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                         |              |                       |
+|                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.                         |              |                       |
+|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch. |              |                       |
+|                         | They also define Conventional Commit labels.                                                                                                                                  |              |                       |
+|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                      |              |                       |
+| **`include-paths`**     | Additional paths to include in the release notes filtering (JSON array).                                                                                                      | **false**    | `[]`                  |
+|                         | These paths are added to the `include-paths` configuration of release-drafter.                                                                                                |              |                       |
+| **`github-token`**      | GitHub Token for planning the release.                                                                                                                                        | **false**    | `${{ github.token }}` |
+|                         | Permissions:                                                                                                                                                                  |              |                       |
+|                         | - contents: read                                                                                                                                                              |              |                       |
+|                         | - pull-requests: read                                                                                                                                                         |              |                       |
 
 <!-- inputs:end -->
 

@@ -72,6 +72,9 @@ jobs:
       # Working directory used to scope release preparation in a monorepo.
       # If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
       # If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.
+      # The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
+      # They also apply Conventional Commit labels.
+      # They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
       working-directory: ""
 ```
 
@@ -83,13 +86,16 @@ jobs:
 
 ### Workflow Call Inputs
 
-| **Input**               | **Description**                                                                                                                                       | **Required** | **Type**   | **Default**         |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
-| **`runs-on`**           | JSON array of runner(s) to use.                                                                                                                       | **false**    | **string** | `["ubuntu-latest"]` |
-|                         | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                                                    |              |            |                     |
-| **`working-directory`** | Working directory used to scope release preparation in a monorepo.                                                                                    | **false**    | **string** | -                   |
-|                         | If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.               |              |            |                     |
-|                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file. |              |            |                     |
+| **Input**               | **Description**                                                                                                                                                               | **Required** | **Type**   | **Default**         |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
+| **`runs-on`**           | JSON array of runner(s) to use.                                                                                                                                               | **false**    | **string** | `["ubuntu-latest"]` |
+|                         | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                                                                            |              |            |                     |
+| **`working-directory`** | Working directory used to scope release preparation in a monorepo.                                                                                                            | **false**    | **string** | -                   |
+|                         | If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                       |              |            |                     |
+|                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.                         |              |            |                     |
+|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch. |              |            |                     |
+|                         | They also apply Conventional Commit labels.                                                                                                                                   |              |            |                     |
+|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                      |              |            |                     |
 
 <!-- inputs:end -->
 

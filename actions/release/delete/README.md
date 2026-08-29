@@ -78,7 +78,7 @@ Delete an existing GitHub release for a tag, with optional draft-only cleanup be
 | **Output**          | **Description**                                  |
 | ------------------- | ------------------------------------------------ |
 | **`deleted`**       | Whether the release was deleted                  |
-| **`release-id`**    | The resolved release id when a release was found |
+| **`release-id`**    | The resolved release ID when a release was found |
 | **`release-draft`** | Whether the resolved release was a draft         |
 
 <!-- outputs:end -->

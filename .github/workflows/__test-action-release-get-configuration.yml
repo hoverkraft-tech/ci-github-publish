@@ -34,6 +34,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           CONFIG_PATH: ${{ steps.existing-config.outputs.config-path }}
+          IS_GENERATED: ${{ steps.existing-config.outputs.is-generated }}
         with:
           script: |
             const assert = require('node:assert');
@@ -44,6 +45,7 @@ jobs:
             const configPath = process.env.CONFIG_PATH;
 
             assert.equal(configPath, 'release-config.yml');
+            assert.equal(process.env.IS_GENERATED, 'false');
 
             const absoluteConfigPath = path.resolve(workspace, '.github', configPath);
             assert.ok(fs.existsSync(absoluteConfigPath), `Expected config to exist at ${absoluteConfigPath}`);
@@ -59,6 +61,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           CONFIG_PATH: ${{ steps.generated-config.outputs.config-path }}
+          IS_GENERATED: ${{ steps.generated-config.outputs.is-generated }}
         with:
           script: |
             const assert = require('node:assert');
@@ -70,6 +73,7 @@ jobs:
             const absoluteConfigPath = path.resolve(workspace, '.github', configPath);
             const configContent = fs.readFileSync(absoluteConfigPath, 'utf8');
 
+            assert.equal(process.env.IS_GENERATED, 'true');
             assert.notEqual(configPath, 'release-configs/get-configuration.yml');
             assert.ok(configPath.endsWith('/release-drafter/get-configuration.yml') || configPath === '../release-drafter/get-configuration.yml' || configPath.includes('/release-drafter/get-configuration.yml'));
             assert.ok(fs.existsSync(absoluteConfigPath), `Expected generated config to exist at ${absoluteConfigPath}`);
@@ -78,3 +82,27 @@ jobs:
             assert.ok(configContent.includes('  - "actions/release/get-configuration"'), 'Expected working directory include path in generated config');
             assert.ok(configContent.includes('name-template: "Version get-configuration - $RESOLVED_VERSION"'), 'Expected working-directory-specific name template');
             assert.ok(configContent.includes('tag-prefix: "get-configuration-"'), 'Expected working-directory-specific tag prefix');
+            assert.ok(configContent.includes('## New Contributors'), 'Expected a new contributors section');
+            assert.ok(configContent.includes('$NEW_CONTRIBUTORS'), 'Expected the new contributors template variable');
+            assert.ok(configContent.includes('no-new-contributor-template: "_No new contributors in this release._"'), 'Expected an explicit no-new-contributors placeholder');
+            assert.ok(configContent.includes('change-authors-final-separator: " and "'), 'Expected co-authors to use a natural final separator');
+            assert.ok(configContent.includes('title: "Breaking Changes"'), 'Expected a breaking changes category');
+            assert.ok(configContent.includes('breaking: true'), 'Expected conventional breaking changes to trigger a major release');
+            assert.ok(configContent.includes('title: "Dependency Updates"'), 'Expected a dependency updates category');
+            assert.ok(configContent.includes('collapse-after: 3'), 'Expected long dependency sections to collapse');
+            assert.ok(configContent.includes('title: "Features"'), 'Expected a features category');
+            assert.ok(configContent.includes('type: "feat"'), 'Expected conventional features to trigger a minor release');
+            assert.ok(configContent.includes('title: "Other Changes"'), 'Expected a fallback category');
+            assert.ok(configContent.includes('semver-increment: major'), 'Expected breaking changes to increment major');
+            assert.ok(configContent.includes('semver-increment: minor'), 'Expected features to increment minor');
+            assert.ok(configContent.includes('semver-increment: patch'), 'Expected other changes to increment patch');
+            assert.ok(!configContent.includes('type: "version-resolver"'), 'Expected changelog categories to resolve semantic versions directly');
+            assert.ok(!configContent.includes('release-major'), 'Expected version resolution not to depend on release labels');
+            assert.ok(configContent.includes('autolabeler:\n'), 'Expected an autolabeler configuration');
+            assert.ok(configContent.includes('label: "type: breaking"'), 'Expected breaking changes to be labeled');
+            assert.ok(configContent.includes('label: "type: feature"'), 'Expected features to be labeled');
+            assert.ok(configContent.includes('label: "type: dependencies"'), 'Expected dependency updates to be labeled');
+            assert.ok(configContent.includes('label: "type: fix"'), 'Expected fixes to be labeled');
+            assert.ok(configContent.includes('label: "type: performance"'), 'Expected performance changes to be labeled');
+            assert.ok(configContent.includes('label: "type: documentation"'), 'Expected documentation changes to be labeled');
+            assert.ok(configContent.includes('label: "type: maintenance"'), 'Expected maintenance changes to be labeled');

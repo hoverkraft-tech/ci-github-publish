@@ -214,12 +214,26 @@ jobs:
             for (const tag of [process.env.DRAFT_TAG, process.env.PUBLISHED_TAG].map((value) => (value || '').trim()).filter(Boolean)) {
               const release = await findReleaseByTag(tag);
               if (!release) {
-                continue;
+                core.info(`No release found for tag ${tag}. Continuing with tag cleanup.`);
+              } else {
+                await github.rest.repos.deleteRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: release.data.id,
+                });
               }
 
-              await github.rest.repos.deleteRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: release.data.id,
-              });
+              try {
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/${tag}`,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+
+                core.info(`No Git tag found for ${tag}.`);
+              }
             }

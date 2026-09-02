@@ -66,16 +66,16 @@ jobs:
     permissions:
       contents: read
 
-  test-action-release-delete:
+  test-action-release-create:
     needs: linter
-    uses: ./.github/workflows/__test-action-release-delete.yml
+    uses: ./.github/workflows/__test-action-release-create.yml
     permissions:
       contents: write
       pull-requests: read
 
-  test-action-release-create:
-    needs: linter
-    uses: ./.github/workflows/__test-action-release-create.yml
+  test-action-release-delete:
+    needs: [linter, test-action-release-create]
+    uses: ./.github/workflows/__test-action-release-delete.yml
     permissions:
       contents: write
       pull-requests: read

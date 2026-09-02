@@ -230,7 +230,7 @@ jobs:
                   ref: `tags/${tag}`,
                 });
               } catch (error) {
-                if (error.status !== 404) {
+                if (error.status !== 404 && error.status !== 422) {
                   throw error;
                 }
 

@@ -153,3 +153,17 @@ jobs:
                 release_id: release.data.id,
               });
             }
+
+            try {
+              await github.rest.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${tag}`,
+              });
+            } catch (error) {
+              if (error.status === 404 || error.status === 422) {
+                return;
+              }
+
+              throw error;
+            }

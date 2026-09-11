@@ -19,9 +19,9 @@
 	"author": "hoverkraft",
 	"license": "MIT",
 	"dependencies": {
-		"@langchain/anthropic": "1.5.8",
+		"@langchain/anthropic": "1.5.9",
 		"@langchain/google-genai": "2.3.0",
-		"@langchain/openai": "1.5.10",
+		"@langchain/openai": "1.5.11",
 		"html-to-text": "^10.0.1",
 		"langchain": "1.5.10"
 	},

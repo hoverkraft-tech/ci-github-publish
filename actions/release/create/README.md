@@ -35,7 +35,7 @@ The release is published by default after optional changelog summarization and a
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@ed354ada70b9f518c2bb663e18a80041c2cf5156 # 0.27.1
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@a0a9d185c51c10710a5987822e78feb2b5ce1932 # 0.29.0
   with:
     # Whether the release is a prerelease
     # Default: `false`

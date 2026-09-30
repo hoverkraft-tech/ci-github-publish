@@ -55,7 +55,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/get-finished@de91953dd118099667dcfccaeead703889ae33d8 # 0.27.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/get-finished@a0a9d185c51c10710a5987822e78feb2b5ce1932 # 0.29.0
   with:
     # The ID of the GitHub deployment to wait for (numeric ID)
     # This input is required.

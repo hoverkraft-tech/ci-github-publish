@@ -48,7 +48,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@1ee0354c40e4cd0a46c69cbe305c74fc67338042 # 0.28.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@a0a9d185c51c10710a5987822e78feb2b5ce1932 # 0.29.0
   with:
     # The ID of the "build" artifact to download.
     # The artifact must contain the full (absolute) build path.

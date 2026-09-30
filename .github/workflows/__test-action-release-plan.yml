@@ -6,6 +6,23 @@ on:
 permissions: {}
 
 jobs:
+  unit-tests:
+    name: Test release change detection
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      - name: Test release planning
+        run: node --test actions/release/plan/index.test.js
+
   tests:
     name: Tests for "release/plan" action
     runs-on: ubuntu-latest
@@ -29,10 +46,12 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.drafter-plan.outputs.tag }}
           RELEASE_NAME: ${{ steps.drafter-plan.outputs.name }}
+          HAS_CHANGES: ${{ steps.drafter-plan.outputs.has-changes }}
         with:
           script: |
             const assert = require('node:assert');
 
+            assert.ok(['true', 'false'].includes(process.env.HAS_CHANGES), 'Expected a boolean has-changes output');
             assert.ok(process.env.RELEASE_TAG, 'Expected planned tag to be set');
             assert.ok(process.env.RELEASE_TAG.startsWith('get-configuration-'), `Expected tag to start with "get-configuration-", got "${process.env.RELEASE_TAG}"`);
             assert.ok(process.env.RELEASE_NAME, 'Expected planned name to be set');

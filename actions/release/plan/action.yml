@@ -1,5 +1,5 @@
 name: "Release - Plan"
-description: "Plan a release identity without creating a Git tag or GitHub release."
+description: "Detect release changes and plan a release identity without creating a Git tag or GitHub release."
 author: hoverkraft
 branding:
   icon: bookmark
@@ -26,6 +26,12 @@ inputs:
       These paths are added to the `include-paths` configuration of release-drafter.
     required: false
     default: "[]"
+  target-sha: # codespell:ignore commitish
+    description: |
+      Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.
+      Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.
+    required: false
+    default: ""
   github-token:
     description: |
       GitHub Token for planning the release.
@@ -36,11 +42,14 @@ inputs:
     default: ${{ github.token }}
 
 outputs:
+  has-changes:
+    description: "Whether the release has relevant changes, or no previous matching release exists (true or false)"
+    value: ${{ steps.release-plan.outputs.has-changes }}
   tag:
-    description: "The planned release tag"
+    description: "The planned release tag, including when there are no relevant changes"
     value: ${{ steps.release-plan.outputs.tag }}
   name:
-    description: "The planned release name"
+    description: "The planned release name, including when there are no relevant changes"
     value: ${{ steps.release-plan.outputs.name }}
 
 runs:
@@ -61,6 +70,22 @@ runs:
         working-directory: ${{ inputs.working-directory }}
         include-paths: ${{ inputs.include-paths }}
 
+    - id: prepare-change-detection
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        CONFIG_PATH: ${{ steps.get-configuration.outputs.config-path }}
+      with:
+        script: |
+          const { prepareConfiguration } = require(`${process.env.ACTION_PATH}/index.js`);
+          const configuration = prepareConfiguration({
+            configPath: process.env.CONFIG_PATH,
+            workspace: process.env.GITHUB_WORKSPACE,
+            runnerTemp: process.env.RUNNER_TEMP,
+          });
+          core.setOutput('config-path', configuration.configPath);
+          core.setOutput('marker', configuration.marker);
+
     - id: release-drafter
       uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
       with:
@@ -68,47 +93,38 @@ runs:
         dry-run: "true"
         publish: "false"
         # config-path is relative to ".github" directory
-        config-name: file:${{ steps.get-configuration.outputs.config-path }}
+        config-name: file:${{ steps.prepare-change-detection.outputs.config-path }}
+        commitish: ${{ inputs.target-sha || github.sha }}
         prerelease: ${{ inputs.prerelease }}
         latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
 
     - id: release-plan
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
+        ACTION_PATH: ${{ github.action_path }}
         PLANNED_RELEASE_NAME: ${{ steps.release-drafter.outputs.name }}
         PLANNED_RELEASE_TAG: ${{ steps.release-drafter.outputs.tag_name }}
+        PLANNED_RELEASE_BODY: ${{ steps.release-drafter.outputs.body }}
+        CHANGE_DETECTION_MARKER: ${{ steps.prepare-change-detection.outputs.marker }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const assertTagDoesNotExist = async releaseTag => {
-            try {
-              await github.rest.git.getRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `tags/${releaseTag}`,
-              });
-            } catch (error) {
-              if (error.status === 404) {
-                return;
-              }
-
-              throw new Error(`Cannot check remote tag ${releaseTag}: ${error.message}`);
-            }
-
-            throw new Error(`Remote tag already exists: ${releaseTag}`);
-          };
-
+          const { resolvePlan } = require(`${process.env.ACTION_PATH}/index.js`);
           try {
-            const releaseTag = (process.env.PLANNED_RELEASE_TAG || '').trim();
-            if (!releaseTag) {
-              return core.setFailed('Cannot determine release tag. Configure Release Drafter.');
-            }
-
-            await assertTagDoesNotExist(releaseTag);
-
-            const releaseName = ((process.env.PLANNED_RELEASE_NAME || '').trim() || releaseTag).trim();
-            core.setOutput('tag', releaseTag);
-            core.setOutput('name', releaseName);
+            const plan = await resolvePlan({
+              body: process.env.PLANNED_RELEASE_BODY,
+              marker: process.env.CHANGE_DETECTION_MARKER,
+              tag: process.env.PLANNED_RELEASE_TAG,
+              name: process.env.PLANNED_RELEASE_NAME,
+              github,
+              repo: context.repo,
+            });
+            core.info(plan.hasChanges
+              ? 'Release planned with relevant changes or no previous release.'
+              : 'Release planned without relevant changes.');
+            core.setOutput('has-changes', plan.hasChanges ? 'true' : 'false');
+            core.setOutput('tag', plan.tag);
+            core.setOutput('name', plan.name);
           } catch (error) {
-            return core.setFailed(error.message);
+            core.setFailed(error.message);
           }

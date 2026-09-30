@@ -33,10 +33,8 @@ Detect release changes and plan a release identity without creating a Git tag or
 
 ## Usage
 
-Replace `<sha>` with a commit containing the `has-changes` output before using these examples.
-
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@<sha>
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@1ee0354c40e4cd0a46c69cbe305c74fc67338042 # 0.28.0
   with:
     # Whether to plan the release as a prerelease
     # Default: `false`
@@ -99,21 +97,11 @@ Replace `<sha>` with a commit containing the `has-changes` output before using t
 
 ## Outputs
 
-| **Output**        | **Description**                                                                                               |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| **`has-changes`** | `true` when Release Drafter finds relevant changes or no previous matching release exists; otherwise `false`. |
-| **`tag`**         | The planned release tag, including when there are no relevant changes.                                        |
-| **`name`**        | The planned release name, including when there are no relevant changes.                                       |
-
-Change detection uses the same effective Release Drafter configuration, including package paths, labels, categories, tag prefixes, and prerelease rules.
-Changes excluded from the release notes do not count toward `has-changes`. Direct commits without an included pull request are not counted by Release Drafter.
-The first release is allowed because there is no previous matching release to compare against.
-Planning targets `${{ github.sha }}` by default; set `target-sha` to plan from a different ref.
-
-The action always returns the proposed `tag` and `name`, including when `has-changes` is `false`.
-The caller decides whether to release, for example by combining `has-changes` with a manual workflow input.
-Planning checks that the proposed tag is unused and never creates a tag or release.
-Missing or invalid detection output fails the action rather than silently skipping a release.
+| **Output**        | **Description**                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------ |
+| **`has-changes`** | Whether the release has relevant changes, or no previous matching release exists (true or false) |
+| **`tag`**         | The planned release tag, including when there are no relevant changes                            |
+| **`name`**        | The planned release name, including when there are no relevant changes                           |
 
 <!-- outputs:end -->
 
@@ -121,6 +109,8 @@ Missing or invalid detection output fails the action rather than silently skippi
 <!-- secrets:end -->
 
 <!-- examples:start -->
+
+## Examples
 
 ## Scheduled and manual releases
 
@@ -156,7 +146,7 @@ jobs:
       tag: ${{ steps.plan.outputs.tag }}
     steps:
       - id: plan
-        uses: hoverkraft-tech/ci-github-publish/actions/release/plan@<sha>
+        uses: hoverkraft-tech/ci-github-publish/actions/release/plan@1ee0354c40e4cd0a46c69cbe305c74fc67338042 # 0.28.0
 
   release:
     needs: plan
@@ -173,9 +163,13 @@ jobs:
 ```
 
 Scheduled runs happen on Mondays at 08:25 UTC and skip unchanged releases.
+
 Manual runs skip unchanged releases by default; select `force` to request the planned version anyway.
+
 The `force` input and `should-release` job output belong to this caller workflow.
+
 Apply the same `should-release` guard to validation, packaging, and registry publishing jobs that depend on planning.
+
 A `skip-if-no-changes` check during release creation happens too late to prevent packages from being published by earlier steps.
 
 <!-- examples:end -->

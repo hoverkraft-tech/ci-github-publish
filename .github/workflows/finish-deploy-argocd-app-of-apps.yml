@@ -157,6 +157,12 @@ jobs:
           client-id: ${{ inputs.github-app-client-id }}
           private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           owner: ${{ github.repository_owner }}
+          # Reporting reads this workflow run and updates the application deployment.
+          repositories: |
+            ${{ github.event.repository.name }}
+            ${{ steps.check-client-payload.outputs.repository }}
+          permission-actions: read
+          permission-deployments: write
 
       - id: local-workflow-actions
         if: always()

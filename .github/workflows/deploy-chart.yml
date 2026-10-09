@@ -479,6 +479,7 @@ jobs:
 
               const [ownerName, repoName] = repository.split('/');
               core.setOutput("owner", ownerName);
+              core.setOutput("repository-name", repoName);
             }
 
             const environment = process.env.ENVIRONMENT.trim();
@@ -551,6 +552,8 @@ jobs:
           client-id: ${{ inputs.github-app-client-id }}
           private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           owner: ${{ steps.prepare-deployment.outputs.owner }}
+          repositories: ${{ steps.prepare-deployment.outputs.repository-name }}
+          permission-contents: write
       # jscpd:ignore-end
 
       - id: local-workflow-actions

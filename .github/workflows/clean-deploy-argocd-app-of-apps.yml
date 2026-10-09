@@ -119,6 +119,8 @@ jobs:
         with:
           client-id: ${{ inputs.github-app-client-id }}
           private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
+          permission-contents: write
+          permission-pull-requests: write
       # jscpd:ignore-end
 
       - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0

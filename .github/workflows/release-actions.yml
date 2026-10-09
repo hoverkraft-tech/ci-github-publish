@@ -325,6 +325,8 @@ jobs:
         with:
           client-id: ${{ inputs.github-app-client-id }}
           private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
+          permission-contents: write
+          permission-pull-requests: write
 
       # jscpd:ignore-end
 

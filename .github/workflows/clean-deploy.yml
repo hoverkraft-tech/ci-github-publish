@@ -135,27 +135,44 @@ jobs:
 
               const [ownerName, repoName] = repository.split('/');
               core.setOutput("owner", ownerName);
+              core.setOutput("repository-name", repoName);
             }
 
+      # Review app environments belong to the calling repository.
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         if: ${{ inputs.github-app-client-id }}
         id: generate-token
         with:
           client-id: ${{ inputs.github-app-client-id }}
           private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
-          owner: ${{ steps.prepare-cleaning.outputs.owner }}
+          permission-administration: write
 
       - id: delete-deployment
         uses: ./../self-workflow/actions/deployment/delete
         with:
           token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
+      # Cleanup dispatches can target a repository in another app installation.
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        if: >-
+          ${{ inputs.github-app-client-id &&
+              steps.delete-deployment.outputs.environments &&
+              steps.delete-deployment.outputs.environments != '[]' &&
+              inputs.clean-deploy-type == 'repository-dispatch' }}
+        id: generate-dispatch-token
+        with:
+          client-id: ${{ inputs.github-app-client-id }}
+          private-key: ${{ secrets.github-app-key }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
+          owner: ${{ steps.prepare-cleaning.outputs.owner }}
+          repositories: ${{ steps.prepare-cleaning.outputs.repository-name }}
+          permission-contents: write
+
       - uses: ./../self-workflow/actions/clean-deploy/repository-dispatch
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' && inputs.clean-deploy-type == 'repository-dispatch' }}
         with:
           repository: ${{ steps.prepare-cleaning.outputs.repository }}
           environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
-          github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
+          github-token: ${{ steps.generate-dispatch-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
       - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}

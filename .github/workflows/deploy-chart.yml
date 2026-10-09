@@ -94,9 +94,11 @@ on:
           - `build-secret-github-app-token-env`
           - `build-secret-github-app-client-id`
           - `build-secret-github-app-owner`
+          - `build-secret-github-app-repositories`
           - `cache-type`
           - `buildkitd-config-inline`
           - `sign`
+          - `attest`
           Example:
           ```json
           {
@@ -122,6 +124,14 @@ on:
         required: false
         type: string
         default: charts/application
+      chart-sign:
+        description: |
+          Sign the published Helm chart.
+          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
+          Requires `id-token: write` on the chart release job when enabled.
+        required: false
+        type: boolean
+        default: true
       chart-values:
         description: |
           Define chart values to be filled.
@@ -279,6 +289,7 @@ jobs:
         env:
           BUILD_PARAMETERS: ${{ inputs.build-parameters }}
           REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
         with:
           script: |
             const buildParametersInput = process.env.BUILD_PARAMETERS;
@@ -299,9 +310,11 @@ jobs:
               'build-secret-github-app-token-env',
               'build-secret-github-app-client-id',
               'build-secret-github-app-owner',
+              'build-secret-github-app-repositories',
               'cache-type',
               'buildkitd-config-inline',
               'sign',
+              'attest',
             ]);
 
             for (const key of Object.keys(buildParameters)) {
@@ -315,9 +328,11 @@ jobs:
               buildSecretGithubAppTokenEnv: buildParameters['build-secret-github-app-token-env'] || 'GITHUB_APP_TOKEN',
               buildSecretGithubAppClientId: buildParameters['build-secret-github-app-client-id'] || '',
               buildSecretGithubAppOwner: buildParameters['build-secret-github-app-owner'] || process.env.REPOSITORY_OWNER,
+              buildSecretGithubAppRepositories: buildParameters['build-secret-github-app-repositories'] || process.env.REPOSITORY_NAME,
               cacheType: buildParameters['cache-type'] === false ? 'false' : (buildParameters['cache-type'] || 'gha'),
               buildkitdConfigInline: buildParameters['buildkitd-config-inline'] || '',
               sign: buildParameters.sign ?? true,
+              attest: buildParameters.attest ?? true,
             };
 
             core.setOutput('parameters', JSON.stringify(parameters));
@@ -325,8 +340,9 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@f8255a6a37eb141fa331527f5aed9b9e1d598c77 # 0.38.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@5ffc3c81daacc57700a14bb91d67edbc67eedc1d # 0.39.0
     permissions:
+      attestations: write
       contents: read
       id-token: write
       issues: read
@@ -341,9 +357,11 @@ jobs:
       build-secret-github-app-token-env: ${{ fromJSON(needs.prepare-deploy.outputs.build-parameters).buildSecretGithubAppTokenEnv }}
       build-secret-github-app-client-id: ${{ fromJSON(needs.prepare-deploy.outputs.build-parameters).buildSecretGithubAppClientId }}
       build-secret-github-app-owner: ${{ fromJSON(needs.prepare-deploy.outputs.build-parameters).buildSecretGithubAppOwner }}
+      build-secret-github-app-repositories: ${{ fromJSON(needs.prepare-deploy.outputs.build-parameters).buildSecretGithubAppRepositories }}
       cache-type: ${{ fromJSON(needs.prepare-deploy.outputs.build-parameters).cacheType }}
       buildkitd-config-inline: ${{ fromJSON(needs.prepare-deploy.outputs.build-parameters).buildkitdConfigInline }}
       sign: ${{ fromJSON(needs.prepare-deploy.outputs.build-parameters).sign }}
+      attest: ${{ fromJSON(needs.prepare-deploy.outputs.build-parameters).attest }}
     secrets:
       oci-registry-password: ${{ secrets.oci-registry-password }}
       build-secrets: ${{ secrets.build-secrets }}
@@ -355,6 +373,7 @@ jobs:
     needs: [prepare-deploy, build-oci-images]
     permissions:
       contents: read
+      id-token: write
       packages: write
     outputs:
       chart: ${{ steps.release.outputs.image }}
@@ -448,7 +467,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@f8255a6a37eb141fa331527f5aed9b9e1d598c77 # 0.38.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@5ffc3c81daacc57700a14bb91d67edbc67eedc1d # 0.39.0
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}
@@ -456,6 +475,7 @@ jobs:
           values: ${{ steps.set-chart-values.outputs.chart-values }}
           oci-registry: ${{ inputs.oci-registry }}
           oci-registry-password: ${{ secrets.oci-registry-password }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
+          sign: ${{ inputs.chart-sign }}
 
   deploy-chart:
     name: Deploy chart

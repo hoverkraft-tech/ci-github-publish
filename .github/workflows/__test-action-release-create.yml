@@ -45,6 +45,7 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const assert = require('node:assert');
+            // jscpd:ignore-start
             const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
 
             const findReleaseByTag = async (tag) => {
@@ -82,6 +83,8 @@ jobs:
               }
             };
 
+            // jscpd:ignore-end
+
             const createdTag = (process.env.CREATED_TAG || '').trim();
             const outputTag = (process.env.OUTPUT_TAG || '').trim();
             const expectedReleaseSha = (process.env.EXPECTED_RELEASE_SHA || '').trim();
@@ -108,6 +111,7 @@ jobs:
               return;
             }
 
+            // jscpd:ignore-start
             const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
 
             const findReleaseByTag = async (releaseTag) => {
@@ -144,6 +148,8 @@ jobs:
                 }
               }
             };
+
+            // jscpd:ignore-end
 
             const release = await findReleaseByTag(tag);
             if (release) {

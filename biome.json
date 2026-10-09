@@ -1,0 +1,5 @@
+{
+	"files": {
+		"includes": ["**", "!!.github/logo.svg", "!!.github/social-preview.svg"]
+	}
+}

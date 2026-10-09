@@ -52,6 +52,7 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const assert = require('node:assert');
+            // jscpd:ignore-start
             const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
 
             const findReleaseByTag = async (tag) => {
@@ -88,6 +89,8 @@ jobs:
                 }
               }
             };
+
+            // jscpd:ignore-end
 
             assert.equal(process.env.RELEASE_DELETED, 'true');
             assert.equal(process.env.RELEASE_DRAFT, 'true');
@@ -121,6 +124,7 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const assert = require('node:assert');
+            // jscpd:ignore-start
             const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
 
             const findReleaseByTag = async (tag) => {
@@ -157,6 +161,8 @@ jobs:
                 }
               }
             };
+
+            // jscpd:ignore-end
 
             assert.equal(process.env.RELEASE_DELETED, 'false');
             assert.equal(process.env.RELEASE_DRAFT, 'false');
@@ -174,6 +180,7 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
+            // jscpd:ignore-start
             const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
 
             const findReleaseByTag = async (tag) => {
@@ -210,6 +217,8 @@ jobs:
                 }
               }
             };
+
+            // jscpd:ignore-end
 
             for (const tag of [process.env.DRAFT_TAG, process.env.PUBLISHED_TAG].map((value) => (value || '').trim()).filter(Boolean)) {
               const release = await findReleaseByTag(tag);

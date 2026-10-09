@@ -28,7 +28,7 @@ outputs:
     description: "Whether the release was deleted"
     value: ${{ steps.delete-release.outputs.deleted }}
   release-id:
-    description: "The resolved release id when a release was found"
+    description: "The resolved release ID when a release was found"
     value: ${{ steps.delete-release.outputs.release-id }}
   release-draft:
     description: "Whether the resolved release was a draft"

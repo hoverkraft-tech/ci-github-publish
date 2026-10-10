@@ -53,7 +53,7 @@ on:
           See https://github.com/actions/create-github-app-token.
     outputs:
       artifact-id:
-        description: "ID of the uploaded artifact containing generated documentation."
+        description: "ID of the uploaded artifact containing generated documentation. If no documentation was generated, this will be empty."
         value: ${{ jobs.upload-documentation-artifact.outputs.artifact-id }}
 
 permissions:

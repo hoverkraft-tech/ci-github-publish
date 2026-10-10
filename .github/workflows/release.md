@@ -52,11 +52,26 @@ Delete an existing GitHub release by tag, with optional draft-only cleanup behav
 
 Generate a concise end user release summary from drafted changelog content. `actions/release/create` can call this helper through its `changelog-summary` input, or you can run it directly when the summary must be reviewed or transformed before publication.
 
+See [Example 4](#example-4-generate-an-end-user-release-summary) for both usage modes.
+
+The helper reads a Markdown `changelog-body`, calls the configured LLM provider,
+and returns a rendered `summary` output. It talks to the GitHub API to inspect
+referenced commits and pull requests, so grant the job `contents: read` and
+`pull-requests: read`, and provide the provider credentials through `llm-auth`.
+See the [`actions/release/summarize-changelog` readme](../../actions/release/summarize-changelog/README.md)
+for the full input and output reference.
+
+<!--
+// jscpd:ignore-start
+-->
+
 ## Workflow Examples
 
 Choose the smallest workflow that fits the repository. Copy Example 1 first, add Example 2 only when artifacts must be built from the final release identity, and add Example 3 only when the released source tree must change before the release can be drafted.
 
 Use `actions/release/create` alone when the workflow only needs to validate and publish a release. Add `actions/release/plan` when later jobs need the release identity before drafting, or when validation and publishing should be skipped if there are no release changes.
+
+Example 4 is orthogonal to that release-state ladder: layer it onto any of the previous flows when the release notes need an end user summary generated from the drafted changelog.
 
 ### Example 1: Validate source and release
 
@@ -327,6 +342,137 @@ jobs:
           publish: "true"
           github-token: ${{ github.token }}
 ```
+
+### Example 4: Generate an end user release summary
+
+Use this when the published release notes should open with a short, human readable summary generated from the drafted changelog. Pick one of the two modes below.
+
+Store the LLM provider credential as a repository secret (for example `OPENAI_API_KEY`) and pass it through to the summarizer. The summarizer inspects referenced commits and pull requests through the GitHub API, so the job needs `contents: read` and `pull-requests: read` in addition to the permissions each release action already requires.
+
+#### Mode A: Let `actions/release/create` summarize the changelog
+
+This is the simplest path. `actions/release/create` drafts the release, summarizes the changelog body it produced, and prepends the summary above the full changelog in a single step. Pass the summarizer configuration as JSON through the `changelog-summary` input.
+
+```yaml
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.repository }}-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate-source:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@<sha> # vx.y.z
+      - run: make test
+
+  release:
+    runs-on: ubuntu-latest
+    needs: validate-source
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: hoverkraft-tech/ci-github-publish/actions/release/create@<sha> # x.y.z
+        with:
+          github-token: ${{ github.token }}
+          # The summary is generated and prepended automatically before publication.
+          changelog-summary: |
+            {
+              "llmAuth": "${{ secrets.OPENAI_API_KEY }}",
+              "llmProvider": "openai",
+              "llmModel": "gpt-5.4"
+            }
+```
+
+#### Mode B: Summarize directly so the summary can be reviewed or transformed
+
+Run `actions/release/summarize-changelog` yourself when the summary must be checked or edited before it is published. Draft the release without publishing, read the drafted changelog, summarize it, apply any review or transformation, then publish the final body with `actions/release/update`.
+
+```yaml
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.repository }}-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate-source:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@<sha> # vx.y.z
+      - run: make test
+
+  release:
+    runs-on: ubuntu-latest
+    needs: validate-source
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - id: draft-release
+        uses: hoverkraft-tech/ci-github-publish/actions/release/create@<sha> # x.y.z
+        with:
+          publish: "false"
+          github-token: ${{ github.token }}
+
+      - id: read-draft-body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.draft-release.outputs.tag }}
+        run: |
+          {
+            echo 'body<<CHANGELOG_EOF'
+            gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body
+            echo CHANGELOG_EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - id: summarize
+        uses: hoverkraft-tech/ci-github-publish/actions/release/summarize-changelog@<sha> # x.y.z
+        with:
+          changelog-body: ${{ steps.read-draft-body.outputs.body }}
+          llm-auth: ${{ secrets.OPENAI_API_KEY }}
+
+      # Review or transform steps.summarize.outputs.summary here before publishing,
+      # for example with an approval gate or an additional formatting step.
+
+      - id: compose-body
+        env:
+          SUMMARY: ${{ steps.summarize.outputs.summary }}
+          CHANGELOG: ${{ steps.read-draft-body.outputs.body }}
+        run: |
+          {
+            echo 'body<<RELEASE_EOF'
+            printf '%s\n\n%s\n' "$SUMMARY" "$CHANGELOG"
+            echo RELEASE_EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: hoverkraft-tech/ci-github-publish/actions/release/update@<sha> # x.y.z
+        with:
+          tag: ${{ steps.draft-release.outputs.tag }}
+          body: ${{ steps.compose-body.outputs.body }}
+          publish: "true"
+          github-token: ${{ github.token }}
+```
+
+<!--
+// jscpd:ignore-end
+-->
 
 ## Artifact and Signature Links
 

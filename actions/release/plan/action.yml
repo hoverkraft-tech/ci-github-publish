@@ -58,6 +58,7 @@ runs:
     - uses: hoverkraft-tech/ci-github-common/actions/checkout@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
       with:
         fetch-depth: "0"
+        ref: ${{ inputs.target-sha || github.sha }}
 
     - id: local-actions
       uses: hoverkraft-tech/ci-github-common/actions/local-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0

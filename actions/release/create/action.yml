@@ -145,6 +145,7 @@ runs:
           if (!llmAuth) {
             return core.setFailed('changelog-summary.llmAuth is required when changelog-summary is provided');
           }
+          core.setSecret(llmAuth);
 
           const llmProvider = (summaryConfig.llmProvider || 'openai').trim() || 'openai';
           const llmModel = (summaryConfig.llmModel || 'gpt-5.4').trim() || 'gpt-5.4';

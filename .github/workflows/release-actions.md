@@ -129,9 +129,9 @@ jobs:
 
 ## Outputs
 
-| **Output**        | **Description**                                                 |
-| ----------------- | --------------------------------------------------------------- |
-| **`artifact-id`** | ID of the uploaded artifact containing generated documentation. |
+| **Output**        | **Description**                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **`artifact-id`** | ID of the uploaded artifact containing generated documentation. If no documentation was generated, this will be empty. |
 
 <!-- outputs:end -->
 

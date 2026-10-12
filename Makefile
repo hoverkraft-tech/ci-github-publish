@@ -26,7 +26,7 @@ npm-audit-fix: ## Execute npm audit fix
 	$(call run_npm_for_packages,audit fix)
 
 npm-update: ## Interactively update npm dependencies for all action packages
-	$(call run_npm_for_packages,exec --yes --package=npm-check-updates@23.1.1 -- ncu --interactive --install always --packageManager npm --packageFile "$$pkg")
+	$(call run_npm_for_packages,exec --yes --package=npm-check-updates -- ncu --interactive --install always --packageManager npm --packageFile "$$pkg")
 
 test: ## Execute tests
 	@echo "Running tests for all packages..."

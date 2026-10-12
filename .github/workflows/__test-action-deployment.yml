@@ -23,7 +23,7 @@ jobs:
           persist-credentials: false
 
       - id: create-deployment
-        uses: ./actions/deployment/create
+        uses: $/actions/deployment/create
         with:
           environment: "review-apps"
 
@@ -37,7 +37,7 @@ jobs:
           fi
 
       - id: get-deployment
-        uses: ./actions/deployment/read
+        uses: $/actions/deployment/read
         with:
           deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
           repository: ${{ github.event.repository.name }}
@@ -63,7 +63,7 @@ jobs:
           fi
 
       - id: update-deployment
-        uses: ./actions/deployment/update
+        uses: $/actions/deployment/update
         with:
           deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
           state: "in_progress"
@@ -76,7 +76,7 @@ jobs:
           permission-administration: write
 
       - id: delete-deployment
-        uses: ./actions/deployment/delete
+        uses: $/actions/deployment/delete
         with:
           token: ${{ steps.generate-token.outputs.token }}
 

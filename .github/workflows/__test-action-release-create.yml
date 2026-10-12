@@ -28,7 +28,7 @@ jobs:
 
       - name: Act - Create explicit draft release
         id: create-release
-        uses: ./actions/release/create
+        uses: $/actions/release/create
         with:
           tag: ${{ steps.test-release.outputs.tag }}
           target-sha: ${{ github.sha }}

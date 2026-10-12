@@ -28,7 +28,7 @@ jobs:
 
       - name: Act - Resolve existing repository config
         id: existing-config
-        uses: ./actions/release/get-configuration
+        uses: $/actions/release/get-configuration
 
       - name: Assert - Existing repository config
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -52,7 +52,7 @@ jobs:
 
       - name: Act - Resolve generated temp config
         id: generated-config
-        uses: ./actions/release/get-configuration
+        uses: $/actions/release/get-configuration
         with:
           working-directory: actions/release/get-configuration
           include-paths: '["actions/release/create"]'

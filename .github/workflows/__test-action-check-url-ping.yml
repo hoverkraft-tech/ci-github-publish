@@ -96,7 +96,7 @@ jobs:
       # Test 1: Successful URL check
       - name: Test 1 - Successful URL check
         id: test-success
-        uses: ./actions/check/url-ping
+        uses: $/actions/check/url-ping
         with:
           url: "${{ env.MOCK_URL_BASE }}/success"
           expected-statuses: "200"
@@ -126,7 +126,7 @@ jobs:
       # Test 2: Multiple expected status codes
       - name: Test 2 - Multiple expected status codes (404 allowed)
         id: test-multiple-status
-        uses: ./actions/check/url-ping
+        uses: $/actions/check/url-ping
         with:
           url: "${{ env.MOCK_URL_BASE }}/not-found"
           expected-statuses: "200,404,301"
@@ -150,7 +150,7 @@ jobs:
       - name: Test 3 - Timeout handling
         id: test-timeout
         continue-on-error: true
-        uses: ./actions/check/url-ping
+        uses: $/actions/check/url-ping
         with:
           url: "${{ env.MOCK_URL_BASE }}/very-slow"
           expected-statuses: "200"
@@ -256,7 +256,7 @@ jobs:
 
       - name: Test 4 - Retry with exponential backoff
         id: test-retry
-        uses: ./actions/check/url-ping
+        uses: $/actions/check/url-ping
         with:
           url: "${{ env.MOCK_URL_BASE }}/retry-test"
           expected-statuses: "200"
@@ -286,7 +286,7 @@ jobs:
       # Test 5: Redirect handling when redirects are disabled
       - name: Test 5 - Redirect handling (follow disabled)
         id: test-redirect-disabled
-        uses: ./actions/check/url-ping
+        uses: $/actions/check/url-ping
         with:
           url: "${{ env.MOCK_URL_BASE }}/redirect-manual"
           expected-statuses: "301"
@@ -310,7 +310,7 @@ jobs:
       # Test 6: Redirect handling when redirects are enabled
       - name: Test 6 - Redirect handling (follow enabled)
         id: test-redirect-enabled
-        uses: ./actions/check/url-ping
+        uses: $/actions/check/url-ping
         with:
           url: "${{ env.MOCK_URL_BASE }}/redirect-manual"
           expected-statuses: "200"
@@ -335,7 +335,7 @@ jobs:
       - name: Test 7 - Invalid URL handling
         id: test-invalid-url
         continue-on-error: true
-        uses: ./actions/check/url-ping
+        uses: $/actions/check/url-ping
         with:
           url: "not-a-valid-url"
           expected-statuses: "200"
@@ -359,7 +359,7 @@ jobs:
       # Test 8: Real-world endpoint test
       - name: Test 8 - Real-world endpoint
         id: test-real-world
-        uses: ./actions/check/url-ping
+        uses: $/actions/check/url-ping
         with:
           url: "https://hoverkraft.cloud"
           expected-statuses: "200"
@@ -426,7 +426,7 @@ jobs:
       - name: Test 9 - Max retries exhausted
         id: test-max-retries
         continue-on-error: true
-        uses: ./actions/check/url-ping
+        uses: $/actions/check/url-ping
         with:
           url: "${{ env.MOCK_URL_BASE }}/always-fail"
           expected-statuses: "200"

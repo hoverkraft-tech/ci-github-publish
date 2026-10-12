@@ -186,7 +186,7 @@ permissions: {}
 jobs:
   deploy-start:
     name: Start deploy
-    uses: ./.github/workflows/deploy-start.yml
+    uses: $/.github/workflows/deploy-start.yml
     permissions:
       actions: read
       contents: read
@@ -592,7 +592,7 @@ jobs:
     name: Finish deploy
     if: ${{ always() && needs.deploy-start.outputs.trigger }}
     needs: [deploy-start, deploy-chart]
-    uses: ./.github/workflows/deploy-finish.yml
+    uses: $/.github/workflows/deploy-finish.yml
     permissions:
       actions: read
       contents: read

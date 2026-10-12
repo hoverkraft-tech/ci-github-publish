@@ -165,7 +165,7 @@ jobs:
 
       - name: Act - Summarize changelog
         id: summarize
-        uses: ./actions/release/summarize-changelog
+        uses: $/actions/release/summarize-changelog
         with:
           changelog-body: |
             ## What's Changed

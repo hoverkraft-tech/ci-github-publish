@@ -1,5 +1,7 @@
 [codespell]
 skip = *.svg
+# npm integrity hashes are generated binary data, not prose.
+ignore-regex = \bsha(?:256|384|512)-[A-Za-z0-9+/]+=*
 ignore-words-list =
     # commitish is the input name used by release-drafter
     commitish,

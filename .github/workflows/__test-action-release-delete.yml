@@ -27,7 +27,7 @@ jobs:
             core.setOutput('published-tag', `test-release-delete-published-${context.runId}-${context.runAttempt}`);
 
       - name: Arrange - Create explicit draft release
-        uses: ./actions/release/create
+        uses: $/actions/release/create
         with:
           tag: ${{ steps.test-releases.outputs.draft-tag }}
           target-sha: ${{ github.sha }}
@@ -36,7 +36,7 @@ jobs:
 
       - name: Act - Delete explicit draft release
         id: delete-draft-release
-        uses: ./actions/release/delete
+        uses: $/actions/release/delete
         with:
           tag: ${{ steps.test-releases.outputs.draft-tag }}
           draft-only: "true"
@@ -99,7 +99,7 @@ jobs:
             assert.equal(release, null);
 
       - name: Arrange - Create explicit published release
-        uses: ./actions/release/create
+        uses: $/actions/release/create
         with:
           tag: ${{ steps.test-releases.outputs.published-tag }}
           target-sha: ${{ github.sha }}
@@ -108,7 +108,7 @@ jobs:
 
       - name: Act - Skip deleting published release in draft-only mode
         id: delete-published-release-draft-only
-        uses: ./actions/release/delete
+        uses: $/actions/release/delete
         with:
           tag: ${{ steps.test-releases.outputs.published-tag }}
           draft-only: "true"

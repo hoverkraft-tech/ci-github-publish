@@ -7,7 +7,10 @@ permissions: {}
 
 jobs:
   continuous-integration:
-    name: Continuous integration for "deploy/jekyll" action
+    name: Continuous integration for "deploy/${{ matrix.action }}" action
+    strategy:
+      matrix:
+        action: [jekyll, jampack]
     uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@81a4bca8445b7b273455ff26a9a5c3c31c86b2a1 # 0.25.0
     permissions:
       contents: read
@@ -16,7 +19,7 @@ jobs:
       pull-requests: write
       security-events: write
     with:
-      working-directory: ./actions/deploy/jekyll
+      working-directory: ./actions/deploy/${{ matrix.action }}
       build: null
       lint: null
       test: '{ "coverage": null }'
@@ -51,7 +54,7 @@ jobs:
 
       - name: Act - Deploy Jekyll
         id: deploy-jekyll
-        uses: ./actions/deploy/jekyll
+        uses: $/actions/deploy/jekyll
         with:
           pages: |
             .github/workflows/release-actions.md
@@ -127,7 +130,7 @@ jobs:
             );
 
       - name: Act - Run Jampack
-        uses: ./actions/deploy/jampack
+        uses: $/actions/deploy/jampack
         with:
           path: ${{ steps.deploy-jekyll.outputs.build-path }}
 

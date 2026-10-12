@@ -37,7 +37,7 @@ jobs:
 
       - name: Act - Plan drafter release
         id: drafter-plan
-        uses: ./actions/release/plan
+        uses: $/actions/release/plan
         with:
           working-directory: actions/release/get-configuration
 
@@ -86,7 +86,7 @@ jobs:
       - name: Act - Plan drafter release with existing tag
         id: existing-tag-plan
         continue-on-error: true
-        uses: ./actions/release/plan
+        uses: $/actions/release/plan
         with:
           working-directory: actions/release/get-configuration
 

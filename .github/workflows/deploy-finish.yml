@@ -86,7 +86,7 @@ jobs:
     name: Deploy checks
     needs: get-finished-deployment
     if: ${{ needs.get-finished-deployment.outputs.url }}
-    uses: ./.github/workflows/deploy-checks.yml
+    uses: $/.github/workflows/deploy-checks.yml
     permissions:
       contents: read
     with:

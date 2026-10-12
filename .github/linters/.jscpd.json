@@ -1,12 +1,4 @@
 {
 	"threshold": 5,
-	"ignore": [
-		"**/tests/**",
-		"actions/**/README.md",
-		".github/workflows/clean-deploy*.md",
-		".github/workflows/deploy-*.md",
-		".github/workflows/finish-deploy-*.md",
-		".github/workflows/prepare-release.md",
-		".github/workflows/release-actions.md"
-	]
+	"ignore": ["**/tests/**"]
 }

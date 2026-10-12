@@ -173,9 +173,11 @@ gh act -W .github/workflows/workflow-file-to-test.yml
 ```
 
 Commitlint uses the Conventional Commits preset, including the `!` marker for
-breaking changes. Duplicate-code checks keep the 5% threshold and exclude
-generated action and workflow documentation, whose content mirrors the YAML
-definitions. Source files and handwritten documentation remain checked.
+breaking changes. Duplicate-code checks keep the 5% threshold and scan action
+and workflow documentation. Repeated sections use inline
+`<!-- jscpd:ignore-start -->` and `<!-- jscpd:ignore-end -->` comments in the
+affected files. Place these comments outside the documentation generator's
+section markers so regeneration preserves them.
 
 The Jampack action installs its locked dependencies with security overrides for
 `esbuild`, `file-type`, `sharp`, and `undici`. Its integration test exercises CSS,

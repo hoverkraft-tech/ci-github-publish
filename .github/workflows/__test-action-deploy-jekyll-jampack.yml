@@ -19,8 +19,6 @@ jobs:
       pull-requests: write
       security-events: write
     with:
-      # Reviewed once for the whole repository in __shared-ci.yml.
-      dependency-review: false
       working-directory: ./actions/deploy/${{ matrix.action }}
       build: null
       lint: null

@@ -55,18 +55,13 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: hoverkraft-tech/ci-github-common/actions/checkout@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
+    - uses: hoverkraft-tech/ci-github-common/actions/checkout@ab69f41f76e77ec84e733dedb03492b3ee95a05f # 0.39.0
       with:
         fetch-depth: "0"
         ref: ${{ inputs.target-sha || github.sha }}
 
-    - id: local-actions
-      uses: hoverkraft-tech/ci-github-common/actions/local-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-      with:
-        source-path: ${{ github.action_path }}/..
-
     - id: get-configuration
-      uses: ./../self-actions/get-configuration
+      uses: $/actions/release/get-configuration
       with:
         working-directory: ${{ inputs.working-directory }}
         include-paths: ${{ inputs.include-paths }}

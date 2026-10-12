@@ -209,7 +209,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@ab69f41f76e77ec84e733dedb03492b3ee95a05f # 0.39.0
         if: inputs.tag == ''
         with:
           fetch-depth: 0
@@ -222,7 +222,7 @@ jobs:
 
       - id: get-issue-number
         if: inputs.tag == '' && github.event_name == 'issue_comment'
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@ab69f41f76e77ec84e733dedb03492b3ee95a05f # 0.39.0
 
       - id: get-tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -576,13 +576,8 @@ jobs:
           permission-contents: write
       # jscpd:ignore-end
 
-      - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-        with:
-          actions-path: actions
-
       - if: inputs.deploy-type == 'helm-repository-dispatch'
-        uses: ./../self-workflow/actions/deploy/helm-repository-dispatch
+        uses: $/actions/deploy/helm-repository-dispatch
         with:
           deployment-id: ${{ needs.deploy-start.outputs.deployment-id }}
           chart: ${{ needs.release-chart.outputs.chart }}

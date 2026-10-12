@@ -77,19 +77,14 @@ jobs:
     outputs:
       summary: ${{ steps.generate-summary.outputs.summary }}
     steps:
-      - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-        with:
-          actions-path: actions
-
-      - uses: ./../self-workflow/actions/check/url-ping
+      - uses: $/actions/check/url-ping
         id: ping
         with:
           url: ${{ inputs.url }}
           timeout: ${{ inputs['ping-timeout'] }}
 
       - id: lighthouse
-        uses: ./../self-workflow/actions/check/url-lighthouse
+        uses: $/actions/check/url-lighthouse
         with:
           url: ${{ inputs.url }}
           budget-path: ${{ inputs.budget-path }}

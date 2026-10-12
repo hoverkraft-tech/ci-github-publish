@@ -51,13 +51,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-        with:
-          actions-path: actions
-
       - id: get-configuration
-        uses: ./../self-workflow/actions/release/get-configuration
+        uses: $/actions/release/get-configuration
         with:
           working-directory: ${{ inputs.working-directory }}
 

@@ -94,12 +94,7 @@ runs:
           const artifactName = `${runId}-${runNumber}-github-pages-${timestamp}-${uniquid}`;
           core.setOutput("artifact-name", artifactName);
 
-    - id: local-actions
-      uses: hoverkraft-tech/ci-github-common/actions/local-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-      with:
-        source-path: ${{ github.action_path }}/../..
-
-    - uses: ./../self-actions/deploy/jampack
+    - uses: $/actions/deploy/jampack
       with:
         path: ${{ steps.prepare-variables.outputs.build-path }}
 
@@ -125,12 +120,12 @@ runs:
     # jscpd:ignore-start
 
     # Url checks
-    - uses: ./../self-actions/check/url-ping
+    - uses: $/actions/check/url-ping
       if: ${{ inputs.checks == 'true' }}
       with:
         url: ${{ steps.deployment.outputs.page_url }}
 
-    - uses: ./../self-actions/check/url-lighthouse
+    - uses: $/actions/check/url-lighthouse
       if: ${{ inputs.checks == 'true' }}
       with:
         url: ${{ steps.deployment.outputs.page_url }}

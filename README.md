@@ -16,6 +16,13 @@
 
 Opinionated GitHub Actions and workflows for streamlined release, deployment, and publishing.
 
+### Requirements
+
+Use GitHub.com with GitHub Actions runner **2.336.0 or newer**. Internal actions use
+[`$/` references](https://github.blog/changelog/2026-07-30-reference-same-repository-actions-with-self-repository-syntax/)
+to resolve paths from this repository at the same revision as the defining action
+or workflow, without a separate checkout of this repository.
+
 ## Actions
 
 ### ArgoCD
@@ -143,7 +150,7 @@ actions/{category}/{action-name}/
 
 1. **Consistent branding**: All actions use `author: hoverkraft`, `icon: <specific-icon>`, `color: blue`
 2. **Composite actions**: Use `using: "composite"` with GitHub Script for complex logic
-3. **Pinned dependencies**: Always pin action versions with SHA (e.g., `@ed597411d8f924073f98dfc5c65a23a2325f34cd`)
+3. **Pinned dependencies**: Pin external action versions with SHA (e.g., `@ed597411d8f924073f98dfc5c65a23a2325f34cd`); use `$/` references for actions in this repository
 4. **Input validation**: Validate inputs early in GitHub Script steps
 
 #### JavaScript Patterns
@@ -175,10 +182,16 @@ gh act -W .github/workflows/workflow-file-to-test.yml
 
 **Always follow these patterns when creating/modifying actions:**
 
-1. **Pinned Dependencies**: Use exact SHA commits for all action dependencies:
+1. **Pinned Dependencies**: Use exact SHA commits for external action dependencies:
 
    ```yaml
    uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+   ```
+
+   Reference actions in this repository from its root with `$/`:
+
+   ```yaml
+   uses: $/actions/release/get-configuration
    ```
 
 2. **Consistent Branding**: Every action.yml must include:

@@ -96,14 +96,9 @@ jobs:
               core.setOutput('trigger', process.env.EVENT_NAME);
             }
 
-      - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-        with:
-          actions-path: actions
-
       - id: get-environment
         if: ${{ steps.trigger.outputs.trigger }}
-        uses: ./../self-workflow/actions/deploy/get-environment
+        uses: $/actions/deploy/get-environment
         with:
           environment: ${{ inputs.environment }}
 
@@ -120,17 +115,12 @@ jobs:
     outputs:
       deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
     steps:
-      - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-        with:
-          actions-path: actions
-
       - id: create-deployment
-        uses: ./../self-workflow/actions/deployment/create
+        uses: $/actions/deployment/create
         with:
           environment: ${{ needs.prepare-deploy.outputs.environment }}
 
-      - uses: ./../self-workflow/actions/deployment/update
+      - uses: $/actions/deployment/update
         with:
           deployment-id: ${{ steps.create-deployment.outputs.deployment-id }}
           state: "in_progress"

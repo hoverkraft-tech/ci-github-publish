@@ -29,6 +29,7 @@ npm-update: ## Interactively update npm dependencies for all action packages
 	$(call run_npm_for_packages,exec --yes --package=npm-check-updates -- ncu --interactive --install always --packageManager npm --packageFile "$$pkg")
 
 test: ## Execute tests
+	node --test .github/scripts/tests/*.test.cjs
 	@echo "Running tests for all packages..."
 	$(call run_npm_for_packages,test)
 

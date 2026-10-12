@@ -195,6 +195,14 @@ as a directory. The exception expires on November 12, 2026, and must be
 reassessed if Jampack or its CLI arguments change. `npm audit` still reports this
 advisory and its dependent packages until an upstream fix is available.
 
+GitHub Dependency Review runs once for the whole repository, including merge
+queues. It uses the same assessment with a
+[scope and expiry check](.github/scripts/dependency-review.cjs) on the review's
+unfiltered dependency changes. Only this advisory for `braces@3.0.3` in Jampack's
+lockfile is accepted until the expiry date. Other advisories and occurrences in
+other files or versions still fail CI. Keep the workflow, scope check, and Trivy
+assessment aligned; `make test` checks these constraints.
+
 #### File Conventions
 
 - **Dockerfile**: Uses Super Linter slim image for consistent code quality

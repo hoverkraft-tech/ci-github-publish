@@ -16,6 +16,8 @@ jobs:
       pull-requests: write
       security-events: write
     with:
+      # Reviewed once for the whole repository in __shared-ci.yml.
+      dependency-review: false
       working-directory: ./actions/release/summarize-changelog
       build: null
       lint: null

@@ -11,6 +11,41 @@ on: # yamllint disable-line rule:truthy
 permissions: {}
 
 jobs:
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Test dependency assessment
+        run: node --test .github/scripts/tests/*.test.cjs
+
+      - name: Review dependencies
+        id: review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          base-ref: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          head-ref: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+          # The next step enforces this advisory's manifest, package, version, and expiry.
+          allow-ghsas: GHSA-vfj7-8cjw-p6xm
+          fail-on-scopes: runtime, development, unknown
+
+      - name: Enforce dependency assessment scope and expiry
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DEPENDENCY_CHANGES: ${{ steps.review.outputs.dependency-changes }}
+        with:
+          script: |
+            const { verifyDependencyChanges } = require('./.github/scripts/dependency-review.cjs');
+            const count = verifyDependencyChanges(JSON.parse(process.env.DEPENDENCY_CHANGES));
+            core.info(`Accepted ${count} findings covered by the scoped, unexpired assessment.`);
+
   linter:
     uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@ab69f41f76e77ec84e733dedb03492b3ee95a05f # 0.39.0
     permissions:

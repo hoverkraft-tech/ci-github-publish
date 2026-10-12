@@ -173,7 +173,7 @@ make npm-update  # Choose dependency upgrades interactively for each action pack
 gh act -W .github/workflows/workflow-file-to-test.yml
 ```
 
-`make npm-update` uses pinned `npm-check-updates` to select dependency upgrades
+`make npm-update` uses `npm-check-updates` to select dependency upgrades
 for each package under `actions/`, excluding `node_modules`. After selection,
 it runs `npm install` in that package to refresh its lockfile. Run it from an
 interactive terminal with npm 10+ and Node.js 24.15+ (24.x) or 26+.
@@ -186,8 +186,9 @@ affected files. Place these comments outside the documentation generator's
 section markers so regeneration preserves them.
 
 The Jampack action installs its locked dependencies with security overrides for
-`esbuild`, `file-type`, `sharp`, and `undici`. Its integration test exercises CSS,
-JavaScript, and local and remote images. Trivy's
+`esbuild`, `file-type`, `sharp`, and `undici`. Keep these overrides until Jampack
+adopts patched versions upstream; removing them reintroduces security findings.
+Its integration test exercises CSS, JavaScript, and local and remote images. Trivy's
 [scoped exception](.github/linters/trivy-ignore.yaml) records the unpatched
 `braces` advisory: this action uses fixed glob patterns and passes the input path
 as a directory. The exception expires on November 12, 2026, and must be

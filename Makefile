@@ -1,4 +1,4 @@
-.PHONY: help
+.PHONY: help npm-update
 
 help: ## Display help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -24,6 +24,9 @@ setup: ## Install npm dependencies for all package.json files under actions/
 npm-audit-fix: ## Execute npm audit fix
 	@echo "Running npm audit fix for all packages..."
 	$(call run_npm_for_packages,audit fix)
+
+npm-update: ## Interactively update npm dependencies for all action packages
+	$(call run_npm_for_packages,exec --yes --package=npm-check-updates@23.1.1 -- ncu --interactive --install always --packageManager npm --packageFile "$$pkg")
 
 test: ## Execute tests
 	@echo "Running tests for all packages..."

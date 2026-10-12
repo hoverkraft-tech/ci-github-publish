@@ -167,10 +167,16 @@ actions/{category}/{action-name}/
 ```bash
 make lint        # Run Super Linter (dockerized)
 make lint-fix    # Auto-fix issues where possible
+make npm-update  # Choose dependency upgrades interactively for each action package
 
 # Use GitHub Actions locally with `act`
 gh act -W .github/workflows/workflow-file-to-test.yml
 ```
+
+`make npm-update` uses pinned `npm-check-updates` to select dependency upgrades
+for each package under `actions/`, excluding `node_modules`. After selection,
+it runs `npm install` in that package to refresh its lockfile. Run it from an
+interactive terminal with npm 10+ and Node.js 24.15+ (24.x) or 26+.
 
 Commitlint uses the Conventional Commits preset, including the `!` marker for
 breaking changes. Duplicate-code checks keep the 5% threshold and scan action

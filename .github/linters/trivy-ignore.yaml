@@ -1,0 +1,19 @@
+---
+vulnerabilities:
+  - id: CVE-2026-93687
+    paths:
+      - actions/deploy/jampack/package-lock.json
+    purls:
+      - pkg:npm/braces@3.0.3
+    expired_at: 2026-11-12
+    statement: >-
+      Reviewed 2026-10-12: no patched braces release is available
+      (https://github.com/advisories/GHSA-vfj7-8cjw-p6xm).
+      Jampack 0.34.2 calls globby in dist/optimize.js and dist/compress.js
+      with fixed patterns (**/*.{htm,html}, **/**, !_jampack/**).
+      The action does not expose the include/exclude CLI options that can
+      replace those patterns. Its path input is a literal directory argument
+      passed as globby's cwd, not a brace pattern. Attacker-controlled nested
+      brace patterns cannot reach the vulnerable AST walkers through this
+      action. Reassess when changing Jampack, its CLI arguments, or this
+      dependency, and remove the exception when a patched release is available.

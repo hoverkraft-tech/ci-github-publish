@@ -19,7 +19,7 @@ jobs:
 
       - name: Act - Check URL Lighthouse
         id: check-url-lighthouse
-        uses: ./actions/check/url-lighthouse
+        uses: $/actions/check/url-lighthouse
         with:
           url: "https://hoverkraft.cloud"
 

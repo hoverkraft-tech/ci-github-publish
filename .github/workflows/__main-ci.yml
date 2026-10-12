@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   ci:
-    uses: ./.github/workflows/__shared-ci.yml
+    uses: $/.github/workflows/__shared-ci.yml
     permissions:
       actions: read
       contents: write
@@ -36,7 +36,7 @@ jobs:
   release:
     needs: ci
     if: github.event_name != 'schedule'
-    uses: ./.github/workflows/release-actions.yml
+    uses: $/.github/workflows/release-actions.yml
     permissions:
       contents: read
     with:

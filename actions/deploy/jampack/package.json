@@ -1,0 +1,28 @@
+{
+	"name": "deploy-jampack",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Locked Jampack dependency for the deploy/jampack GitHub Action",
+	"scripts": {
+		"test": "node --test",
+		"test:ci": "node --test"
+	},
+	"author": "hoverkraft",
+	"license": "MIT",
+	"dependencies": {
+		"@divriots/jampack": "0.34.2"
+	},
+	"overrides": {
+		"@divriots/jampack": {
+			"esbuild": "0.28.2",
+			"file-type": "22.1.1",
+			"sharp": "0.35.5"
+		},
+		"@divriots/cheerio": {
+			"undici": "6.29.0"
+		}
+	},
+	"engines": {
+		"node": ">=24.0.0"
+	}
+}

@@ -24,25 +24,25 @@ jobs:
 
   test-action-check-url-lighthouse:
     needs: linter
-    uses: ./.github/workflows/__test-action-check-url-lighthouse.yml
+    uses: $/.github/workflows/__test-action-check-url-lighthouse.yml
     permissions:
       contents: read
 
   test-action-check-url-ping:
     needs: linter
-    uses: ./.github/workflows/__test-action-check-url-ping.yml
+    uses: $/.github/workflows/__test-action-check-url-ping.yml
     permissions:
       contents: read
 
   test-action-deploy-argocd-manifest-files:
     needs: linter
-    uses: ./.github/workflows/__test-action-deploy-argocd-manifest-files.yml
+    uses: $/.github/workflows/__test-action-deploy-argocd-manifest-files.yml
     permissions:
       contents: read
 
   test-action-deploy-jekyll-jampack:
     needs: linter
-    uses: ./.github/workflows/__test-action-deploy-jekyll-jampack.yml
+    uses: $/.github/workflows/__test-action-deploy-jekyll-jampack.yml
     permissions:
       contents: read
       id-token: write
@@ -52,7 +52,7 @@ jobs:
 
   test-action-deployment:
     needs: linter
-    uses: ./.github/workflows/__test-action-deployment.yml
+    uses: $/.github/workflows/__test-action-deployment.yml
     secrets:
       CI_BOT_APP_PRIVATE_KEY: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
     permissions:
@@ -62,34 +62,34 @@ jobs:
 
   test-action-release-get-configuration:
     needs: linter
-    uses: ./.github/workflows/__test-action-release-get-configuration.yml
+    uses: $/.github/workflows/__test-action-release-get-configuration.yml
     permissions:
       contents: read
 
   test-action-release-create:
     needs: linter
-    uses: ./.github/workflows/__test-action-release-create.yml
+    uses: $/.github/workflows/__test-action-release-create.yml
     permissions:
       contents: write
       pull-requests: read
 
   test-action-release-delete:
     needs: [linter, test-action-release-create]
-    uses: ./.github/workflows/__test-action-release-delete.yml
+    uses: $/.github/workflows/__test-action-release-delete.yml
     permissions:
       contents: write
       pull-requests: read
 
   test-action-release-plan:
     needs: linter
-    uses: ./.github/workflows/__test-action-release-plan.yml
+    uses: $/.github/workflows/__test-action-release-plan.yml
     permissions:
       contents: write
       pull-requests: read
 
   test-action-release-summarize-changelog:
     needs: linter
-    uses: ./.github/workflows/__test-action-release-summarize-changelog.yml
+    uses: $/.github/workflows/__test-action-release-summarize-changelog.yml
     permissions:
       contents: read
       id-token: write

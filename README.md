@@ -172,6 +172,20 @@ make lint-fix    # Auto-fix issues where possible
 gh act -W .github/workflows/workflow-file-to-test.yml
 ```
 
+Commitlint uses the Conventional Commits preset, including the `!` marker for
+breaking changes. Duplicate-code checks keep the 5% threshold and exclude
+generated action and workflow documentation, whose content mirrors the YAML
+definitions. Source files and handwritten documentation remain checked.
+
+The Jampack action installs its locked dependencies with security overrides for
+`esbuild`, `file-type`, `sharp`, and `undici`. Its integration test exercises CSS,
+JavaScript, and local and remote images. Trivy's
+[scoped exception](.github/linters/trivy-ignore.yaml) records the unpatched
+`braces` advisory: this action uses fixed glob patterns and passes the input path
+as a directory. The exception expires on November 12, 2026, and must be
+reassessed if Jampack or its CLI arguments change. `npm audit` still reports this
+advisory and its dependent packages until an upstream fix is available.
+
 #### File Conventions
 
 - **Dockerfile**: Uses Super Linter slim image for consistent code quality

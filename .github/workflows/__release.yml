@@ -16,7 +16,7 @@ concurrency:
 jobs:
   ci:
     if: github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch
-    uses: ./.github/workflows/__shared-ci.yml
+    uses: $/.github/workflows/__shared-ci.yml
     permissions:
       actions: read
       contents: write
@@ -53,14 +53,14 @@ jobs:
 
       - name: Plan release
         id: plan-release
-        uses: ./actions/release/plan
+        uses: $/actions/release/plan
         with:
           target-sha: ${{ github.sha }}
           github-token: ${{ steps.generate-token.outputs.token }}
 
       - name: Create and publish release
         if: steps.plan-release.outputs.has-changes == 'true'
-        uses: ./actions/release/create
+        uses: $/actions/release/create
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # zizmor: ignore[secrets-outside-env] repository secret is scoped to the release summary step
         with:

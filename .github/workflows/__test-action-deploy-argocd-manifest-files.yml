@@ -38,7 +38,7 @@ jobs:
 
       - name: Act - Deploy Argocd Application Manifest
         id: argocd-application-manifest
-        uses: ./actions/deploy/argocd-manifest-files
+        uses: $/actions/deploy/argocd-manifest-files
         with:
           deployment-id: 999
           application-file: ${{ env.TEST_APPLICATION_FILE }}

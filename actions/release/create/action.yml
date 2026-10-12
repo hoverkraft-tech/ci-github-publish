@@ -181,13 +181,8 @@ runs:
           core.setOutput('working-directory', workingDirectory);
           core.setOutput('summary-template', summaryTemplate);
 
-    - id: local-actions
-      uses: hoverkraft-tech/ci-github-common/actions/local-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-      with:
-        source-path: ${{ github.action_path }}/..
-
     - id: get-configuration
-      uses: ./../self-actions/get-configuration
+      uses: $/actions/release/get-configuration
       with:
         working-directory: ${{ inputs.working-directory }}
         include-paths: ${{ inputs.include-paths }}
@@ -525,7 +520,7 @@ runs:
 
     - id: summarize-changelog
       if: steps.resolve-changelog-summary.outputs.enabled == 'true' && steps.resolve-release.outputs.created == 'true'
-      uses: ./../self-actions/summarize-changelog
+      uses: $/actions/release/summarize-changelog
       with:
         changelog-body: ${{ steps.resolve-release.outputs.body }}
         working-directory: ${{ steps.resolve-changelog-summary.outputs.working-directory }}
@@ -563,7 +558,7 @@ runs:
 
     - id: apply-release-update
       if: steps.resolve-release.outputs.created == 'true' && (steps.resolve-changelog-summary.outputs.enabled == 'true' || inputs.release-artifact-id != '' || inputs.publish == 'true')
-      uses: ./../self-actions/update
+      uses: $/actions/release/update
       with:
         tag: ${{ steps.resolve-release.outputs.tag }}
         body: ${{ steps.prepare-release-update.outputs.body }}

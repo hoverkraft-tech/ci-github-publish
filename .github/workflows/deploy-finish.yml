@@ -69,20 +69,15 @@ jobs:
       url: ${{ steps.get-finished-deployment.outputs.url }}
       environment: ${{ steps.get-finished-deployment.outputs.environment }}
     steps:
-      - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-        with:
-          actions-path: actions
-
       - id: get-workflow-failure
         if: ${{ inputs.deployment-id }}
-        uses: ./../self-workflow/actions/workflow/get-workflow-failure
+        uses: $/actions/workflow/get-workflow-failure
         with:
           github-token: ${{ secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
       - id: get-finished-deployment
         if: ${{ inputs.deployment-id && steps.get-workflow-failure.outputs.has-failed != 'true' }}
-        uses: ./../self-workflow/actions/deployment/get-finished
+        uses: $/actions/deployment/get-finished
         with:
           deployment-id: ${{ inputs.deployment-id }}
           timeout: ${{ inputs.deployment-timeout }}
@@ -168,12 +163,7 @@ jobs:
 
             return core.setOutput("extra", JSON.stringify(extra));
 
-      - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-        with:
-          actions-path: actions
-
-      - uses: ./../self-workflow/actions/deploy/report
+      - uses: $/actions/deploy/report
         with:
           deployment-id: ${{ inputs.deployment-id }}
           environment: ${{ needs.get-finished-deployment.outputs.environment }}

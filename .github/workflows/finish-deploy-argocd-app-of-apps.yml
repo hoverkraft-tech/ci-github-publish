@@ -164,13 +164,7 @@ jobs:
           permission-actions: read
           permission-deployments: write
 
-      - id: local-workflow-actions
-        if: always()
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-        with:
-          actions-path: actions
-
-      - uses: ./../self-workflow/actions/deployment/update
+      - uses: $/actions/deployment/update
         with:
           deployment-id: ${{ steps.check-client-payload.outputs.deployment-id }}
           repository: ${{ steps.check-client-payload.outputs.repository }}
@@ -180,8 +174,8 @@ jobs:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           update-log-url: "false"
 
-      - uses: ./../self-workflow/actions/deploy/report
-        if: always() && steps.local-workflow-actions.outputs.path
+      - uses: $/actions/deploy/report
+        if: always()
         with:
           deployment-id: ${{ github.event.client_payload['deployment-id'] }}
           repository: ${{ github.event.client_payload['application-repository'] }}

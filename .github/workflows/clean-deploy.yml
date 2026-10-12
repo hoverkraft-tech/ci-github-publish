@@ -116,11 +116,6 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - id: local-workflow-actions
-        uses: hoverkraft-tech/ci-github-common/actions/local-workflow-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-        with:
-          actions-path: actions
-
       - id: prepare-cleaning
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
@@ -148,7 +143,7 @@ jobs:
           permission-administration: write
 
       - id: delete-deployment
-        uses: ./../self-workflow/actions/deployment/delete
+        uses: $/actions/deployment/delete
         with:
           token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
@@ -167,14 +162,14 @@ jobs:
           repositories: ${{ steps.prepare-cleaning.outputs.repository-name }}
           permission-contents: write
 
-      - uses: ./../self-workflow/actions/clean-deploy/repository-dispatch
+      - uses: $/actions/clean-deploy/repository-dispatch
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' && inputs.clean-deploy-type == 'repository-dispatch' }}
         with:
           repository: ${{ steps.prepare-cleaning.outputs.repository }}
           environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
           github-token: ${{ steps.generate-dispatch-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@ab69f41f76e77ec84e733dedb03492b3ee95a05f # 0.39.0
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}
         with:
           title: "Deployment(s) have been deleted :wastebasket:."

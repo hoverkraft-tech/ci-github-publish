@@ -57,19 +57,14 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - id: local-actions
-      uses: hoverkraft-tech/ci-github-common/actions/local-actions@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
-      with:
-        source-path: ${{ github.action_path }}/../..
-
     - id: get-workflow-failure
-      uses: ./../self-actions/workflow/get-workflow-failure
+      uses: $/actions/workflow/get-workflow-failure
       with:
         github-token: ${{ inputs.github-token }}
 
     - id: get-deployment
       if: inputs.environment == '' && inputs.repository && inputs.deployment-id
-      uses: ./../self-actions/deployment/read
+      uses: $/actions/deployment/read
       with:
         github-token: ${{ inputs.github-token }}
         repository: ${{ inputs.repository }}
@@ -103,7 +98,7 @@ runs:
             extra: process.env.INPUT_EXTRA,
           });
 
-    - uses: ./../self-actions/deployment/update
+    - uses: $/actions/deployment/update
       if: inputs.deployment-id && inputs.repository
       with:
         deployment-id: ${{ inputs.deployment-id }}
@@ -114,7 +109,7 @@ runs:
         update-log-url: ${{ inputs.repository == github.event.repository.name && 'true' || 'false' }}
         github-token: ${{ inputs.github-token }}
 
-    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
+    - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@ab69f41f76e77ec84e733dedb03492b3ee95a05f # 0.39.0
       if: ${{ steps.get-deployment-result.outputs.is-issue-comment == 'true' }}
       with:
         title: "## ${{ steps.get-deployment-result.outputs.title }}"

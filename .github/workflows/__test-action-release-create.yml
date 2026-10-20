@@ -32,10 +32,12 @@ jobs:
         with:
           tag: ${{ steps.test-release.outputs.tag }}
           target-sha: ${{ github.sha }}
+          prerelease: "true"
           publish: "false"
           github-token: ${{ github.token }}
 
       - name: Assert - Created draft release
+        id: draft-release
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           CREATED_TAG: ${{ steps.test-release.outputs.tag }}
@@ -92,17 +94,79 @@ jobs:
             assert.equal(outputTag, createdTag);
 
             const releaseResponse = await findReleaseByTag(createdTag);
+            core.setOutput('release-id', String(releaseResponse.data.id));
 
             assert.equal(releaseResponse.data.tag_name, createdTag);
             assert.ok((releaseResponse.data.name || '').trim());
             assert.equal(releaseResponse.data.draft, true);
+            assert.equal(releaseResponse.data.prerelease, true);
             assert.equal(releaseResponse.data.target_commitish, expectedReleaseSha);
+            assert.match(releaseResponse.data.body, /^## What's Changed\n\n/);
+            assert.match(releaseResponse.data.body, /\n## New Contributors\n\n/);
+
+      - name: Act - Update draft release body
+        uses: $/actions/release/update
+        with:
+          tag: ${{ steps.test-release.outputs.tag }}
+          body: "Release notes updated before publication."
+          github-token: ${{ github.token }}
+
+      - name: Assert - Updated draft preserves its tag
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_ID: ${{ steps.draft-release.outputs.release-id }}
+          EXPECTED_TAG: ${{ steps.test-release.outputs.tag }}
+        with:
+          script: |
+            const assert = require('node:assert/strict');
+            const { data: release } = await github.rest.repos.getRelease({
+              ...context.repo,
+              release_id: Number(process.env.RELEASE_ID),
+            });
+
+            assert.equal(release.tag_name, process.env.EXPECTED_TAG);
+            assert.equal(release.draft, true);
+            assert.equal(release.body, 'Release notes updated before publication.');
+
+      - name: Act - Publish release
+        uses: $/actions/release/update
+        with:
+          tag: ${{ steps.test-release.outputs.tag }}
+          publish: "true"
+          github-token: ${{ github.token }}
+
+      - name: Assert - Published release and Git tag
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_ID: ${{ steps.draft-release.outputs.release-id }}
+          EXPECTED_TAG: ${{ steps.test-release.outputs.tag }}
+          EXPECTED_SHA: ${{ github.sha }}
+        with:
+          script: |
+            const assert = require('node:assert/strict');
+            const tag = process.env.EXPECTED_TAG;
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              ...context.repo,
+              tag,
+            });
+            const { data: tagRef } = await github.rest.git.getRef({
+              ...context.repo,
+              ref: `tags/${tag}`,
+            });
+
+            assert.equal(release.id, Number(process.env.RELEASE_ID));
+            assert.equal(release.tag_name, tag);
+            assert.equal(release.draft, false);
+            assert.equal(release.prerelease, true);
+            assert.equal(release.body, 'Release notes updated before publication.');
+            assert.equal(tagRef.object.sha, process.env.EXPECTED_SHA);
 
       - name: Cleanup - Delete test release and tag
         if: always()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           CREATED_TAG: ${{ steps.test-release.outputs.tag }}
+          RELEASE_ID: ${{ steps.draft-release.outputs.release-id }}
         with:
           github-token: ${{ github.token }}
           script: |
@@ -151,7 +215,10 @@ jobs:
 
             // jscpd:ignore-end
 
-            const release = await findReleaseByTag(tag);
+            const releaseId = Number(process.env.RELEASE_ID || 0);
+            const release = releaseId
+              ? await github.rest.repos.getRelease({ ...context.repo, release_id: releaseId })
+              : await findReleaseByTag(tag);
             if (release) {
               await github.rest.repos.deleteRelease({
                 owner: context.repo.owner,
@@ -160,16 +227,19 @@ jobs:
               });
             }
 
-            try {
-              await github.rest.git.deleteRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `tags/${tag}`,
-              });
-            } catch (error) {
-              if (error.status === 404 || error.status === 422) {
-                return;
-              }
+            const tags = new Set([tag, release?.data.tag_name].filter(Boolean));
+            for (const releaseTag of tags) {
+              try {
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/${releaseTag}`,
+                });
+              } catch (error) {
+                if (error.status === 404 || error.status === 422) {
+                  continue;
+                }
 
-              throw error;
+                throw error;
+              }
             }

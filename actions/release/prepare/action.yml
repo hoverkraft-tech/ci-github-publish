@@ -1,0 +1,71 @@
+name: "Release - Prepare (internal helper)"
+description: |
+  Compute the release version and notes, and optionally save them as a GitHub draft.
+  Internal helper shared by release/plan and release/create, using history scoped by the configured tag prefix.
+  Use release/plan for change detection and release/create to create or publish releases.
+author: hoverkraft
+branding:
+  icon: bookmark
+  color: blue
+
+inputs:
+  config-name:
+    description: "Release Drafter configuration target, relative to .github, including file: targets."
+    required: true
+  token:
+    description: "GitHub token with contents read and pull requests read; contents write is also required to create drafts."
+    required: false
+    default: ${{ github.token }}
+  dry-run:
+    description: |
+      If true, calculate the version and release notes without writing a release.
+      If false, create or refresh a draft without publishing it.
+    default: "false"
+  commitish: # codespell:ignore commitish
+    description: "Branch, commit SHA, or fully qualified tag or pull request ref to target."
+    default: ""
+  tag:
+    description: "Explicit release tag, otherwise calculated from the configuration."
+    default: ""
+  prerelease:
+    description: "Whether to draft a prerelease. Empty uses the configuration."
+    default: ""
+  latest:
+    description: "Whether the release is eligible to be marked latest. Empty uses the configuration."
+    default: ""
+
+outputs:
+  tag_name:
+    description: "The calculated or explicitly supplied release tag."
+    value: ${{ steps.prepare.outputs.tag_name }}
+  name:
+    description: "The release name."
+    value: ${{ steps.prepare.outputs.name }}
+  body:
+    description: "The release notes."
+    value: ${{ steps.prepare.outputs.body }}
+
+runs:
+  using: composite
+  steps:
+    - uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@81a4bca8445b7b273455ff26a9a5c3c31c86b2a1 # 0.25.0
+      with:
+        working-directory: ${{ github.action_path }}
+
+    - id: prepare
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        RELEASE_TOKEN: ${{ inputs.token }}
+        RELEASE_CONFIG: ${{ inputs.config-name }}
+        RELEASE_TARGET: ${{ inputs.commitish }} # codespell:ignore commitish
+        RELEASE_TAG: ${{ inputs.tag }}
+        RELEASE_PRERELEASE: ${{ inputs.prerelease }}
+        RELEASE_LATEST: ${{ inputs.latest }}
+        RELEASE_DRY_RUN: ${{ inputs.dry-run }}
+      with:
+        script: |
+          const { pathToFileURL } = require('node:url');
+          const path = require('node:path');
+          const { run } = await import(pathToFileURL(path.join(process.env.ACTION_PATH, 'index.js')));
+          await run({ core, context });

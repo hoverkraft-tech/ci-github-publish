@@ -93,6 +93,17 @@ _Actions for managing releases._
 
 #### - [Summarize changelog](actions/release/summarize-changelog/README.md)
 
+Use `release/plan` to detect changes and determine the release tag and name
+without creating a release. Use `release/create` to create or refresh a release
+and optionally publish it.
+
+Both actions use the internal [prepare helper](actions/release/prepare/README.md)
+to calculate versions and release notes from the same release history. An explicit
+empty `tag-prefix` selects repository SemVer tags; a component prefix selects
+SemVer tags after that prefix. Other components' published releases and drafts
+do not affect the version or changelog. Custom configurations that omit
+`tag-prefix` use all release tags.
+
 ### Workflow
 
 _Actions for managing workflows._

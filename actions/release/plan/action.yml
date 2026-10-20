@@ -82,12 +82,11 @@ runs:
           core.setOutput('config-path', configuration.configPath);
           core.setOutput('marker', configuration.marker);
 
-    - id: release-drafter
-      uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+    - id: prepare-release
+      uses: $/actions/release/prepare
       with:
         token: ${{ inputs.github-token }}
         dry-run: "true"
-        publish: "false"
         # config-path is relative to ".github" directory
         config-name: file:${{ steps.prepare-change-detection.outputs.config-path }}
         commitish: ${{ inputs.target-sha || github.sha }}
@@ -98,9 +97,9 @@ runs:
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         ACTION_PATH: ${{ github.action_path }}
-        PLANNED_RELEASE_NAME: ${{ steps.release-drafter.outputs.name }}
-        PLANNED_RELEASE_TAG: ${{ steps.release-drafter.outputs.tag_name }}
-        PLANNED_RELEASE_BODY: ${{ steps.release-drafter.outputs.body }}
+        PLANNED_RELEASE_NAME: ${{ steps.prepare-release.outputs.name }}
+        PLANNED_RELEASE_TAG: ${{ steps.prepare-release.outputs.tag_name }}
+        PLANNED_RELEASE_BODY: ${{ steps.prepare-release.outputs.body }}
         CHANGE_DETECTION_MARKER: ${{ steps.prepare-change-detection.outputs.marker }}
       with:
         github-token: ${{ inputs.github-token }}

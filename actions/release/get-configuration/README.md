@@ -30,6 +30,12 @@
 Action to get the release configuration details
 
 <!-- overview:end -->
+
+The generated configuration uses level-two headings for “What's Changed” and
+“New Contributors”, and level-three headings for changelog categories. These
+sections align with the default release summary headings. Repository-provided
+configurations control their own heading structure.
+
 <!-- usage:start -->
 
 ## Usage

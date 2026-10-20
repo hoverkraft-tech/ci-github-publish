@@ -34,6 +34,10 @@
 Update an existing GitHub release body, upload release assets, and optionally publish the release for a tag.
 
 <!-- overview:end -->
+
+Body updates and publication explicitly preserve the requested tag, including
+draft releases whose Git tag has not been created yet.
+
 <!--
 // jscpd:ignore-start
 -->

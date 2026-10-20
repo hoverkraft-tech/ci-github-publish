@@ -82,7 +82,9 @@ jobs:
             assert.ok(configContent.includes('  - "actions/release/get-configuration"'), 'Expected working directory include path in generated config');
             assert.ok(configContent.includes('name-template: "Version get-configuration - $RESOLVED_VERSION"'), 'Expected working-directory-specific name template');
             assert.ok(configContent.includes('tag-prefix: "get-configuration-"'), 'Expected working-directory-specific tag prefix');
-            assert.ok(configContent.includes('## New Contributors'), 'Expected a new contributors section');
+            assert.ok(configContent.includes("  ## What's Changed\n\n"), 'Expected a level-two changelog heading followed by a blank line');
+            assert.ok(configContent.includes('category-template: "### $TITLE"'), 'Expected level-three changelog categories');
+            assert.ok(configContent.includes('  ## New Contributors\n\n'), 'Expected a level-two new contributors heading followed by a blank line');
             assert.ok(configContent.includes('$NEW_CONTRIBUTORS'), 'Expected the new contributors template variable');
             assert.ok(configContent.includes('no-new-contributor-template: "_No new contributors in this release._"'), 'Expected an explicit no-new-contributors placeholder');
             assert.ok(configContent.includes('change-authors-final-separator: " and "'), 'Expected co-authors to use a natural final separator');

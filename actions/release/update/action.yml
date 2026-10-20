@@ -141,20 +141,24 @@ runs:
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         RELEASE_ID: ${{ steps.resolve-release.outputs.release-id }}
+        RELEASE_TAG: ${{ steps.resolve-update-intent.outputs.tag }}
         RELEASE_BODY: ${{ inputs.body }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
           const releaseId = Number(process.env.RELEASE_ID || 0);
+          const releaseTag = (process.env.RELEASE_TAG || '').trim();
 
-          if (!releaseId) {
-            throw new Error('Expected a release id before updating the release body');
+          if (!releaseId || !releaseTag) {
+            throw new Error('Expected a release id and tag before updating the release body');
           }
 
+          // Draft tags may not exist yet; retain the intended tag on every update.
           await github.rest.repos.updateRelease({
             owner: context.repo.owner,
             repo: context.repo.repo,
             release_id: releaseId,
+            tag_name: releaseTag,
             body: process.env.RELEASE_BODY || '',
           });
 
@@ -233,18 +237,21 @@ runs:
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         RELEASE_ID: ${{ steps.resolve-release.outputs.release-id }}
+        RELEASE_TAG: ${{ steps.resolve-update-intent.outputs.tag }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
           const releaseId = Number(process.env.RELEASE_ID || 0);
+          const releaseTag = (process.env.RELEASE_TAG || '').trim();
 
-          if (!releaseId) {
-            throw new Error('Expected a release id before publishing the release');
+          if (!releaseId || !releaseTag) {
+            throw new Error('Expected a release id and tag before publishing the release');
           }
 
           await github.rest.repos.updateRelease({
             owner: context.repo.owner,
             repo: context.repo.repo,
             release_id: releaseId,
+            tag_name: releaseTag,
             draft: false,
           });

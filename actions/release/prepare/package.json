@@ -1,0 +1,21 @@
+{
+	"name": "release-prepare",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Compute release versions and notes, and optionally save a GitHub draft",
+	"type": "module",
+	"scripts": {
+		"test": "node --test",
+		"test:ci": "node --test"
+	},
+	"author": "hoverkraft",
+	"license": "MIT",
+	"engines": {
+		"node": ">=24.0.0"
+	},
+	"dependencies": {
+		"release-drafter": "7.10.0",
+		"semver": "7.8.5",
+		"yaml": "2.9.1"
+	}
+}

@@ -1,4 +1,4 @@
-name: Internal - Tests for "release/plan" action
+name: Internal - Tests for "release/prepare" and "release/plan" actions
 
 on:
   workflow_call:
@@ -6,22 +6,23 @@ on:
 permissions: {}
 
 jobs:
-  unit-tests:
-    name: Test release change detection
-    runs-on: ubuntu-latest
+  continuous-integration:
+    name: Continuous integration for "release/${{ matrix.action }}" action
+    strategy:
+      matrix:
+        action: [prepare, plan]
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@81a4bca8445b7b273455ff26a9a5c3c31c86b2a1 # 0.25.0
     permissions:
       contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "24"
-
-      - name: Test release planning
-        run: node --test actions/release/plan/index.test.js
+      id-token: write
+      packages: read
+      pull-requests: write
+      security-events: write
+    with:
+      working-directory: ./actions/release/${{ matrix.action }}
+      build: null
+      lint: null
+      test: '{ "coverage": null }'
 
   tests:
     name: Tests for "release/plan" action

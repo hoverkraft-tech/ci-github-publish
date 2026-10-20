@@ -54,3 +54,7 @@ updates:
       time: "04:00"
     cooldown:
       default-days: 7
+    groups:
+      devcontainers-dependencies:
+        patterns:
+          - "*"

@@ -8,7 +8,14 @@ Release in this repository is action-first. The release surface is built from fo
 - `actions/release/delete`
 - `actions/release/summarize-changelog`
 
-`plan`, `create`, `update`, and `delete` handle release state directly. `summarize-changelog` is a helper for generating end user release notes from drafted changelog content.
+`plan` detects changes and returns a release tag and name without creating release state.
+`create`, `update`, and `delete` manage release state. `summarize-changelog` generates
+end user release notes from drafted changelog content.
+
+`plan` and `create` share the internal
+[`release/prepare` helper](../../actions/release/prepare/README.md) for version and
+changelog calculation. Caller workflows use `plan` and `create`; both apply the
+same release-history filtering through this helper.
 
 That keeps release state changes explicit in the caller workflow and leaves validation, packaging, signing, and release-file preparation under repository control.
 

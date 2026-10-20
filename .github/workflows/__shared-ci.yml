@@ -80,12 +80,15 @@ jobs:
       contents: write
       pull-requests: read
 
-  test-action-release-plan:
+  test-action-release-prepare-and-plan:
     needs: linter
-    uses: $/.github/workflows/__test-action-release-plan.yml
+    uses: $/.github/workflows/__test-action-release-prepare-and-plan.yml
     permissions:
       contents: write
-      pull-requests: read
+      id-token: write
+      packages: read
+      pull-requests: write
+      security-events: write
 
   test-action-release-summarize-changelog:
     needs: linter

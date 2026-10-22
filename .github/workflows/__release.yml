@@ -3,6 +3,12 @@ name: Internal - Release
 
 on: # yamllint disable-line rule:truthy
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Release even when no relevant changes are detected."
+        type: boolean
+        required: false
+        default: false
 
   schedule:
     - cron: "25 8 * * 1"
@@ -59,7 +65,7 @@ jobs:
           github-token: ${{ steps.generate-token.outputs.token }}
 
       - name: Create and publish release
-        if: steps.plan-release.outputs.has-changes == 'true'
+        if: (steps.plan-release.outputs.has-changes == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force)) && steps.plan-release.outputs.tag != ''
         uses: $/actions/release/create
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # zizmor: ignore[secrets-outside-env] repository secret is scoped to the release summary step

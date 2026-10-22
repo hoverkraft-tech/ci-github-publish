@@ -40,7 +40,7 @@ Detect release changes and plan a release identity without creating a Git tag or
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@218a19141dd9c88bd74b0ad28f1facb4c3568fbb # 1.0.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@16cb15741b5789d383fb2565648a93ad761627e1 # 1.0.1
   with:
     # Whether to plan the release as a prerelease
     # Default: `false`
@@ -158,7 +158,7 @@ jobs:
       tag: ${{ steps.plan.outputs.tag }}
     steps:
       - id: plan
-        uses: hoverkraft-tech/ci-github-publish/actions/release/plan@218a19141dd9c88bd74b0ad28f1facb4c3568fbb # 1.0.0
+        uses: hoverkraft-tech/ci-github-publish/actions/release/plan@16cb15741b5789d383fb2565648a93ad761627e1 # 1.0.1
 
   release:
     needs: plan

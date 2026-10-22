@@ -45,14 +45,16 @@ configurations control their own heading structure.
   with:
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-    # If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.
+    # If that file does not exist, a temporary release configuration is generated; `include-paths` controls its scope.
     # The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
     # They also define Conventional Commit labels.
     # They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
     working-directory: ""
 
-    # Additional paths to include in the release notes filtering (JSON array).
-    # These paths are added to the `include-paths` configuration of release-drafter.
+    # Paths used to filter generated release notes and version calculation (JSON array).
+    # Non-empty paths define the complete scope; no working-directory or workflow paths are added.
+    # Empty paths use the working directory and current workflow, or the whole repository without a working directory.
+    # Existing repository configuration files take precedence over this input.
     #
     # Default: `[]`
     include-paths: "[]"
@@ -67,12 +69,14 @@ configurations control their own heading structure.
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
 | **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                             | **false**    | -           |
 |                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                         |              |             |
-|                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.                         |              |             |
+|                         | If that file does not exist, a temporary release configuration is generated; `include-paths` controls its scope.                         |              |             |
 |                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch. |              |             |
 |                         | They also define Conventional Commit labels.                                                                                                                                  |              |             |
 |                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                      |              |             |
-| **`include-paths`**     | Additional paths to include in the release notes filtering (JSON array).                                                                                                      | **false**    | `[]`        |
-|                         | These paths are added to the `include-paths` configuration of release-drafter.                                                                                                |              |             |
+| **`include-paths`**     | Paths used to filter generated release notes and version calculation (JSON array).                                                                                                      | **false**    | `[]`        |
+|                         | Non-empty paths define the complete scope; no working-directory or workflow paths are added.                                                                                                |              |             |
+|                         | Empty paths use the working directory and current workflow, or the whole repository without a working directory.                                                                                                |              |             |
+|                         | Existing repository configuration files take precedence over this input.                                                                                                |              |             |
 
 <!-- inputs:end -->
 <!-- outputs:start -->

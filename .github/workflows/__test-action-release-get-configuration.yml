@@ -79,7 +79,9 @@ jobs:
             assert.ok(fs.existsSync(absoluteConfigPath), `Expected generated config to exist at ${absoluteConfigPath}`);
             assert.ok(configContent.includes('include-paths:'), 'Expected include-paths section in generated config');
             assert.ok(configContent.includes('  - "actions/release/create"'), 'Expected custom include path in generated config');
-            assert.ok(configContent.includes('  - "actions/release/get-configuration"'), 'Expected working directory include path in generated config');
+            assert.ok(!configContent.includes('  - "actions/release/get-configuration"'), 'Explicit include paths must not add the working directory');
+            const currentWorkflow = process.env.GITHUB_WORKFLOW_REF.replace(`${process.env.GITHUB_REPOSITORY}/`, '').replace(/@.*/, '');
+            assert.ok(!configContent.includes(`  - "${currentWorkflow}"`), 'Explicit include paths must not add the current workflow');
             assert.ok(configContent.includes('name-template: "Version get-configuration - $RESOLVED_VERSION"'), 'Expected working-directory-specific name template');
             assert.ok(configContent.includes('tag-prefix: "get-configuration-"'), 'Expected working-directory-specific tag prefix');
             assert.ok(configContent.includes("  ## What's Changed\n\n"), 'Expected a level-two changelog heading followed by a blank line');

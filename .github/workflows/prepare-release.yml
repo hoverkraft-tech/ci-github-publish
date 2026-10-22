@@ -18,7 +18,7 @@ on:
         description: |
           Working directory used to scope release preparation in a monorepo.
           If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-          If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.
+          If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory.
           The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
           They also apply Conventional Commit labels.
           They credit co-authors and highlight new contributors, with an explicit empty state when there are none.

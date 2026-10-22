@@ -26,7 +26,7 @@ const repo = { owner: "example", repo: "project" };
 
 async function fixture(
 	t,
-	{ paths = '["images/widget/**"]', workingDirectory = "images/widget" } = {},
+	{ paths = "[]", workingDirectory = "images/widget" } = {},
 ) {
 	const workspace = await fs.mkdtemp(path.join(os.tmpdir(), "release-scope-"));
 	t.after(() => fs.rm(workspace, { recursive: true, force: true }));
@@ -123,28 +123,31 @@ const unrelatedChanges = [
 	change(2, "feat!: change another image", "images/other/Dockerfile"),
 ];
 
-test("explicit paths define the complete scope while preserving the working-directory tag prefix", async (t) => {
+test("additional paths extend the working-directory scope and preserve its tag prefix", async (t) => {
 	const { config } = await fixture(t, {
 		paths: '[" shared/** ", "shared/**", ""]',
 	});
-	assert.deepEqual(config["include-paths"], ["shared/**"]);
+	assert.deepEqual(config["include-paths"], ["shared/**", "images/widget"]);
 	assert.equal(config["tag-prefix"], "widget-");
 });
 
 for (const paths of ["[]", '["", "  "]']) {
-	test(`empty path selection ${paths} defaults to the working directory and workflow`, async (t) => {
+	test(`empty additional paths ${paths} scope releases to the working directory`, async (t) => {
 		const { config } = await fixture(t, { paths });
-		assert.deepEqual(config["include-paths"], ["images/widget", workflow]);
+		assert.deepEqual(config["include-paths"], ["images/widget"]);
 	});
 }
 
-test("repository releases without explicit paths have no path filter", async (t) => {
+test("repository releases without additional paths have no path filter", async (t) => {
 	const { config } = await fixture(t, { paths: "[]", workingDirectory: "" });
 	assert.equal(config["include-paths"], undefined);
 });
 
-test("explicit paths can scope a repository release without a working directory", async (t) => {
-	const { config } = await fixture(t, { workingDirectory: "" });
+test("additional paths can scope a repository release without a working directory", async (t) => {
+	const { config } = await fixture(t, {
+		workingDirectory: "",
+		paths: '["images/widget/**"]',
+	});
 	assert.deepEqual(config["include-paths"], ["images/widget/**"]);
 	assert.equal(config["tag-prefix"], "");
 });
@@ -160,7 +163,7 @@ for (const [title, version] of [
 	["feat: add startup option", "1.3.0"],
 	["feat!: change startup interface", "2.0.0"],
 ]) {
-	test(`${title} resolves to ${version} within the explicit scope`, async (t) => {
+	test(`${title} resolves to ${version} within the working directory`, async (t) => {
 		const result = await plan(t, [
 			...unrelatedChanges,
 			change(3, title, "images/widget/Dockerfile"),
@@ -172,17 +175,32 @@ for (const [title, version] of [
 	});
 }
 
-test("callers can explicitly include shared files in the release scope", async (t) => {
+test("additional shared paths retain changes within the working directory", async (t) => {
 	const result = await plan(
 		t,
-		[change(1, "fix: update shared entrypoint", "shared/entrypoint.sh")],
-		{ paths: '["images/widget/**", "shared/**"]' },
+		[
+			change(1, "fix: update shared entrypoint", "shared/entrypoint.sh"),
+			change(2, "feat: add startup option", "images/widget/Dockerfile"),
+		],
+		{ paths: '["shared/**"]' },
 	);
 	assert.equal(result.hasChanges, true);
-	assert.equal(result.tag, "widget-1.2.4");
+	assert.equal(result.tag, "widget-1.3.0");
+	assert.match(result.body, /#1/);
+	assert.match(result.body, /#2/);
 });
 
-test("changes touching both the explicit scope and the workflow are included", async (t) => {
+test("callers can include the workflow through additional paths", async (t) => {
+	const result = await plan(t, unrelatedChanges, {
+		paths: JSON.stringify([workflow]),
+	});
+	assert.equal(result.hasChanges, true);
+	assert.equal(result.tag, "widget-2.0.0");
+	assert.match(result.body, /#1/);
+	assert.doesNotMatch(result.body, /#2/);
+});
+
+test("changes touching both the working directory and the workflow are included", async (t) => {
 	const result = await plan(t, [
 		change(1, "fix: update image build", "images/widget/Dockerfile", workflow),
 	]);

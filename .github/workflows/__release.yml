@@ -3,6 +3,7 @@ name: Internal - Release
 
 on: # yamllint disable-line rule:truthy
   workflow_dispatch:
+    # checkov:skip=CKV_GHA_7: force only bypasses the no-changes guard; source and build settings stay fixed.
     inputs:
       force:
         description: "Release even when no relevant changes are detected."

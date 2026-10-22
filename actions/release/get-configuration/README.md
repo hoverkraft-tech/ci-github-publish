@@ -41,7 +41,7 @@ configurations control their own heading structure.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@a0a9d185c51c10710a5987822e78feb2b5ce1932 # 0.29.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@16cb15741b5789d383fb2565648a93ad761627e1 # 1.0.1
   with:
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.

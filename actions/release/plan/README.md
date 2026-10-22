@@ -48,14 +48,16 @@ Detect release changes and plan a release identity without creating a Git tag or
 
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-    # If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.
+    # If that file does not exist, a temporary release configuration is generated; `include-paths` controls its scope.
     # The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
     # They also define Conventional Commit labels.
     # They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
     working-directory: ""
 
-    # Additional paths to include in the release notes filtering (JSON array).
-    # These paths are added to the `include-paths` configuration of release-drafter.
+    # Paths used to filter generated release notes and version calculation (JSON array).
+    # Non-empty paths define the complete scope; no working-directory or workflow paths are added.
+    # Empty paths use the working directory and current workflow, or the whole repository without a working directory.
+    # Existing repository configuration files take precedence over this input.
     #
     # Default: `[]`
     include-paths: "[]"
@@ -84,12 +86,14 @@ Detect release changes and plan a release identity without creating a Git tag or
 | **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                                                   | **false**    | `false`               |
 | **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                             | **false**    | -                     |
 |                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                         |              |                       |
-|                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory and current workflow file.                         |              |                       |
+|                         | If that file does not exist, a temporary release configuration is generated; `include-paths` controls its scope.                         |              |                       |
 |                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch. |              |                       |
 |                         | They also define Conventional Commit labels.                                                                                                                                  |              |                       |
 |                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                      |              |                       |
-| **`include-paths`**     | Additional paths to include in the release notes filtering (JSON array).                                                                                                      | **false**    | `[]`                  |
-|                         | These paths are added to the `include-paths` configuration of release-drafter.                                                                                                |              |                       |
+| **`include-paths`**     | Paths used to filter generated release notes and version calculation (JSON array).                                                                                                      | **false**    | `[]`                  |
+|                         | Non-empty paths define the complete scope; no working-directory or workflow paths are added.                                                                                                |              |                       |
+|                         | Empty paths use the working directory and current workflow, or the whole repository without a working directory.                                                                                                |              |                       |
+|                         | Existing repository configuration files take precedence over this input.                                                                                                |              |                       |
 | **`target-sha`**        | Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.                                                                                       | **false**    | -                     |
 |                         | Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.                                                                           |              |                       |
 | **`github-token`**      | GitHub Token for planning the release.                                                                                                                                        | **false**    | `${{ github.token }}` |

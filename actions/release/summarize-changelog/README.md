@@ -40,7 +40,7 @@ Generate a concise end user release summary from an existing changelog with opti
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/summarize-changelog@8e0ea88afb2f97c608e942afc2057533757b3442 # main
+- uses: hoverkraft-tech/ci-github-publish/actions/release/summarize-changelog@4d906685a32df3cfab9139296d49dd914a86bafd # 1.0.2
   with:
     # Markdown changelog body used as the source material for the release summary.
     # This input is required.

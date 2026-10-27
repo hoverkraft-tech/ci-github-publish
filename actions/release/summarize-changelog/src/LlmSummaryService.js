@@ -12,9 +12,11 @@ const SYSTEM_PROMPT = [
 ].join(" ");
 
 const SUPPORTED_PROVIDERS = new Set(["openai", "anthropic", "google-genai"]);
+const DEFAULT_MAX_RETRIES = 8;
 
 export class LlmSummaryService {
-	constructor(initChatModelImpl) {
+	constructor(logger, initChatModelImpl) {
+		this.logger = logger;
 		this.initChatModelImpl = initChatModelImpl;
 	}
 
@@ -33,8 +35,20 @@ export class LlmSummaryService {
 
 		const llmConfig = this.#normalizeLlmConfig({
 			...inputs.llmConfig,
+			maxRetries: inputs.llmConfig?.maxRetries ?? DEFAULT_MAX_RETRIES,
 			apiKey: inputs.llmAuth,
 		});
+
+		if (
+			!Number.isSafeInteger(llmConfig.maxRetries) ||
+			llmConfig.maxRetries < 0
+		) {
+			throw new Error("llm-config.maxRetries must be a non-negative integer.");
+		}
+
+		this.logger?.info(
+			`LLM requests allow up to ${llmConfig.maxRetries} automatic retries with exponential backoff for transient provider failures.`,
+		);
 
 		const llm = await initChatModel(resolvedModel, llmConfig);
 		const response = await llm.invoke([

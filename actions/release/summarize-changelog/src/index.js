@@ -34,7 +34,7 @@ async function createDefaultServices(core, github, context, inputs) {
 			new GitEvidenceService(referenceExtractor, logger, github, context.repo),
 			new LinkEvidenceService(referenceExtractor, logger),
 			new PromptBuilder(),
-			new LlmSummaryService(),
+			new LlmSummaryService(logger),
 		),
 	};
 }

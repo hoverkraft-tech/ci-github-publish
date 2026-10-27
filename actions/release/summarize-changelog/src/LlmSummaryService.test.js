@@ -1,11 +1,11 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { LlmSummaryService } from "./LlmSummaryService.js";
 
 describe("LlmSummaryService", () => {
 	it("preserves initChatModel baseUrl config and populates OpenAI configuration.baseURL", async () => {
 		const initCalls = [];
-		const service = new LlmSummaryService(async (model, config) => {
+		const service = new LlmSummaryService(undefined, async (model, config) => {
 			initCalls.push({ model, config });
 
 			return {
@@ -38,6 +38,7 @@ describe("LlmSummaryService", () => {
 				model: "openai:gpt-5.4",
 				config: {
 					apiKey: "token",
+					maxRetries: 8,
 					baseUrl: "https://api.openai.com/v1",
 					configuration: {
 						baseURL: "https://api.openai.com/v1",
@@ -51,7 +52,7 @@ describe("LlmSummaryService", () => {
 	});
 
 	it("fails when the model response is not valid JSON", async () => {
-		const service = new LlmSummaryService(async () => ({
+		const service = new LlmSummaryService(undefined, async () => ({
 			async invoke() {
 				return {
 					content: "not-json",

@@ -60,7 +60,7 @@ on:
 permissions: {}
 jobs:
   release-actions:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@218a19141dd9c88bd74b0ad28f1facb4c3568fbb # 1.0.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/release-actions.yml@4d906685a32df3cfab9139296d49dd914a86bafd # 1.0.2
     permissions:
       contents: read
     secrets:
@@ -80,6 +80,12 @@ jobs:
 
       # Update all actions and workflows, regardless of changes.
       update-all: false
+
+      # Merge strategy for the documentation pull request: `merge`, `rebase`, or `squash`.
+      # Use `squash` for branches requiring signed commits and enable squash merging in the repository settings.
+      #
+      # Default: `rebase`
+      merge-method: rebase
 
       # List of extra documentation files to update (if any).
       documentation-files: ""
@@ -101,16 +107,18 @@ jobs:
 
 ### Workflow Call Inputs
 
-| **Input**                  | **Description**                                                                    | **Required** | **Type**    | **Default**         |
-| -------------------------- | ---------------------------------------------------------------------------------- | ------------ | ----------- | ------------------- |
-| **`runs-on`**              | JSON array of runner(s) to use.                                                    | **false**    | **string**  | `["ubuntu-latest"]` |
-|                            | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>. |              |             |                     |
-| **`update-all`**           | Update all actions and workflows, regardless of changes.                           | **false**    | **boolean** | `false`             |
-| **`documentation-files`**  | List of extra documentation files to update (if any).                              | **false**    | **string**  | -                   |
-| **`extra-badges`**         | JSON array of extra badges to include in generated documentation.                  | **false**    | **string**  | -                   |
-|                            | Each badge should have `label`, `url`, and optional `linkUrl` properties.          |              |             |                     |
-| **`github-app-client-id`** | GitHub App Client ID to generate GitHub token in place of github-token.            | **false**    | **string**  | -                   |
-|                            | See <https://github.com/actions/create-github-app-token>.                          |              |             |                     |
+| **Input**                  | **Description**                                                                                          | **Required** | **Type**    | **Default**         |
+| -------------------------- | -------------------------------------------------------------------------------------------------------- | ------------ | ----------- | ------------------- |
+| **`runs-on`**              | JSON array of runner(s) to use.                                                                          | **false**    | **string**  | `["ubuntu-latest"]` |
+|                            | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                       |              |             |                     |
+| **`update-all`**           | Update all actions and workflows, regardless of changes.                                                 | **false**    | **boolean** | `false`             |
+| **`merge-method`**         | Merge strategy for the documentation pull request: `merge`, `rebase`, or `squash`.                       | **false**    | **string**  | `rebase`            |
+|                            | Use `squash` for branches requiring signed commits and enable squash merging in the repository settings. |              |             |                     |
+| **`documentation-files`**  | List of extra documentation files to update (if any).                                                    | **false**    | **string**  | -                   |
+| **`extra-badges`**         | JSON array of extra badges to include in generated documentation.                                        | **false**    | **string**  | -                   |
+|                            | Each badge should have `label`, `url`, and optional `linkUrl` properties.                                |              |             |                     |
+| **`github-app-client-id`** | GitHub App Client ID to generate GitHub token in place of github-token.                                  | **false**    | **string**  | -                   |
+|                            | See <https://github.com/actions/create-github-app-token>.                                                |              |             |                     |
 
 <!-- inputs:end -->
 

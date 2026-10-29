@@ -17,3 +17,15 @@ vulnerabilities:
       brace patterns cannot reach the vulnerable AST walkers through this
       action. Reassess when changing Jampack, its CLI arguments, or this
       dependency, and remove the exception when a patched release is available.
+  - id: CVE-2026-93753
+    paths:
+      - actions/deploy/jampack/package-lock.json
+    purls:
+      - pkg:npm/deepmerge@4.3.1
+    expired_at: 2026-11-12
+    statement: >-
+      Jampack uses deepmerge for defaults and repository-controlled configuration,
+      not processed HTML or downloaded images. This exception assumes trusted
+      repository configuration, including its imports and extends. Reassess if
+      these merge inputs change, and remove when a patched release is available.
+      Decision and supporting evidence: docs/adr/0001-deepmerge-exception.md.

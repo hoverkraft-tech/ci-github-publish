@@ -26,6 +26,13 @@ on:
         required: false
         default: false
         type: boolean
+      merge-method:
+        description: |
+          Merge strategy for the documentation pull request: `merge`, `rebase`, or `squash`.
+          Use `squash` for branches requiring signed commits and enable squash merging in the repository settings.
+        required: false
+        default: rebase
+        type: string
       documentation-files:
         description: "List of extra documentation files to update (if any)."
         required: false
@@ -335,6 +342,7 @@ jobs:
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           branch: docs/actions-workflows-documentation-update
+          merge-method: ${{ inputs.merge-method }}
           title: "docs: update actions and workflows documentation"
           body: Update actions and workflows documentation
           commit-message: |

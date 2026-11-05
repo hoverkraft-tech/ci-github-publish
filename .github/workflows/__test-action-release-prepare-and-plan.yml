@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         action: [prepare, plan]
-    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@81a4bca8445b7b273455ff26a9a5c3c31c86b2a1 # 0.25.0
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@31cd29bfb95f6bc6490d6abe5d66690431b518e3 # 2.0.0
     permissions:
       contents: read
       id-token: write

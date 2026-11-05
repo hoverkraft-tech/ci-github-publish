@@ -282,6 +282,13 @@ runs:
           fs.writeFileSync(configPath, configContent, 'utf8');
           core.setOutput('config-path', process.env.CONFIG_PATH);
 
+    - name: Setup Node.js
+      if: steps.local-config.outputs.config-path != '' || inputs.release-config != ''
+      uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@81a4bca8445b7b273455ff26a9a5c3c31c86b2a1 # 0.25.0
+      with:
+        working-directory: ${{ github.action_path }}
+        ignore-scripts: "true"
+
     - name: Compose release configuration overrides
       id: override-config
       if: steps.local-config.outputs.config-path != '' || inputs.release-config != ''
@@ -293,47 +300,14 @@ runs:
         REPOSITORY_CONFIG_PATH: ${{ steps.local-config.outputs.config-path }}
       with:
         script: |
-          const fs = require('node:fs');
-          const path = require('node:path');
-
-          await exec.exec('npm', ['ci', '--ignore-scripts', '--omit=dev', '--prefix', process.env.ACTION_PATH]);
-          const { parse } = require(`${process.env.ACTION_PATH}/node_modules/yaml`);
-          const mapping = (source, label) => {
-            const value = parse(source);
-            if (!value || typeof value !== 'object' || Array.isArray(value)) {
-              throw new Error(`${label} must be a YAML or JSON mapping.`);
-            }
-            return value;
-          };
-          const githubDirectory = path.join(process.env.GITHUB_WORKSPACE || process.cwd(), '.github');
-          let baseConfig = path.resolve(githubDirectory, process.env.BASE_CONFIG_PATH);
-          const repositoryConfig = process.env.REPOSITORY_CONFIG_PATH
-            ? path.resolve(githubDirectory, process.env.REPOSITORY_CONFIG_PATH)
-            : '';
-          const directory = fs.mkdtempSync(path.join(process.env.RUNNER_TEMP, 'release-config-'));
-          const inherit = (configuration, filename) => {
-            const target = path.join(directory, filename);
-            const content = {
-              ...configuration,
-              _extends: `file:${path.relative(directory, baseConfig).split(path.sep).join('/')}`,
-            };
-            fs.writeFileSync(target, `${JSON.stringify(content, null, 2)}\n`, { mode: 0o600 });
-            baseConfig = target;
-          };
-          if (repositoryConfig) {
-            const repository = mapping(fs.readFileSync(repositoryConfig, 'utf8'), 'Repository release configuration');
-            if (Object.hasOwn(repository, '_extends')) {
-              baseConfig = repositoryConfig;
-            } else {
-              inherit(repository, 'repository.json');
-            }
-          }
-          if (process.env.RELEASE_CONFIG) {
-            const overrides = mapping(process.env.RELEASE_CONFIG, 'release-config');
-            if (Object.hasOwn(overrides, '_extends')) {
-              throw new Error('release-config cannot override _extends; repository configuration inheritance is preserved automatically.');
-            }
-            inherit(overrides, 'overrides.json');
-          }
-          core.setOutput('config-path', path.relative(githubDirectory, baseConfig).split(path.sep).join('/'));
-          core.setOutput('is-generated', String(baseConfig !== repositoryConfig));
+          const { run } = require(`${process.env.ACTION_PATH}/src/index.js`);
+          run({
+            core,
+            inputs: {
+              workspace: process.env.GITHUB_WORKSPACE || process.cwd(),
+              runnerTemp: process.env.RUNNER_TEMP,
+              baseConfigPath: process.env.BASE_CONFIG_PATH,
+              repositoryConfigPath: process.env.REPOSITORY_CONFIG_PATH,
+              releaseConfig: process.env.RELEASE_CONFIG,
+            },
+          });

@@ -6,7 +6,8 @@
 	"type": "module",
 	"scripts": {
 		"test": "node --test",
-		"test:ci": "node --test"
+		"test:watch": "node --test --watch",
+		"test:ci": "node --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test"
 	},
 	"author": "hoverkraft",
 	"license": "MIT",

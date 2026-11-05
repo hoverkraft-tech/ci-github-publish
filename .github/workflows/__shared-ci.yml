@@ -65,6 +65,10 @@ jobs:
     uses: $/.github/workflows/__test-action-release-get-configuration.yml
     permissions:
       contents: read
+      id-token: write
+      packages: read
+      pull-requests: write
+      security-events: write
 
   test-action-release-create:
     needs: linter

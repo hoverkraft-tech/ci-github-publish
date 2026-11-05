@@ -21,14 +21,17 @@ const generate = compileFunction(
 		.script,
 	["require", "process", "core"],
 );
-const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
-const override = new AsyncFunction(
-	"require",
-	"process",
-	"core",
-	"exec",
-	action.runs.steps.find((step) => step.id === "override-config").with.script,
-);
+// Load the actual configuration action with this package's YAML dependency.
+// Each action's CI installs only its own package dependencies.
+const configurationModule = { exports: {} };
+compileFunction(
+	await fs.readFile(
+		new URL("../get-configuration/src/index.js", import.meta.url),
+		"utf8",
+	),
+	["require", "module"],
+)((name) => (name === "yaml" ? { parse } : require(name)), configurationModule);
+const { run: override } = configurationModule.exports;
 const workflow = ".github/workflows/release.yml";
 const repo = { owner: "example", repo: "project" };
 
@@ -78,22 +81,16 @@ async function fixture(
 		);
 	}
 	if (releaseConfig || repositoryConfig) {
-		await override(
-			(name) =>
-				name.endsWith("/node_modules/yaml") ? { parse } : require(name),
-			{
-				env: {
-					GITHUB_WORKSPACE: workspace,
-					RUNNER_TEMP: workspace,
-					ACTION_PATH: "get-configuration",
-					BASE_CONFIG_PATH: outputs["config-path"],
-					REPOSITORY_CONFIG_PATH: repositoryConfig ? "release-config.yml" : "",
-					RELEASE_CONFIG: releaseConfig,
-				},
-			},
+		override({
 			core,
-			{ exec: async () => {} },
-		);
+			inputs: {
+				workspace,
+				runnerTemp: workspace,
+				baseConfigPath: outputs["config-path"],
+				repositoryConfigPath: repositoryConfig ? "release-config.yml" : "",
+				releaseConfig,
+			},
+		});
 	}
 	const config = parse(
 		await fs.readFile(

@@ -5,17 +5,7 @@ const path = require("node:path");
 const { test } = require("node:test");
 const { parse } = require("yaml");
 
-const action = parse(
-	fs.readFileSync(path.join(__dirname, "action.yml"), "utf8"),
-);
-const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
-const override = new AsyncFunction(
-	"require",
-	"process",
-	"core",
-	"exec",
-	action.runs.steps.find((step) => step.id === "override-config").with.script,
-);
+const { run } = require("./index.js");
 
 function fixture(
 	t,
@@ -44,28 +34,23 @@ function fixture(
 		workspace,
 		runnerTemp,
 		async apply(input) {
-			await override(
-				require,
-				{
-					env: {
-						GITHUB_WORKSPACE: workspace,
-						RUNNER_TEMP: runnerTemp,
-						ACTION_PATH: __dirname,
-						BASE_CONFIG_PATH: path.relative(
-							path.join(workspace, ".github"),
-							defaults,
-						),
-						REPOSITORY_CONFIG_PATH: "release-config.yml",
-						RELEASE_CONFIG: input,
-					},
-				},
-				{
+			run({
+				core: {
 					setOutput(name, value) {
 						outputs[name] = value;
 					},
 				},
-				{ exec: async () => {} },
-			);
+				inputs: {
+					workspace,
+					runnerTemp,
+					baseConfigPath: path.relative(
+						path.join(workspace, ".github"),
+						defaults,
+					),
+					repositoryConfigPath: "release-config.yml",
+					releaseConfig: input,
+				},
+			});
 			const target = path.resolve(workspace, ".github", outputs["config-path"]);
 			return { target, config: parse(fs.readFileSync(target, "utf8")) };
 		},

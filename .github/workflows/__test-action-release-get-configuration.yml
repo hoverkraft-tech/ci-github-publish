@@ -6,7 +6,21 @@ on:
 permissions: {}
 
 jobs:
-  tests:
+  continuous-integration:
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@81a4bca8445b7b273455ff26a9a5c3c31c86b2a1 # 0.25.0
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+      pull-requests: write
+      security-events: write
+    with:
+      working-directory: ./actions/release/get-configuration
+      build: null
+      lint: null
+      test: '{ "coverage": null }'
+
+  integration-tests:
     name: Tests for "release/get-configuration" action
     runs-on: ubuntu-latest
     permissions:
@@ -16,16 +30,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Arrange - Install configuration test dependencies
-        uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@81a4bca8445b7b273455ff26a9a5c3c31c86b2a1 # 0.25.0
-        with:
-          working-directory: actions/release/get-configuration
-          ignore-scripts: "true"
-
-      - name: Assert - Configuration unit tests
-        working-directory: actions/release/get-configuration
-        run: npm test
 
       - name: Arrange - Create repository config fixture
         run: |

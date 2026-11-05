@@ -6,6 +6,12 @@ branding:
   color: blue
 
 inputs:
+  release-config:
+    description: |
+      Optional partial Release Drafter configuration as a YAML or JSON mapping.
+      Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.
+      Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.
+    default: ""
   prerelease:
     description: "Whether to plan the release as a prerelease"
     required: false
@@ -14,7 +20,7 @@ inputs:
     description: |
       Working directory used to scope release automation in a monorepo.
       If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-      If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory.
+      Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults include the working directory in include-paths.
       The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
       They also define Conventional Commit labels.
       They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
@@ -25,7 +31,7 @@ inputs:
       Additional paths to include in generated release notes and version calculation (JSON array).
       These paths are added to the working-directory scope when one is specified.
       Add the calling workflow path explicitly to include workflow-only changes.
-      Existing repository configuration files take precedence over this input.
+      An include-paths setting in the repository configuration or release-config input replaces this generated scope.
     required: false
     default: "[]"
   target-sha: # codespell:ignore commitish
@@ -65,6 +71,7 @@ runs:
     - id: get-configuration
       uses: $/actions/release/get-configuration
       with:
+        release-config: ${{ inputs.release-config }}
         working-directory: ${{ inputs.working-directory }}
         include-paths: ${{ inputs.include-paths }}
 

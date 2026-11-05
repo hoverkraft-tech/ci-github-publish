@@ -21,12 +21,25 @@ const generate = compileFunction(
 		.script,
 	["require", "process", "core"],
 );
+const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+const override = new AsyncFunction(
+	"require",
+	"process",
+	"core",
+	"exec",
+	action.runs.steps.find((step) => step.id === "override-config").with.script,
+);
 const workflow = ".github/workflows/release.yml";
 const repo = { owner: "example", repo: "project" };
 
 async function fixture(
 	t,
-	{ paths = "[]", workingDirectory = "images/widget" } = {},
+	{
+		paths = "[]",
+		workingDirectory = "images/widget",
+		releaseConfig = "",
+		repositoryConfig = "",
+	} = {},
 ) {
 	const workspace = await fs.mkdtemp(path.join(os.tmpdir(), "release-scope-"));
 	t.after(() => fs.rm(workspace, { recursive: true, force: true }));
@@ -58,8 +71,35 @@ async function fixture(
 		},
 		core,
 	);
+	if (repositoryConfig) {
+		await fs.writeFile(
+			path.join(workspace, ".github/release-config.yml"),
+			repositoryConfig,
+		);
+	}
+	if (releaseConfig || repositoryConfig) {
+		await override(
+			(name) =>
+				name.endsWith("/node_modules/yaml") ? { parse } : require(name),
+			{
+				env: {
+					GITHUB_WORKSPACE: workspace,
+					RUNNER_TEMP: workspace,
+					ACTION_PATH: "get-configuration",
+					BASE_CONFIG_PATH: outputs["config-path"],
+					REPOSITORY_CONFIG_PATH: repositoryConfig ? "release-config.yml" : "",
+					RELEASE_CONFIG: releaseConfig,
+				},
+			},
+			core,
+			{ exec: async () => {} },
+		);
+	}
 	const config = parse(
-		await fs.readFile(path.join(workspace, ".github/release.yml"), "utf8"),
+		await fs.readFile(
+			path.resolve(workspace, ".github", outputs["config-path"]),
+			"utf8",
+		),
 	);
 	return { workspace, outputs, core, config };
 }
@@ -67,7 +107,7 @@ async function fixture(
 async function plan(t, pullRequests, options) {
 	const { workspace, outputs, core } = await fixture(t, options);
 	const { configPath, marker } = prepareConfiguration({
-		configPath: "release.yml",
+		configPath: outputs["config-path"],
 		workspace,
 		runnerTemp: workspace,
 	});
@@ -77,7 +117,7 @@ async function plan(t, pullRequests, options) {
 		env: {
 			GITHUB_WORKSPACE: workspace,
 			RUNNER_TEMP: workspace,
-			RELEASE_CONFIG: `file:${configPath}`,
+			RELEASE_CONFIG: `file:${options?.renderNotes ? outputs["config-path"] : configPath}`,
 			RELEASE_TOKEN: "test-token",
 			RELEASE_DRY_RUN: "true",
 			RELEASE_PRERELEASE: "false",
@@ -85,7 +125,11 @@ async function plan(t, pullRequests, options) {
 		adapter: {
 			capabilities: { draftReleases: true },
 			listReleases: async () => [
-				{ id: 1, tagName: "widget-1.2.3", createdAt: "2026-01-01T00:00:00Z" },
+				{
+					id: 1,
+					tagName: options?.previousTag || "widget-1.2.3",
+					createdAt: "2026-01-01T00:00:00Z",
+				},
 			],
 			resolveCommitish: async ({ commitish }) => commitish,
 			findChanges: async () => ({
@@ -95,6 +139,8 @@ async function plan(t, pullRequests, options) {
 			}),
 		},
 	});
+	if (options?.renderNotes)
+		return { tag: outputs.tag_name, body: outputs.body };
 	const result = await resolvePlan({
 		body: outputs.body,
 		tag: outputs.tag_name,
@@ -213,3 +259,105 @@ for (const paths of ["{", "{}", '["images/widget/**", 1]']) {
 		await assert.rejects(fixture(t, { paths }), /include-paths/);
 	});
 }
+
+for (const [title, version] of [
+	["fix: repair", "1.2.4"],
+	["feat: extend", "1.3.0"],
+	["feat!: replace", "2.0.0"],
+]) {
+	test(`partial tag overrides inherit Conventional Commit rules for ${title}`, async (t) => {
+		const result = await plan(
+			t,
+			[change(1, title, "images/widget/Dockerfile")],
+			{
+				releaseConfig:
+					"tag-prefix: v\ntag-template: v$RESOLVED_VERSION\nname-template: Custom $RESOLVED_VERSION\n",
+				previousTag: "v1.2.3",
+			},
+		);
+		assert.equal(result.tag, `v${version}`);
+		assert.equal(result.name, `Custom ${version}`);
+		assert.equal(result.hasChanges, true);
+	});
+}
+
+test("overridden presentation cannot hide no-change detection", async (t) => {
+	const result = await plan(t, unrelatedChanges, {
+		releaseConfig:
+			"tag-prefix: v\ntag-template: v$RESOLVED_VERSION\ntemplate: Hidden\nno-changes-template: Hidden\n",
+		previousTag: "v1.2.3",
+	});
+	assert.equal(result.hasChanges, false);
+});
+
+test("release notes inherit categories and compare the resolved overridden tag", async (t) => {
+	const result = await plan(
+		t,
+		[change(1, "feat: expose API", "images/widget/Dockerfile")],
+		{
+			releaseConfig: '{"tag-prefix":"v","tag-template":"v$RESOLVED_VERSION"}',
+			previousTag: "v1.2.3",
+			renderNotes: true,
+		},
+	);
+	assert.equal(result.tag, "v1.3.0");
+	assert.match(result.body, /### Features/);
+	assert.match(result.body, /compare\/v1\.2\.3\.\.\.v1\.3\.0/);
+	assert.doesNotMatch(result.body, /\$RESOLVED_TAG/);
+});
+
+test("an overridden list replaces the inherited release scope", async (t) => {
+	const result = await plan(
+		t,
+		[change(1, "feat: expose API", "images/other/Dockerfile")],
+		{
+			releaseConfig: 'include-paths: ["images/other/**"]',
+		},
+	);
+	assert.equal(result.hasChanges, true);
+	assert.equal(result.tag, "widget-1.3.0");
+});
+
+test("a partial repository file inherits version rules and release note defaults", async (t) => {
+	const options = {
+		repositoryConfig: "tag-prefix: v\ntag-template: v$RESOLVED_VERSION\n",
+		previousTag: "v1.2.3",
+	};
+	const changes = [change(1, "feat: expose API", "images/widget/Dockerfile")];
+	const result = await plan(t, changes, options);
+	assert.equal(result.tag, "v1.3.0");
+	assert.equal(result.hasChanges, true);
+	const notes = await plan(t, changes, { ...options, renderNotes: true });
+	assert.match(notes.body, /### Features/);
+	assert.match(notes.body, /compare\/v1\.2\.3\.\.\.v1\.3\.0/);
+});
+
+test("workflow settings override repository settings while retaining omitted fields", async (t) => {
+	const result = await plan(
+		t,
+		[change(1, "feat: expose API", "images/widget/Dockerfile")],
+		{
+			repositoryConfig:
+				"tag-prefix: repo-\ntag-template: repo-$RESOLVED_VERSION\nname-template: From file $RESOLVED_VERSION\nheader: Repository header\n",
+			releaseConfig:
+				"tag-prefix: input-\ntag-template: input-$RESOLVED_VERSION\n",
+			previousTag: "input-1.2.3",
+		},
+	);
+	assert.equal(result.tag, "input-1.3.0");
+	assert.equal(result.name, "From file 1.3.0");
+	assert.equal(result.hasChanges, true);
+});
+
+test("an empty list clears inherited path filtering", async (t) => {
+	const result = await plan(
+		t,
+		[change(1, "feat: outside scope", "images/other/Dockerfile")],
+		{
+			repositoryConfig: 'include-paths: ["images/widget/**"]',
+			releaseConfig: "include-paths: []",
+		},
+	);
+	assert.equal(result.hasChanges, true);
+	assert.equal(result.tag, "widget-1.3.0");
+});

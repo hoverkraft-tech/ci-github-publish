@@ -41,11 +41,18 @@ configurations control their own heading structure.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@16cb15741b5789d383fb2565648a93ad761627e1 # 1.0.1
+- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@ea6682de88070c254dac619a6623a242a6d57cd3
   with:
+    # Optional partial Release Drafter configuration as a YAML or JSON mapping.
+    # Supplied top-level keys replace repository values, which inherit generated defaults unless the repository declares its own _extends chain.
+    # Omitted keys are inherited; mappings and lists are replaced, not concatenated or deep-merged. Empty lists clear inherited lists.
+    # The _extends key is reserved for inheriting the selected configuration. Repository files and their inheritance remain unchanged.
+    # Pass the same overrides to release/plan and release/create.
+    release-config: ""
+
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-    # If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory.
+    # Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults include the working directory in include-paths.
     # The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
     # They also define Conventional Commit labels.
     # They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
@@ -54,7 +61,7 @@ configurations control their own heading structure.
     # Additional paths to include in generated release notes and version calculation (JSON array).
     # These paths are added to the working-directory scope when one is specified.
     # Add the calling workflow path explicitly to include workflow-only changes.
-    # Existing repository configuration files take precedence over this input.
+    # An include-paths setting in the repository configuration or release-config input replaces this generated scope.
     #
     # Default: `[]`
     include-paths: "[]"
@@ -65,28 +72,33 @@ configurations control their own heading structure.
 
 ## Inputs
 
-| **Input**               | **Description**                                                                                                                                                               | **Required** | **Default** |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
-| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                             | **false**    | -           |
-|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                         |              |             |
-|                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory.                                                   |              |             |
-|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch. |              |             |
-|                         | They also define Conventional Commit labels.                                                                                                                                  |              |             |
-|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                      |              |             |
-| **`include-paths`**     | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                  | **false**    | `[]`        |
-|                         | These paths are added to the working-directory scope when one is specified.                                                                                                   |              |             |
-|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                    |              |             |
-|                         | Existing repository configuration files take precedence over this input.                                                                                                      |              |             |
+| **Input**               | **Description**                                                                                                                                                                        | **Required** | **Default** |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
+| **`release-config`**    | Optional partial Release Drafter configuration as a YAML or JSON mapping.                                                                                                              | **false**    | -           |
+|                         | Supplied top-level keys replace repository values, which inherit generated defaults unless the repository declares its own _extends chain.                                             |              |             |
+|                         | Omitted keys are inherited; mappings and lists are replaced, not concatenated or deep-merged. Empty lists clear inherited lists.                                                       |              |             |
+|                         | The _extends key is reserved for inheriting the selected configuration. Repository files and their inheritance remain unchanged.                                                       |              |             |
+|                         | Pass the same overrides to release/plan and release/create.                                                                                                                            |              |             |
+| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                                      | **false**    | -           |
+|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                  |              |             |
+|                         | Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults include the working directory in include-paths. |              |             |
+|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.          |              |             |
+|                         | They also define Conventional Commit labels.                                                                                                                                           |              |             |
+|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                               |              |             |
+| **`include-paths`**     | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                           | **false**    | `[]`        |
+|                         | These paths are added to the working-directory scope when one is specified.                                                                                                            |              |             |
+|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                             |              |             |
+|                         | An include-paths setting in the repository configuration or release-config input replaces this generated scope.                                                                        |              |             |
 
 <!-- inputs:end -->
 <!-- outputs:start -->
 
 ## Outputs
 
-| **Output**         | **Description**                                                    |
-| ------------------ | ------------------------------------------------------------------ |
-| **`config-path`**  | The effective configuration path relative to the .github directory |
-| **`is-generated`** | Whether a temporary configuration was generated                    |
+| **Output**         | **Description**                                                                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`config-path`**  | The effective configuration path relative to the .github directory                                                                                |
+| **`is-generated`** | Whether the effective configuration is temporary. False when a repository configuration with its own inheritance is used without input overrides. |
 
 <!-- outputs:end -->
 <!-- secrets:start -->

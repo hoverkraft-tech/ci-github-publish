@@ -6,11 +6,19 @@ branding:
   color: blue
 
 inputs:
+  release-config:
+    description: |
+      Optional partial Release Drafter configuration as a YAML or JSON mapping.
+      Supplied top-level keys replace repository values, which inherit generated defaults unless the repository declares its own _extends chain.
+      Omitted keys are inherited; mappings and lists are replaced, not concatenated or deep-merged. Empty lists clear inherited lists.
+      The _extends key is reserved for inheriting the selected configuration. Repository files and their inheritance remain unchanged.
+      Pass the same overrides to release/plan and release/create.
+    default: ""
   working-directory:
     description: |
       Working directory used to scope release automation in a monorepo.
       If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-      If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory.
+      Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults include the working directory in include-paths.
       The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
       They also define Conventional Commit labels.
       They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
@@ -21,17 +29,17 @@ inputs:
       Additional paths to include in generated release notes and version calculation (JSON array).
       These paths are added to the working-directory scope when one is specified.
       Add the calling workflow path explicitly to include workflow-only changes.
-      Existing repository configuration files take precedence over this input.
+      An include-paths setting in the repository configuration or release-config input replaces this generated scope.
     required: false
     default: "[]"
 
 outputs:
   config-path:
     description: "The effective configuration path relative to the .github directory"
-    value: ${{ steps.local-config.outputs.config-path || steps.create-temp-config.outputs.config-path }}
+    value: ${{ steps.override-config.outputs.config-path || steps.create-temp-config.outputs.config-path }}
   is-generated:
-    description: "Whether a temporary configuration was generated"
-    value: ${{ steps.create-temp-config.outputs.config-path != '' }}
+    description: "Whether the effective configuration is temporary. False when a repository configuration with its own inheritance is used without input overrides."
+    value: ${{ steps.override-config.outputs.is-generated || 'true' }}
 
 runs:
   using: "composite"
@@ -106,7 +114,6 @@ runs:
           }
 
     - id: create-temp-config
-      if: steps.local-config.outputs.config-path == ''
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         CONFIG_SLUG: ${{ steps.resolve-config-paths.outputs.config-slug }}
@@ -185,7 +192,7 @@ runs:
             '',
             '  \$NEW_CONTRIBUTORS',
             '',
-            `  **Full Changelog**: https://github.com/\$OWNER/\$REPOSITORY/compare/\$PREVIOUS_TAG...${tagTemplate}`,
+            '  **Full Changelog**: https://github.com/\$OWNER/\$REPOSITORY/compare/\$PREVIOUS_TAG...\$RESOLVED_TAG',
             `name-template: "${nameTemplate}"`,
             `tag-template: "${tagTemplate}"`,
             `tag-prefix: "${tagPrefix}"`,
@@ -274,3 +281,59 @@ runs:
           fs.mkdirSync(path.dirname(configPath), { recursive: true });
           fs.writeFileSync(configPath, configContent, 'utf8');
           core.setOutput('config-path', process.env.CONFIG_PATH);
+
+    - name: Compose release configuration overrides
+      id: override-config
+      if: steps.local-config.outputs.config-path != '' || inputs.release-config != ''
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        RELEASE_CONFIG: ${{ inputs.release-config }}
+        BASE_CONFIG_PATH: ${{ steps.create-temp-config.outputs.config-path }}
+        REPOSITORY_CONFIG_PATH: ${{ steps.local-config.outputs.config-path }}
+      with:
+        script: |
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          await exec.exec('npm', ['ci', '--ignore-scripts', '--omit=dev', '--prefix', process.env.ACTION_PATH]);
+          const { parse } = require(`${process.env.ACTION_PATH}/node_modules/yaml`);
+          const mapping = (source, label) => {
+            const value = parse(source);
+            if (!value || typeof value !== 'object' || Array.isArray(value)) {
+              throw new Error(`${label} must be a YAML or JSON mapping.`);
+            }
+            return value;
+          };
+          const githubDirectory = path.join(process.env.GITHUB_WORKSPACE || process.cwd(), '.github');
+          let baseConfig = path.resolve(githubDirectory, process.env.BASE_CONFIG_PATH);
+          const repositoryConfig = process.env.REPOSITORY_CONFIG_PATH
+            ? path.resolve(githubDirectory, process.env.REPOSITORY_CONFIG_PATH)
+            : '';
+          const directory = fs.mkdtempSync(path.join(process.env.RUNNER_TEMP, 'release-config-'));
+          const inherit = (configuration, filename) => {
+            const target = path.join(directory, filename);
+            const content = {
+              ...configuration,
+              _extends: `file:${path.relative(directory, baseConfig).split(path.sep).join('/')}`,
+            };
+            fs.writeFileSync(target, `${JSON.stringify(content, null, 2)}\n`, { mode: 0o600 });
+            baseConfig = target;
+          };
+          if (repositoryConfig) {
+            const repository = mapping(fs.readFileSync(repositoryConfig, 'utf8'), 'Repository release configuration');
+            if (Object.hasOwn(repository, '_extends')) {
+              baseConfig = repositoryConfig;
+            } else {
+              inherit(repository, 'repository.json');
+            }
+          }
+          if (process.env.RELEASE_CONFIG) {
+            const overrides = mapping(process.env.RELEASE_CONFIG, 'release-config');
+            if (Object.hasOwn(overrides, '_extends')) {
+              throw new Error('release-config cannot override _extends; repository configuration inheritance is preserved automatically.');
+            }
+            inherit(overrides, 'overrides.json');
+          }
+          core.setOutput('config-path', path.relative(githubDirectory, baseConfig).split(path.sep).join('/'));
+          core.setOutput('is-generated', String(baseConfig !== repositoryConfig));

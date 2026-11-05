@@ -32,6 +32,8 @@ jobs:
         with:
           tag: ${{ steps.test-release.outputs.tag }}
           target-sha: ${{ github.sha }}
+          release-config: |
+            name-template: Configured release
           prerelease: "true"
           publish: "false"
           github-token: ${{ github.token }}
@@ -97,7 +99,7 @@ jobs:
             core.setOutput('release-id', String(releaseResponse.data.id));
 
             assert.equal(releaseResponse.data.tag_name, createdTag);
-            assert.ok((releaseResponse.data.name || '').trim());
+            assert.equal(releaseResponse.data.name, 'Configured release');
             assert.equal(releaseResponse.data.draft, true);
             assert.equal(releaseResponse.data.prerelease, true);
             assert.equal(releaseResponse.data.target_commitish, expectedReleaseSha);

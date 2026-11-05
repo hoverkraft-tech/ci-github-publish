@@ -17,6 +17,16 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Arrange - Install configuration test dependencies
+        uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@81a4bca8445b7b273455ff26a9a5c3c31c86b2a1 # 0.25.0
+        with:
+          working-directory: actions/release/get-configuration
+          ignore-scripts: "true"
+
+      - name: Assert - Configuration unit tests
+        working-directory: actions/release/get-configuration
+        run: npm test
+
       - name: Arrange - Create repository config fixture
         run: |
           mkdir -p .github
@@ -44,11 +54,14 @@ jobs:
             const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
             const configPath = process.env.CONFIG_PATH;
 
-            assert.equal(configPath, 'release-config.yml');
-            assert.equal(process.env.IS_GENERATED, 'false');
-
+            assert.notEqual(configPath, 'release-config.yml');
+            assert.equal(process.env.IS_GENERATED, 'true');
             const absoluteConfigPath = path.resolve(workspace, '.github', configPath);
-            assert.ok(fs.existsSync(absoluteConfigPath), `Expected config to exist at ${absoluteConfigPath}`);
+            const config = JSON.parse(fs.readFileSync(absoluteConfigPath, 'utf8'));
+            assert.equal(config.template, '$CHANGES\n');
+            const defaults = path.resolve(path.dirname(absoluteConfigPath), config._extends.slice(5));
+            assert.match(fs.readFileSync(defaults, 'utf8'), /title: "Features"/);
+            assert.equal(fs.readFileSync('.github/release-config.yml', 'utf8'), '---\ntemplate: |\n  $CHANGES\n');
 
       - name: Act - Resolve generated temp config
         id: generated-config
@@ -110,3 +123,35 @@ jobs:
             assert.ok(configContent.includes('label: "type: performance"'), 'Expected performance changes to be labeled');
             assert.ok(configContent.includes('label: "type: documentation"'), 'Expected documentation changes to be labeled');
             assert.ok(configContent.includes('label: "type: maintenance"'), 'Expected maintenance changes to be labeled');
+
+      - name: Act - Override the selected repository configuration
+        id: overridden-config
+        uses: $/actions/release/get-configuration
+        with:
+          release-config: |
+            tag-prefix: v
+            tag-template: v$RESOLVED_VERSION
+            categories: []
+
+      - name: Assert - Overrides inherit the unmodified repository file
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          CONFIG_PATH: ${{ steps.overridden-config.outputs.config-path }}
+          IS_GENERATED: ${{ steps.overridden-config.outputs.is-generated }}
+        with:
+          script: |
+            const assert = require('node:assert/strict');
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const file = path.resolve('.github', process.env.CONFIG_PATH);
+            const config = JSON.parse(fs.readFileSync(file, 'utf8'));
+            assert.equal(process.env.IS_GENERATED, 'true');
+            assert.equal(config['tag-prefix'], 'v');
+            assert.equal(config['tag-template'], 'v$RESOLVED_VERSION');
+            assert.deepEqual(config.categories, []);
+            const repositoryPath = path.resolve(path.dirname(file), config._extends.slice(5));
+            const repository = JSON.parse(fs.readFileSync(repositoryPath, 'utf8'));
+            assert.equal(repository.template, '$CHANGES\n');
+            const defaults = path.resolve(path.dirname(repositoryPath), repository._extends.slice(5));
+            assert.match(fs.readFileSync(defaults, 'utf8'), /title: "Features"/);
+            assert.equal(fs.readFileSync('.github/release-config.yml', 'utf8'), '---\ntemplate: |\n  $CHANGES\n');

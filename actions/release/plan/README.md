@@ -40,15 +40,20 @@ Detect release changes and plan a release identity without creating a Git tag or
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@16cb15741b5789d383fb2565648a93ad761627e1 # 1.0.1
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@ea6682de88070c254dac619a6623a242a6d57cd3
   with:
+    # Optional partial Release Drafter configuration as a YAML or JSON mapping.
+    # Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.
+    # Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.
+    release-config: ""
+
     # Whether to plan the release as a prerelease
     # Default: `false`
     prerelease: "false"
 
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-    # If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory.
+    # Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults include the working directory in include-paths.
     # The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
     # They also define Conventional Commit labels.
     # They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
@@ -57,7 +62,7 @@ Detect release changes and plan a release identity without creating a Git tag or
     # Additional paths to include in generated release notes and version calculation (JSON array).
     # These paths are added to the working-directory scope when one is specified.
     # Add the calling workflow path explicitly to include workflow-only changes.
-    # Existing repository configuration files take precedence over this input.
+    # An include-paths setting in the repository configuration or release-config input replaces this generated scope.
     #
     # Default: `[]`
     include-paths: "[]"
@@ -81,25 +86,28 @@ Detect release changes and plan a release identity without creating a Git tag or
 
 ## Inputs
 
-| **Input**               | **Description**                                                                                                                                                               | **Required** | **Default**           |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                                                   | **false**    | `false`               |
-| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                             | **false**    | -                     |
-|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                         |              |                       |
-|                         | If that file does not exist, a temporary release configuration is generated with `include-paths` for the working directory.                                                   |              |                       |
-|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch. |              |                       |
-|                         | They also define Conventional Commit labels.                                                                                                                                  |              |                       |
-|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                      |              |                       |
-| **`include-paths`**     | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                  | **false**    | `[]`                  |
-|                         | These paths are added to the working-directory scope when one is specified.                                                                                                   |              |                       |
-|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                    |              |                       |
-|                         | Existing repository configuration files take precedence over this input.                                                                                                      |              |                       |
-| **`target-sha`**        | Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.                                                                                       | **false**    | -                     |
-|                         | Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.                                                                           |              |                       |
-| **`github-token`**      | GitHub Token for planning the release.                                                                                                                                        | **false**    | `${{ github.token }}` |
-|                         | Permissions:                                                                                                                                                                  |              |                       |
-|                         | - contents: read                                                                                                                                                              |              |                       |
-|                         | - pull-requests: read                                                                                                                                                         |              |                       |
+| **Input**               | **Description**                                                                                                                                                                        | **Required** | **Default**           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`release-config`**    | Optional partial Release Drafter configuration as a YAML or JSON mapping.                                                                                                              | **false**    | -                     |
+|                         | Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.                                                      |              |                       |
+|                         | Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.                                                            |              |                       |
+| **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                                                            | **false**    | `false`               |
+| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                                      | **false**    | -                     |
+|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                  |              |                       |
+|                         | Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults include the working directory in include-paths. |              |                       |
+|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.          |              |                       |
+|                         | They also define Conventional Commit labels.                                                                                                                                           |              |                       |
+|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                               |              |                       |
+| **`include-paths`**     | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                           | **false**    | `[]`                  |
+|                         | These paths are added to the working-directory scope when one is specified.                                                                                                            |              |                       |
+|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                             |              |                       |
+|                         | An include-paths setting in the repository configuration or release-config input replaces this generated scope.                                                                        |              |                       |
+| **`target-sha`**        | Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.                                                                                                | **false**    | -                     |
+|                         | Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.                                                                                    |              |                       |
+| **`github-token`**      | GitHub Token for planning the release.                                                                                                                                                 | **false**    | `${{ github.token }}` |
+|                         | Permissions:                                                                                                                                                                           |              |                       |
+|                         | - contents: read                                                                                                                                                                       |              |                       |
+|                         | - pull-requests: read                                                                                                                                                                  |              |                       |
 
 <!-- inputs:end -->
 

@@ -19,6 +19,37 @@ same release-history filtering through this helper.
 
 That keeps release state changes explicit in the caller workflow and leaves validation, packaging, signing, and release-file preparation under repository control.
 
+## Override release configuration
+
+Pass `release-config` to `actions/release/plan` and `actions/release/create` to
+override any supported Release Drafter setting without copying a complete
+configuration. Use the same value for both actions. The input accepts a YAML or
+JSON mapping, for example:
+
+```yaml
+release-config: |
+  name-template: v$RESOLVED_VERSION
+  tag-template: v$RESOLVED_VERSION
+  tag-prefix: v
+```
+
+Alternatively, put only your overrides in `.github/release-config.yml`, or in
+`.github/release-configs/{slug}.yml` for a scoped release. Both interfaces can be
+used together: shared defaults come first, repository settings override them,
+and the `release-config` input takes precedence over the repository file.
+
+Supplied top-level keys replace inherited values, including whole mappings and
+lists; omitted keys stay inherited. An empty list clears an inherited list. These
+are Release Drafter's native inheritance rules. A repository file declaring its
+own `_extends` chain retains that base instead of inheriting shared defaults.
+The `_extends` key is reserved in the workflow input.
+
+Overrides are written to a separate temporary configuration. Repository files
+remain unchanged, and no configuration file is committed. Default compare links
+use the final resolved tag, including a customized prefix. Existing explicit
+workflow inputs, such as the prepared tag and prerelease mode, retain their
+normal precedence over configuration values.
+
 ## Core Rule
 
 Compute the release identity early. Publish the GitHub release only after the final release body and assets are ready.

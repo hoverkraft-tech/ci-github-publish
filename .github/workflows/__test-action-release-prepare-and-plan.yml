@@ -58,6 +58,29 @@ jobs:
             assert.ok(process.env.RELEASE_NAME, 'Expected planned name to be set');
             assert.ok(process.env.RELEASE_NAME.startsWith('Version get-configuration - '), `Expected name to start with "Version get-configuration - ", got "${process.env.RELEASE_NAME}"`);
 
+      - name: Act - Plan with generic configuration overrides
+        id: configured-plan
+        uses: $/actions/release/plan
+        with:
+          working-directory: actions/release/get-configuration
+          release-config: |
+            tag-prefix: configured-
+            tag-template: configured-$RESOLVED_VERSION
+            name-template: Configured $RESOLVED_VERSION
+
+      - name: Assert - Configured release identity
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_TAG: ${{ steps.configured-plan.outputs.tag }}
+          RELEASE_NAME: ${{ steps.configured-plan.outputs.name }}
+          HAS_CHANGES: ${{ steps.configured-plan.outputs.has-changes }}
+        with:
+          script: |
+            const assert = require('node:assert/strict');
+            assert.match(process.env.RELEASE_TAG, /^configured-\d+\.\d+\.\d+$/);
+            assert.match(process.env.RELEASE_NAME, /^Configured \d+\.\d+\.\d+$/);
+            assert.ok(['true', 'false'].includes(process.env.HAS_CHANGES));
+
       - name: Arrange - Create colliding tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:

@@ -1,0 +1,41 @@
+name: Verify release sources
+description: Verify that release artifacts belong to this run and commit, reject conflicting tags, and identify already published releases without changing repository state.
+author: hoverkraft
+branding:
+  icon: shield
+  color: blue
+inputs:
+  artifact-ids:
+    description: JSON array of validated artifact IDs from this workflow run and source commit. Require successful producer jobs with needs; artifact metadata does not prove validation passed.
+    required: true
+  tags:
+    description: JSON array of release tags. Existing lightweight or annotated tags must resolve to this workflow's source commit. Package-specific version validation belongs to the caller.
+    required: true
+  require-tags:
+    description: Require every tag to exist already, for releases prepared before validation. Leave false when publication creates new source tags.
+    default: "false"
+outputs:
+  releases:
+    description: JSON array of objects containing tag and published. A matching draft or absent release has published=false.
+    value: ${{ steps.verify.outputs.releases }}
+runs:
+  using: composite
+  steps:
+    - id: verify
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        ARTIFACT_IDS: ${{ inputs.artifact-ids }}
+        TAGS: ${{ inputs.tags }}
+        REQUIRE_TAGS: ${{ inputs.require-tags }}
+      with:
+        script: |
+          const { ReleaseVerification } = require(process.env.ACTION_PATH + '/index.js');
+          if (!['true', 'false'].includes(process.env.REQUIRE_TAGS)) throw new Error('require-tags must be true or false.');
+          const verification = new ReleaseVerification({ github, context });
+          const releases = await verification.verify({
+            artifactIds: JSON.parse(process.env.ARTIFACT_IDS),
+            tags: JSON.parse(process.env.TAGS),
+            requireTags: process.env.REQUIRE_TAGS === 'true',
+          });
+          core.setOutput('releases', releases);

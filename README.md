@@ -79,6 +79,10 @@ _Actions for managing deployments._
 
 ### Release
 
+#### - [Verify release sources](actions/release/verify/README.md)
+
+Check artifact ownership, tag identity, and published state before publication.
+
 _Actions for managing releases._
 
 #### - [Create or refresh release](actions/release/create/README.md)

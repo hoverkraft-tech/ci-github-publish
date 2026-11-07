@@ -40,7 +40,7 @@ Use release/plan for change detection and release/create to create or publish re
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/prepare@ea6682de88070c254dac619a6623a242a6d57cd3 # 1.0.3
+- uses: hoverkraft-tech/ci-github-publish/actions/release/prepare@647b53a3e08fb4ea2c477fc6f79dcba94b1395e1 # fix/release-drafter-path-categories
   with:
     # Release Drafter configuration target, relative to .github, including file: targets.
     # This input is required.
@@ -48,7 +48,7 @@ Use release/plan for change detection and release/create to create or publish re
 
     # GitHub token with contents read and pull requests read; contents write is also required to create drafts.
     # Default: `${{ github.token }}`
-    token: ${{ github.token }}
+    github-token: ${{ github.token }}
 
     # If true, calculate the version and release notes without writing a release.
     # If false, create or refresh a draft without publishing it.
@@ -57,7 +57,7 @@ Use release/plan for change detection and release/create to create or publish re
     dry-run: "false"
 
     # Branch, commit SHA, or fully qualified tag or pull request ref to target.
-    commitish: ""
+    target-ref: ""
 
     # Explicit release tag, otherwise calculated from the configuration.
     tag: ""
@@ -75,16 +75,16 @@ Use release/plan for change detection and release/create to create or publish re
 
 ## Inputs
 
-| **Input**         | **Description**                                                                                           | **Required** | **Default**           |
-| ----------------- | --------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`config-name`** | Release Drafter configuration target, relative to .github, including file: targets.                       | **true**     | -                     |
-| **`token`**       | GitHub token with contents read and pull requests read; contents write is also required to create drafts. | **false**    | `${{ github.token }}` |
-| **`dry-run`**     | If true, calculate the version and release notes without writing a release.                               | **false**    | `false`               |
-|                   | If false, create or refresh a draft without publishing it.                                                |              |                       |
-| **`commitish`**   | Branch, commit SHA, or fully qualified tag or pull request ref to target.                                 | **false**    | -                     |
-| **`tag`**         | Explicit release tag, otherwise calculated from the configuration.                                        | **false**    | -                     |
-| **`prerelease`**  | Whether to draft a prerelease. Empty uses the configuration.                                              | **false**    | -                     |
-| **`latest`**      | Whether the release is eligible to be marked latest. Empty uses the configuration.                        | **false**    | -                     |
+| **Input**          | **Description**                                                                                           | **Required** | **Default**           |
+| ------------------ | --------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`config-name`**  | Release Drafter configuration target, relative to .github, including file: targets.                       | **true**     | -                     |
+| **`github-token`** | GitHub token with contents read and pull requests read; contents write is also required to create drafts. | **false**    | `${{ github.token }}` |
+| **`dry-run`**      | If true, calculate the version and release notes without writing a release.                               | **false**    | `false`               |
+|                    | If false, create or refresh a draft without publishing it.                                                |              |                       |
+| **`target-ref`**   | Branch, commit SHA, or fully qualified tag or pull request ref to target.                                 | **false**    | -                     |
+| **`tag`**          | Explicit release tag, otherwise calculated from the configuration.                                        | **false**    | -                     |
+| **`prerelease`**   | Whether to draft a prerelease. Empty uses the configuration.                                              | **false**    | -                     |
+| **`latest`**       | Whether the release is eligible to be marked latest. Empty uses the configuration.                        | **false**    | -                     |
 
 <!-- inputs:end -->
 
@@ -92,11 +92,11 @@ Use release/plan for change detection and release/create to create or publish re
 
 ## Outputs
 
-| **Output**     | **Description**                                    |
-| -------------- | -------------------------------------------------- |
-| **`tag_name`** | The calculated or explicitly supplied release tag. |
-| **`name`**     | The release name.                                  |
-| **`body`**     | The release notes.                                 |
+| **Output** | **Description**                                    |
+| ---------- | -------------------------------------------------- |
+| **`tag`**  | The calculated or explicitly supplied release tag. |
+| **`name`** | The release name.                                  |
+| **`body`** | The release notes.                                 |
 
 <!-- outputs:end -->
 

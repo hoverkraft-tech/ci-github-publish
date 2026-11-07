@@ -54,7 +54,7 @@ on:
 permissions: {}
 jobs:
   prepare-release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@d983bd6279de308518b8b8df7c51e179fd50bffb # main
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@647b53a3e08fb4ea2c477fc6f79dcba94b1395e1 # fix/release-drafter-path-categories
     permissions:
       contents: read
       pull-requests: write
@@ -73,7 +73,8 @@ jobs:
 
       # Working directory used to scope release preparation in a monorepo.
       # If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-      # Generated defaults scope changes to the working directory with a `pre-include` category. Repository categories replace these defaults, including path filters and version rules.
+      # Generated defaults scope changes to the working directory with a `pre-include` category. Repository categories replace changelog and version rules while preserving this scope unless they include an explicit `pre-include` category.
+      # Repository files with their own _extends chain use native Release Drafter inheritance instead of generated defaults and scope preservation.
       # The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
       # They also apply Conventional Commit labels.
       # They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
@@ -88,16 +89,17 @@ jobs:
 
 ### Workflow Call Inputs
 
-| **Input**               | **Description**                                                                                                                                                                  | **Required** | **Type**   | **Default**         |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
-| **`runs-on`**           | JSON array of runner(s) to use.                                                                                                                                                  | **false**    | **string** | `["ubuntu-latest"]` |
-|                         | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                                                                               |              |            |                     |
-| **`working-directory`** | Working directory used to scope release preparation in a monorepo.                                                                                                               | **false**    | **string** | -                   |
-|                         | If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                          |              |            |                     |
-|                         | Generated defaults scope changes to the working directory with a `pre-include` category. Repository categories replace these defaults, including path filters and version rules. |              |            |                     |
-|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.    |              |            |                     |
-|                         | They also apply Conventional Commit labels.                                                                                                                                      |              |            |                     |
-|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                         |              |            |                     |
+| **Input**               | **Description**                                                                                                                                                                                                                        | **Required** | **Type**   | **Default**         |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | ------------------- |
+| **`runs-on`**           | JSON array of runner(s) to use.                                                                                                                                                                                                        | **false**    | **string** | `["ubuntu-latest"]` |
+|                         | See <https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job>.                                                                                                                                                     |              |            |                     |
+| **`working-directory`** | Working directory used to scope release preparation in a monorepo.                                                                                                                                                                     | **false**    | **string** | -                   |
+|                         | If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                                                                |              |            |                     |
+|                         | Generated defaults scope changes to the working directory with a `pre-include` category. Repository categories replace changelog and version rules while preserving this scope unless they include an explicit `pre-include` category. |              |            |                     |
+|                         | Repository files with their own _extends chain use native Release Drafter inheritance instead of generated defaults and scope preservation.                                                                                            |              |            |                     |
+|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.                                                          |              |            |                     |
+|                         | They also apply Conventional Commit labels.                                                                                                                                                                                            |              |            |                     |
+|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                                                                               |              |            |                     |
 
 <!-- inputs:end -->
 
@@ -136,7 +138,7 @@ permissions: {}
 
 jobs:
   prepare-release:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@d983bd6279de308518b8b8df7c51e179fd50bffb # main
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/prepare-release.yml@647b53a3e08fb4ea2c477fc6f79dcba94b1395e1 # fix/release-drafter-path-categories
     permissions:
       contents: read
       pull-requests: write

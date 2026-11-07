@@ -40,13 +40,15 @@ Detect release changes and plan a release identity without creating a Git tag or
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@d983bd6279de308518b8b8df7c51e179fd50bffb # main
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@647b53a3e08fb4ea2c477fc6f79dcba94b1395e1 # fix/release-drafter-path-categories
   with:
     # Optional partial Release Drafter configuration as a YAML or JSON mapping.
-    # Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.
-    # Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.
-    # Replacing categories also replaces generated path filters and version rules.
-    release-config: ""
+    # Precedence: generated defaults, repository configuration, then these overrides.
+    # Supplied mappings and lists replace inherited values. Categories preserve inherited pre-include filters unless they contain an explicit pre-include category; an empty categories list clears changelog and version rules but keeps the scope.
+    # Repository files with their own _extends chain use native Release Drafter inheritance instead of generated defaults and scope preservation.
+    # The _extends key is reserved in this input. Pass identical overrides to release/plan and release/create.
+    # See [release configuration](../../../docs/usage/release.md#override-release-configuration) for scope examples.
+    config-overrides: ""
 
     # Plan a release even without relevant changes, using the version, tag and name calculated by Release Drafter.
     # Configured version rules and identity templates remain authoritative. Existing tag collisions still fail; tags are never created or moved.
@@ -70,14 +72,14 @@ Detect release changes and plan a release identity without creating a Git tag or
     # Additional paths to include in generated release notes and version calculation (JSON array).
     # These paths are added to the working-directory scope when one is specified.
     # Add the calling workflow path explicitly to include workflow-only changes.
-    # To replace this scope, supply categories in the repository configuration or release-config input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.
+    # To replace this scope, supply categories in the repository configuration or config-overrides input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.
     #
     # Default: `[]`
-    include-paths: "[]"
+    additional-paths: "[]"
 
     # Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.
-    # Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.
-    target-sha: ""
+    # Tag and pull request refs are resolved to commit SHAs.
+    target-ref: ""
 
     # GitHub Token for planning the release.
     # Permissions:
@@ -94,32 +96,34 @@ Detect release changes and plan a release identity without creating a Git tag or
 
 ## Inputs
 
-| **Input**               | **Description**                                                                                                                                                                                              | **Required** | **Default**           |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ | --------------------- |
-| **`release-config`**    | Optional partial Release Drafter configuration as a YAML or JSON mapping.                                                                                                                                    | **false**    | -                     |
-|                         | Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.                                                                            |              |                       |
-|                         | Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.                                                                                  |              |                       |
-|                         | Replacing categories also replaces generated path filters and version rules.                                                                                                                                 |              |                       |
-| **`force`**             | Plan a release even without relevant changes, using the version, tag and name calculated by Release Drafter.                                                                                                 | **false**    | `false`               |
-|                         | Configured version rules and identity templates remain authoritative. Existing tag collisions still fail; tags are never created or moved.                                                                   |              |                       |
-|                         | Callers decide when forcing is allowed, for example only on manual default-branch runs.                                                                                                                      |              |                       |
-| **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                                                                                  | **false**    | `false`               |
-| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                                                            | **false**    | -                     |
-|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                                        |              |                       |
-|                         | Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults scope changes to the working directory with a `pre-include` category. |              |                       |
-|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.                                |              |                       |
-|                         | They also define Conventional Commit labels.                                                                                                                                                                 |              |                       |
-|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                                                     |              |                       |
-| **`include-paths`**     | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                                                 | **false**    | `[]`                  |
-|                         | These paths are added to the working-directory scope when one is specified.                                                                                                                                  |              |                       |
-|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                                                   |              |                       |
-|                         | To replace this scope, supply categories in the repository configuration or release-config input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.          |              |                       |
-| **`target-sha`**        | Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.                                                                                                                      | **false**    | -                     |
-|                         | Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.                                                                                                          |              |                       |
-| **`github-token`**      | GitHub Token for planning the release.                                                                                                                                                                       | **false**    | `${{ github.token }}` |
-|                         | Permissions:                                                                                                                                                                                                 |              |                       |
-|                         | - contents: read                                                                                                                                                                                             |              |                       |
-|                         | - pull-requests: read                                                                                                                                                                                        |              |                       |
+| **Input**               | **Description**                                                                                                                                                                                                                                | **Required** | **Default**           |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| **`config-overrides`**  | Optional partial Release Drafter configuration as a YAML or JSON mapping.                                                                                                                                                                      | **false**    | -                     |
+|                         | Precedence: generated defaults, repository configuration, then these overrides.                                                                                                                                                                |              |                       |
+|                         | Supplied mappings and lists replace inherited values. Categories preserve inherited pre-include filters unless they contain an explicit pre-include category; an empty categories list clears changelog and version rules but keeps the scope. |              |                       |
+|                         | Repository files with their own _extends chain use native Release Drafter inheritance instead of generated defaults and scope preservation.                                                                                                    |              |                       |
+|                         | The _extends key is reserved in this input. Pass identical overrides to release/plan and release/create.                                                                                                                                       |              |                       |
+|                         | See [release configuration](../../../docs/usage/release.md#override-release-configuration) for scope examples.                                                                                                                                 |              |                       |
+| **`force`**             | Plan a release even without relevant changes, using the version, tag and name calculated by Release Drafter.                                                                                                                                   | **false**    | `false`               |
+|                         | Configured version rules and identity templates remain authoritative. Existing tag collisions still fail; tags are never created or moved.                                                                                                     |              |                       |
+|                         | Callers decide when forcing is allowed, for example only on manual default-branch runs.                                                                                                                                                        |              |                       |
+| **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                                                                                                                    | **false**    | `false`               |
+| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                                                                                              | **false**    | -                     |
+|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                                                                          |              |                       |
+|                         | Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults scope changes to the working directory with a `pre-include` category.                                   |              |                       |
+|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.                                                                  |              |                       |
+|                         | They also define Conventional Commit labels.                                                                                                                                                                                                   |              |                       |
+|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                                                                                       |              |                       |
+| **`additional-paths`**  | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                                                                                   | **false**    | `[]`                  |
+|                         | These paths are added to the working-directory scope when one is specified.                                                                                                                                                                    |              |                       |
+|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                                                                                     |              |                       |
+|                         | To replace this scope, supply categories in the repository configuration or config-overrides input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.                                          |              |                       |
+| **`target-ref`**        | Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.                                                                                                                                                        | **false**    | -                     |
+|                         | Tag and pull request refs are resolved to commit SHAs.                                                                                                                                                                                         |              |                       |
+| **`github-token`**      | GitHub Token for planning the release.                                                                                                                                                                                                         | **false**    | `${{ github.token }}` |
+|                         | Permissions:                                                                                                                                                                                                                                   |              |                       |
+|                         | - contents: read                                                                                                                                                                                                                               |              |                       |
+|                         | - pull-requests: read                                                                                                                                                                                                                          |              |                       |
 
 <!-- inputs:end -->
 
@@ -129,11 +133,11 @@ Detect release changes and plan a release identity without creating a Git tag or
 
 ## Outputs
 
-| **Output**        | **Description**                                                                                                |
-| ----------------- | -------------------------------------------------------------------------------------------------------------- |
-| **`has-changes`** | Whether there are relevant changes, no previous matching release, or an explicit force request (true or false) |
-| **`tag`**         | The planned release tag, including when there are no relevant changes                                          |
-| **`name`**        | The planned release name, including when there are no relevant changes                                         |
+| **Output**           | **Description**                                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **`should-release`** | Whether there are relevant changes, no previous matching release, or an explicit force request (true or false) |
+| **`tag`**            | The planned release tag, including when there are no relevant changes                                          |
+| **`name`**           | The planned release name, including when there are no relevant changes                                         |
 
 <!-- outputs:end -->
 
@@ -144,65 +148,7 @@ Detect release changes and plan a release identity without creating a Git tag or
 
 ## Examples
 
-## Scheduled and manual releases
-
-```yaml
-name: Release
-
-on:
-  schedule:
-    - cron: "25 8 * * 1"
-  workflow_dispatch:
-    inputs:
-      force:
-        description: Release even when no relevant changes are detected
-        type: boolean
-        required: false
-        default: false
-
-permissions: {}
-
-concurrency:
-  group: release-${{ github.repository }}
-  cancel-in-progress: false
-
-jobs:
-  plan:
-    if: github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      should-release: ${{ steps.plan.outputs.has-changes == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force) }}
-      tag: ${{ steps.plan.outputs.tag }}
-    steps:
-      - id: plan
-        uses: hoverkraft-tech/ci-github-publish/actions/release/plan@d983bd6279de308518b8b8df7c51e179fd50bffb # main
-
-  release:
-    needs: plan
-    if: needs.plan.outputs.should-release == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: read
-    steps:
-      - uses: hoverkraft-tech/ci-github-publish/actions/release/create@ed354ada70b9f518c2bb663e18a80041c2cf5156 # 0.27.1
-        with:
-          tag: ${{ needs.plan.outputs.tag }}
-          target-sha: ${{ github.sha }}
-```
-
-Scheduled runs happen on Mondays at 08:25 UTC and skip unchanged releases.
-
-Manual runs skip unchanged releases by default; select `force` to request the planned version anyway.
-
-The `force` input and `should-release` job output belong to this caller workflow.
-
-Apply the same `should-release` guard to validation, packaging, and registry publishing jobs that depend on planning.
-
-A `skip-if-no-changes` check during release creation happens too late to prevent packages from being published by earlier steps.
+See the [release workflow examples](../../../docs/usage/release.md#workflow-examples) for planning, forcing, and publishing releases.
 
 <!-- examples:end -->
 

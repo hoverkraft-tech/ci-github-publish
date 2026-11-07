@@ -69,12 +69,12 @@ test("rejects expired artifacts, another run or commit, and missing source metad
 		await assert.rejects(arrange({ artifact }).verify(), /this run and commit/);
 	}
 });
-test("rejects malformed, unsafe, duplicate and empty inputs before API calls", async () => {
+test("rejects malformed artifacts and malformed or empty tags before API calls", async () => {
 	const { github, verify } = arrange();
 	github.rest.actions.getArtifact = () =>
 		assert.fail("Invalid input must not call GitHub.");
 	for (const artifactIds of [
-		[],
+		null,
 		{},
 		["0"],
 		["-1"],
@@ -186,4 +186,43 @@ test("fails closed on artifact, tag, release and pagination API errors", async (
 		if (endpoint === "list") github.paginate = fail;
 		await assert.rejects(verify(), /Forbidden/);
 	}
+});
+
+for (const artifactIds of [undefined, []]) {
+	test(`verifies source-only releases with ${artifactIds === undefined ? "omitted" : "empty"} artifacts`, async () => {
+		for (const published of [false, true]) {
+			const { github, verify } = arrange({
+				tags: { "v1.2.3": commit },
+				releases: published ? [{ tag_name: "v1.2.3", draft: false }] : [],
+			});
+			github.rest.actions.getArtifact = () =>
+				assert.fail("Source-only releases need no Actions API permissions.");
+			assert.deepEqual(await verify({ artifactIds }), [
+				{ tag: "v1.2.3", published },
+			]);
+		}
+	});
+}
+test("source-only releases retain tag conflicts, missing-tag and API-error checks", async () => {
+	await assert.rejects(
+		arrange({ tags: { "v1.2.3": { type: "commit", sha: "other" } } }).verify({
+			artifactIds: [],
+		}),
+		/source commit/,
+	);
+	await assert.rejects(
+		arrange().verify({ artifactIds: [], requireTags: true }),
+		/does not exist/,
+	);
+	await assert.rejects(
+		arrange({ releases: [{ tag_name: "v1.2.3", draft: false }] }).verify({
+			artifactIds: [],
+		}),
+		/no matching Git tag/,
+	);
+	const { github, verify } = arrange();
+	github.rest.git.getRef = () => {
+		throw Object.assign(new Error("Forbidden"), { status: 403 });
+	};
+	await assert.rejects(verify({ artifactIds: [] }), /Forbidden/);
 });

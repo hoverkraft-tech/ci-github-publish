@@ -43,17 +43,27 @@ jobs:
             assert.equal(JSON.parse(process.env.RELEASES)[0].published, false);
           }
           NODE
-      - name: Act - Require a missing prepared tag
-        if: github.event_name != 'pull_request'
+      - name: Act - Verify source-only release without artifacts
+        id: source
+        uses: $/actions/release/verify
+        with:
+          tags: '["verify-${{ github.run_id }}-${{ github.run_attempt }}"]'
+      - name: Assert - Source-only release is ready
+        env:
+          RELEASES: ${{ steps.source.outputs.releases }}
+        run: |
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          assert.equal(JSON.parse(process.env.RELEASES)[0].published, false);
+          NODE
+      - name: Act - Require a missing source tag
         id: missing-tag
         continue-on-error: true
         uses: $/actions/release/verify
         with:
-          artifact-ids: '["${{ steps.artifact.outputs.artifact-id }}"]'
           tags: '["verify-${{ github.run_id }}-${{ github.run_attempt }}"]'
           require-tags: "true"
       - name: Assert - Missing tag fails verification
-        if: github.event_name != 'pull_request'
         env:
           OUTCOME: ${{ steps.missing-tag.outcome }}
         run: test "$OUTCOME" = failure

@@ -38,17 +38,25 @@ function prepareConfiguration({ configPath, workspace, runnerTemp }) {
 	};
 }
 
-async function assertTagDoesNotExist(github, repo, tag) {
+async function tagExists(github, repo, tag) {
 	try {
 		await github.rest.git.getRef({ ...repo, ref: `tags/${tag}` });
 	} catch (error) {
-		if (error.status === 404) return;
+		if (error.status === 404) return false;
 		throw new Error(`Cannot check remote tag ${tag}: ${error.message}`);
 	}
-	throw new Error(`Remote tag already exists: ${tag}`);
+	return true;
 }
 
-async function resolvePlan({ body, marker, tag, name, github, repo }) {
+async function resolvePlan({
+	body,
+	marker,
+	tag,
+	name,
+	github,
+	repo,
+	force = false,
+}) {
 	const prefix = `${marker}:`;
 	const lineEnd = body?.indexOf("\n") ?? -1;
 	if (!marker || !body?.startsWith(prefix) || lineEnd < 0) {
@@ -72,9 +80,11 @@ async function resolvePlan({ body, marker, tag, name, github, repo }) {
 	if (!releaseTag) {
 		throw new Error("Cannot determine release tag. Configure Release Drafter.");
 	}
-	await assertTagDoesNotExist(github, repo, releaseTag);
+	if (await tagExists(github, repo, releaseTag)) {
+		throw new Error(`Remote tag already exists: ${releaseTag}`);
+	}
 	return {
-		hasChanges,
+		hasChanges: hasChanges || force,
 		tag: releaseTag,
 		name: name?.trim() || releaseTag,
 	};

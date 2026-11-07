@@ -214,3 +214,68 @@ test("unchanged releases still validate tag availability", async () => {
 		);
 	}
 });
+
+test("force plans an unchanged release without lowering the planned version", async () => {
+	const { input } = fixture({
+		body: `${marker}:v1.0.0\n${marker}:no-changes`,
+		force: true,
+	});
+	assert.deepEqual(await resolvePlan(input), {
+		hasChanges: true,
+		tag: "v1.1.0",
+		name: "Version 1.1.0",
+	});
+});
+test("force preserves custom tag and name formats from Release Drafter", async () => {
+	for (const tag of [
+		"release-42",
+		"v1.3",
+		"package-1.3-final",
+		"package-1.3.0-rc.2",
+	]) {
+		const name = `Release ${tag} / protocol 1.0.0`;
+		const { input, calls } = fixture({
+			body: `${marker}:v1.0.0\n${marker}:no-changes`,
+			tag,
+			name,
+			force: true,
+		});
+		assert.deepEqual(await resolvePlan(input), { hasChanges: true, tag, name });
+		assert.deepEqual(calls, [{ ...repo, ref: `tags/${tag}` }]);
+	}
+});
+
+test("force rejects collisions without inventing a different tag", async () => {
+	for (const changes of ["* A relevant change", `${marker}:no-changes`]) {
+		for (const tag of ["v1.0.0", "release-42", "v1.3", "package-1.3.0-rc.2"]) {
+			const { input, calls } = fixture({
+				force: true,
+				tag,
+				body: `${marker}:v1.0.0\n${changes}`,
+			});
+			input.github.rest.git.getRef = async (request) => {
+				calls.push(request);
+				if (request.ref === `tags/${tag}`) return { data: {} };
+				throw Object.assign(new Error("Not Found"), { status: 404 });
+			};
+			await assert.rejects(resolvePlan(input), {
+				message: `Remote tag already exists: ${tag}`,
+			});
+			assert.deepEqual(calls, [{ ...repo, ref: `tags/${tag}` }]);
+		}
+	}
+});
+
+test("forced planning does not bypass tag API failures", async () => {
+	const { input } = fixture({
+		force: true,
+		body: `${marker}:v1.0.0\n${marker}:no-changes`,
+	});
+	input.github.rest.git.getRef = async () => {
+		throw Object.assign(new Error("Forbidden"), { status: 403 });
+	};
+	await assert.rejects(
+		resolvePlan(input),
+		/Cannot check remote tag v1.1.0: Forbidden/,
+	);
+});

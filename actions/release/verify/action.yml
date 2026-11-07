@@ -1,13 +1,13 @@
 name: Verify release sources
-description: Verify that release artifacts belong to this run and commit, reject conflicting tags, and identify already published releases without changing repository state.
+description: Verify release tags and publication state without changing the repository. When artifacts are supplied, also verify their workflow run and source commit.
 author: hoverkraft
 branding:
   icon: shield
   color: blue
 inputs:
   artifact-ids:
-    description: JSON array of validated artifact IDs from this workflow run and source commit. Require successful producer jobs with needs; artifact metadata does not prove validation passed.
-    required: true
+    description: Optional JSON array of validated artifact IDs from this workflow run and source commit. Omit for source-only releases. Supplied artifacts must pass all identity checks. Require successful validation jobs with needs; this action does not prove validation passed.
+    default: "[]"
   tags:
     description: JSON array of release tags. Existing lightweight or annotated tags must resolve to this workflow's source commit. Package-specific version validation belongs to the caller.
     required: true

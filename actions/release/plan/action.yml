@@ -12,6 +12,12 @@ inputs:
       Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.
       Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.
     default: ""
+  force:
+    description: |
+      Plan a release even without relevant changes, using the version, tag and name calculated by Release Drafter.
+      Configured version rules and identity templates remain authoritative. Existing tag collisions still fail; tags are never created or moved.
+      Callers decide when forcing is allowed, for example only on manual default-branch runs.
+    default: "false"
   prerelease:
     description: "Whether to plan the release as a prerelease"
     required: false
@@ -51,7 +57,7 @@ inputs:
 
 outputs:
   has-changes:
-    description: "Whether the release has relevant changes, or no previous matching release exists (true or false)"
+    description: "Whether there are relevant changes, no previous matching release, or an explicit force request (true or false)"
     value: ${{ steps.release-plan.outputs.has-changes }}
   tag:
     description: "The planned release tag, including when there are no relevant changes"
@@ -110,21 +116,24 @@ runs:
         PLANNED_RELEASE_TAG: ${{ steps.prepare-release.outputs.tag_name }}
         PLANNED_RELEASE_BODY: ${{ steps.prepare-release.outputs.body }}
         CHANGE_DETECTION_MARKER: ${{ steps.prepare-change-detection.outputs.marker }}
+        FORCE: ${{ inputs.force }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
           const { resolvePlan } = require(`${process.env.ACTION_PATH}/index.js`);
           try {
+            if (!["true", "false"].includes(process.env.FORCE)) throw new Error("force must be true or false.");
             const plan = await resolvePlan({
               body: process.env.PLANNED_RELEASE_BODY,
               marker: process.env.CHANGE_DETECTION_MARKER,
+              force: process.env.FORCE === "true",
               tag: process.env.PLANNED_RELEASE_TAG,
               name: process.env.PLANNED_RELEASE_NAME,
               github,
               repo: context.repo,
             });
             core.info(plan.hasChanges
-              ? 'Release planned with relevant changes or no previous release.'
+              ? 'Release planned with changes, no previous release, or an explicit force request.'
               : 'Release planned without relevant changes.');
             core.setOutput('has-changes', plan.hasChanges ? 'true' : 'false');
             core.setOutput('tag', plan.tag);

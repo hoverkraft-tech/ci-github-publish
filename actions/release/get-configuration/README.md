@@ -41,15 +41,15 @@ configurations control their own heading structure.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@d983bd6279de308518b8b8df7c51e179fd50bffb # main
+- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@647b53a3e08fb4ea2c477fc6f79dcba94b1395e1 # fix/release-drafter-path-categories
   with:
     # Optional partial Release Drafter configuration as a YAML or JSON mapping.
-    # Supplied top-level keys replace repository values, which inherit generated defaults unless the repository declares its own _extends chain.
-    # Omitted keys are inherited; mappings and lists are replaced, not concatenated or deep-merged. Empty lists clear inherited lists.
-    # Replacing categories also replaces generated path filters and version rules.
-    # The _extends key is reserved for inheriting the selected configuration. Repository files and their inheritance remain unchanged.
-    # Pass the same overrides to release/plan and release/create.
-    release-config: ""
+    # Precedence: generated defaults, repository configuration, then these overrides.
+    # Supplied mappings and lists replace inherited values. Categories preserve inherited pre-include filters unless they contain an explicit pre-include category; an empty categories list clears changelog and version rules but keeps the scope.
+    # Repository files with their own _extends chain use native Release Drafter inheritance instead of generated defaults and scope preservation.
+    # The _extends key is reserved in this input. Pass identical overrides to release/plan and release/create.
+    # See [release configuration](../../../docs/usage/release.md#override-release-configuration) for scope examples.
+    config-overrides: ""
 
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
@@ -62,10 +62,10 @@ configurations control their own heading structure.
     # Additional paths to include in generated release notes and version calculation (JSON array).
     # These paths are added to the working-directory scope when one is specified.
     # Add the calling workflow path explicitly to include workflow-only changes.
-    # To replace this scope, supply categories in the repository configuration or release-config input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.
+    # To replace this scope, supply categories in the repository configuration or config-overrides input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.
     #
     # Default: `[]`
-    include-paths: "[]"
+    additional-paths: "[]"
 ```
 
 <!-- usage:end -->
@@ -73,24 +73,24 @@ configurations control their own heading structure.
 
 ## Inputs
 
-| **Input**               | **Description**                                                                                                                                                                                              | **Required** | **Default** |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ | ----------- |
-| **`release-config`**    | Optional partial Release Drafter configuration as a YAML or JSON mapping.                                                                                                                                    | **false**    | -           |
-|                         | Supplied top-level keys replace repository values, which inherit generated defaults unless the repository declares its own _extends chain.                                                                   |              |             |
-|                         | Omitted keys are inherited; mappings and lists are replaced, not concatenated or deep-merged. Empty lists clear inherited lists.                                                                             |              |             |
-|                         | Replacing categories also replaces generated path filters and version rules.                                                                                                                                 |              |             |
-|                         | The _extends key is reserved for inheriting the selected configuration. Repository files and their inheritance remain unchanged.                                                                             |              |             |
-|                         | Pass the same overrides to release/plan and release/create.                                                                                                                                                  |              |             |
-| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                                                            | **false**    | -           |
-|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                                        |              |             |
-|                         | Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults scope changes to the working directory with a `pre-include` category. |              |             |
-|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.                                |              |             |
-|                         | They also define Conventional Commit labels.                                                                                                                                                                 |              |             |
-|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                                                     |              |             |
-| **`include-paths`**     | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                                                 | **false**    | `[]`        |
-|                         | These paths are added to the working-directory scope when one is specified.                                                                                                                                  |              |             |
-|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                                                   |              |             |
-|                         | To replace this scope, supply categories in the repository configuration or release-config input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.          |              |             |
+| **Input**               | **Description**                                                                                                                                                                                                                                | **Required** | **Default** |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
+| **`config-overrides`**  | Optional partial Release Drafter configuration as a YAML or JSON mapping.                                                                                                                                                                      | **false**    | -           |
+|                         | Precedence: generated defaults, repository configuration, then these overrides.                                                                                                                                                                |              |             |
+|                         | Supplied mappings and lists replace inherited values. Categories preserve inherited pre-include filters unless they contain an explicit pre-include category; an empty categories list clears changelog and version rules but keeps the scope. |              |             |
+|                         | Repository files with their own _extends chain use native Release Drafter inheritance instead of generated defaults and scope preservation.                                                                                                    |              |             |
+|                         | The _extends key is reserved in this input. Pass identical overrides to release/plan and release/create.                                                                                                                                       |              |             |
+|                         | See [release configuration](../../../docs/usage/release.md#override-release-configuration) for scope examples.                                                                                                                                 |              |             |
+| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                                                                                              | **false**    | -           |
+|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                                                                          |              |             |
+|                         | Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults scope changes to the working directory with a `pre-include` category.                                   |              |             |
+|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.                                                                  |              |             |
+|                         | They also define Conventional Commit labels.                                                                                                                                                                                                   |              |             |
+|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                                                                                       |              |             |
+| **`additional-paths`**  | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                                                                                   | **false**    | `[]`        |
+|                         | These paths are added to the working-directory scope when one is specified.                                                                                                                                                                    |              |             |
+|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                                                                                     |              |             |
+|                         | To replace this scope, supply categories in the repository configuration or config-overrides input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.                                          |              |             |
 
 <!-- inputs:end -->
 <!-- outputs:start -->

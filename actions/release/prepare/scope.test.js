@@ -47,10 +47,13 @@ async function fixture(
 	const workspace = await fs.mkdtemp(path.join(os.tmpdir(), "release-scope-"));
 	t.after(() => fs.rm(workspace, { recursive: true, force: true }));
 	const outputs = {};
+	const warnings = [];
 	const core = {
 		debug() {},
 		info() {},
-		warning() {},
+		warning(message) {
+			warnings.push(message);
+		},
 		error() {},
 		setFailed(message) {
 			throw new Error(message);
@@ -98,11 +101,11 @@ async function fixture(
 			"utf8",
 		),
 	);
-	return { workspace, outputs, core, config };
+	return { workspace, outputs, core, config, warnings };
 }
 
 async function plan(t, pullRequests, options) {
-	const { workspace, outputs, core } = await fixture(t, options);
+	const { workspace, outputs, core, warnings } = await fixture(t, options);
 	const { configPath, marker } = prepareConfiguration({
 		configPath: outputs["config-path"],
 		workspace,
@@ -136,6 +139,11 @@ async function plan(t, pullRequests, options) {
 			}),
 		},
 	});
+	assert.deepEqual(
+		warnings,
+		[],
+		"Release Drafter should load without warnings",
+	);
 	if (options?.renderNotes)
 		return { tag: outputs.tag_name, body: outputs.body };
 	const result = await resolvePlan({
@@ -170,20 +178,26 @@ test("additional paths extend the working-directory scope and preserve its tag p
 	const { config } = await fixture(t, {
 		paths: '[" shared/** ", "shared/**", ""]',
 	});
-	assert.deepEqual(config["include-paths"], ["shared/**", "images/widget"]);
+	assert.deepEqual(config.categories[0], {
+		type: "pre-include",
+		when: { paths: ["shared/**", "images/widget"] },
+	});
 	assert.equal(config["tag-prefix"], "widget-");
 });
 
 for (const paths of ["[]", '["", "  "]']) {
 	test(`empty additional paths ${paths} scope releases to the working directory`, async (t) => {
 		const { config } = await fixture(t, { paths });
-		assert.deepEqual(config["include-paths"], ["images/widget"]);
+		assert.deepEqual(config.categories[0].when.paths, ["images/widget"]);
 	});
 }
 
 test("repository releases without additional paths have no path filter", async (t) => {
 	const { config } = await fixture(t, { paths: "[]", workingDirectory: "" });
 	assert.equal(config["include-paths"], undefined);
+	assert.ok(
+		config.categories.every((category) => category.type !== "pre-include"),
+	);
 });
 
 test("additional paths can scope a repository release without a working directory", async (t) => {
@@ -191,8 +205,28 @@ test("additional paths can scope a repository release without a working director
 		workingDirectory: "",
 		paths: '["images/widget/**"]',
 	});
-	assert.deepEqual(config["include-paths"], ["images/widget/**"]);
+	assert.deepEqual(config.categories[0].when.paths, ["images/widget/**"]);
 	assert.equal(config["tag-prefix"], "");
+});
+
+test("path filters preserve quotes and backslashes in YAML", async (t) => {
+	const paths = ['shared/"quoted"/**', "shared/escaped\\*/**"];
+	const { config } = await fixture(t, {
+		workingDirectory: "",
+		paths: JSON.stringify(paths),
+	});
+	assert.deepEqual(config.categories[0].when.paths, paths);
+});
+
+test("repository-wide releases load without warnings and include changes in any directory", async (t) => {
+	const result = await plan(t, unrelatedChanges, {
+		workingDirectory: "",
+		previousTag: "1.2.3",
+	});
+	assert.equal(result.hasChanges, true);
+	assert.equal(result.tag, "2.0.0");
+	assert.match(result.body, /#1/);
+	assert.match(result.body, /#2/);
 });
 
 test("unrelated breaking changes produce a plan without relevant changes", async (t) => {
@@ -303,17 +337,30 @@ test("release notes inherit categories and compare the resolved overridden tag",
 	assert.doesNotMatch(result.body, /\$RESOLVED_TAG/);
 });
 
-test("an overridden list replaces the inherited release scope", async (t) => {
-	const result = await plan(
-		t,
-		[change(1, "feat: expose API", "images/other/Dockerfile")],
-		{
-			releaseConfig: 'include-paths: ["images/other/**"]',
-		},
-	);
-	assert.equal(result.hasChanges, true);
-	assert.equal(result.tag, "widget-1.3.0");
-});
+for (const source of ["releaseConfig", "repositoryConfig"]) {
+	test(`${source} categories replace the inherited release scope and version rules`, async (t) => {
+		const result = await plan(
+			t,
+			[
+				change(1, "feat: expose API", "images/other/Dockerfile"),
+				change(2, "feat!: change widget", "images/widget/Dockerfile"),
+			],
+			{
+				[source]: JSON.stringify({
+					categories: [
+						{ type: "pre-include", when: { paths: ["images/other/**"] } },
+						{ title: "Custom changes", "semver-increment": "minor" },
+					],
+				}),
+				renderNotes: true,
+			},
+		);
+		assert.equal(result.tag, "widget-1.3.0");
+		assert.match(result.body, /### Custom changes/);
+		assert.match(result.body, /#1/);
+		assert.doesNotMatch(result.body, /#2|### Features/);
+	});
+}
 
 test("a partial repository file inherits version rules and release note defaults", async (t) => {
 	const options = {
@@ -346,15 +393,20 @@ test("workflow settings override repository settings while retaining omitted fie
 	assert.equal(result.hasChanges, true);
 });
 
-test("an empty list clears inherited path filtering", async (t) => {
+test("an empty categories list clears inherited path filtering and version rules", async (t) => {
 	const result = await plan(
 		t,
 		[change(1, "feat: outside scope", "images/other/Dockerfile")],
 		{
-			repositoryConfig: 'include-paths: ["images/widget/**"]',
-			releaseConfig: "include-paths: []",
+			repositoryConfig: JSON.stringify({
+				categories: [
+					{ type: "pre-include", when: { paths: ["images/widget/**"] } },
+					{ title: "Features", "semver-increment": "minor" },
+				],
+			}),
+			releaseConfig: "categories: []",
 		},
 	);
 	assert.equal(result.hasChanges, true);
-	assert.equal(result.tag, "widget-1.3.0");
+	assert.equal(result.tag, "widget-1.2.4");
 });

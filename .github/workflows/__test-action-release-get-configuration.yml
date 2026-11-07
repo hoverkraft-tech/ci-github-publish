@@ -94,7 +94,8 @@ jobs:
             assert.notEqual(configPath, 'release-configs/get-configuration.yml');
             assert.ok(configPath.endsWith('/release-drafter/get-configuration.yml') || configPath === '../release-drafter/get-configuration.yml' || configPath.includes('/release-drafter/get-configuration.yml'));
             assert.ok(fs.existsSync(absoluteConfigPath), `Expected generated config to exist at ${absoluteConfigPath}`);
-            assert.ok(configContent.includes('include-paths:'), 'Expected include-paths section in generated config');
+            assert.ok(configContent.includes('  - type: pre-include\n    when:\n      paths:\n'), 'Expected a pre-include path filter in generated config');
+            assert.ok(!configContent.includes('include-paths:'), 'Generated config must not use deprecated include-paths');
             assert.ok(configContent.includes('  - "actions/release/create"'), 'Expected custom include path in generated config');
             assert.ok(configContent.includes('  - "actions/release/get-configuration"'), 'Expected working directory in generated config');
             const currentWorkflow = process.env.GITHUB_WORKFLOW_REF.replace(`${process.env.GITHUB_REPOSITORY}/`, '').replace(/@.*/, '');

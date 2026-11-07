@@ -30,7 +30,7 @@ jobs:
         uses: $/actions/release/create
         with:
           tag: ${{ steps.test-releases.outputs.draft-tag }}
-          target-sha: ${{ github.sha }}
+          target-ref: ${{ github.sha }}
           publish: "false"
           github-token: ${{ github.token }}
 
@@ -102,7 +102,7 @@ jobs:
         uses: $/actions/release/create
         with:
           tag: ${{ steps.test-releases.outputs.published-tag }}
-          target-sha: ${{ github.sha }}
+          target-ref: ${{ github.sha }}
           publish: "true"
           github-token: ${{ github.token }}
 

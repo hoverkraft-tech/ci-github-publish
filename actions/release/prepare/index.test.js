@@ -83,7 +83,7 @@ async function fixture(t) {
 test("action loads generated configuration with repository inheritance and emits planning outputs", async (t) => {
 	const { input, outputs, comparisons, writes } = await fixture(t);
 	await run(input);
-	assert.equal(outputs.tag_name, "1.2.1");
+	assert.equal(outputs.tag, "1.2.1");
 	assert.match(outputs.body, /^1.2.0/);
 	assert.equal(typeof outputs.name, "string");
 	assert.deepEqual(comparisons, [
@@ -117,7 +117,7 @@ test("no-change planning delegates version rules and identity templates to Relea
 			}),
 		);
 		await run(input);
-		assert.equal(outputs.tag_name, `train-${entry.expected}-final`);
+		assert.equal(outputs.tag, `train-${entry.expected}-final`);
 		assert.equal(outputs.name, `Release ${entry.expected} / protocol 1.2.0`);
 		assert.equal(outputs.body, "1.2.0\nNo changes detected");
 		assert.deepEqual(writes, []);
@@ -129,7 +129,7 @@ test("explicit drafting uses the planned tag and tested commit without publishin
 	input.env.RELEASE_DRY_RUN = "false";
 	input.env.RELEASE_TAG = "1.4.0";
 	await run(input);
-	assert.equal(outputs.tag_name, "1.4.0");
+	assert.equal(outputs.tag, "1.4.0");
 	assert.equal(writes[0].payload.tag, "1.4.0");
 	assert.equal(writes[0].payload.targetCommitish, "tested-commit");
 	assert.equal(writes[0].payload.draft, true);

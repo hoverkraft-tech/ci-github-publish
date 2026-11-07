@@ -8,12 +8,14 @@ branding:
   color: blue
 
 inputs:
-  release-config:
+  config-overrides:
     description: |
       Optional partial Release Drafter configuration as a YAML or JSON mapping.
-      Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.
-      Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.
-      Replacing categories also replaces generated path filters and version rules.
+      Precedence: generated defaults, repository configuration, then these overrides.
+      Supplied mappings and lists replace inherited values. Categories preserve inherited pre-include filters unless they contain an explicit pre-include category; an empty categories list clears changelog and version rules but keeps the scope.
+      Repository files with their own _extends chain use native Release Drafter inheritance instead of generated defaults and scope preservation.
+      The _extends key is reserved in this input. Pass identical overrides to release/plan and release/create.
+      See [release configuration](../../../docs/usage/release.md#override-release-configuration) for scope examples.
     default: ""
   prerelease:
     description: "Whether the release is a prerelease"
@@ -28,21 +30,21 @@ inputs:
       They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
     required: false
     default: ""
-  include-paths:
+  additional-paths:
     description: |
       Additional paths to include in generated release notes and version calculation (JSON array).
       These paths are added to the working-directory scope when one is specified.
       Add the calling workflow path explicitly to include workflow-only changes.
-      To replace this scope, supply categories in the repository configuration or release-config input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.
+      To replace this scope, supply categories in the repository configuration or config-overrides input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.
     required: false
     default: "[]"
   tag:
     description: "Release tag name to use in explicit mode"
     required: false
-  target-sha: # codespell:ignore commitish
+  target-ref:
     description: |
       Optional branch, commit SHA, fully qualified tag ref, or pull request ref to target when explicit mode creates a release for a tag that does not already exist.
-      Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.
+      Tag and pull request refs are resolved to commit SHAs.
     required: false
     default: ""
   github-token:
@@ -56,7 +58,7 @@ inputs:
   skip-if-no-changes:
     description: |
       Skip creating or updating the draft release when no changes are detected since the latest relevant published release.
-      In Release Drafter mode, detection respects the configured release filters such as `working-directory` and `include-paths`.
+      In Release Drafter mode, detection respects the configured release filters such as `working-directory` and `additional-paths`.
     required: false
     default: "false"
   changelog-summary:
@@ -110,19 +112,19 @@ runs:
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         INPUT_TAG: ${{ inputs.tag }}
-        INPUT_TARGET_SHA: ${{ inputs.target-sha }}
+        INPUT_TARGET_REF: ${{ inputs.target-ref }}
       with:
         script: |
           const inputTag = (process.env.INPUT_TAG || '').trim();
-          const inputTargetSha = (process.env.INPUT_TARGET_SHA || '').trim();
+          const inputTargetRef = (process.env.INPUT_TARGET_REF || '').trim();
 
-          if (!inputTag && inputTargetSha) {
-            return core.setFailed('target-sha requires tag in explicit mode');
+          if (!inputTag && inputTargetRef) {
+            return core.setFailed('target-ref requires tag in explicit mode');
           }
 
           core.setOutput('mode', inputTag ? 'explicit' : 'drafter');
           core.setOutput('explicit-tag', inputTag);
-          core.setOutput('explicit-target-sha', inputTargetSha);
+          core.setOutput('explicit-target-ref', inputTargetRef);
 
     - id: resolve-changelog-summary
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -193,21 +195,21 @@ runs:
     - id: get-configuration
       uses: $/actions/release/get-configuration
       with:
-        release-config: ${{ inputs.release-config }}
+        config-overrides: ${{ inputs.config-overrides }}
         working-directory: ${{ inputs.working-directory }}
-        include-paths: ${{ inputs.include-paths }}
+        additional-paths: ${{ inputs.additional-paths }}
 
     - id: resolve-explicit-release-inputs
       if: steps.resolve-release-inputs.outputs.mode == 'explicit'
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         INPUT_TAG: ${{ steps.resolve-release-inputs.outputs.explicit-tag }}
-        INPUT_TARGET_SHA: ${{ steps.resolve-release-inputs.outputs.explicit-target-sha }}
+        INPUT_TARGET_REF: ${{ steps.resolve-release-inputs.outputs.explicit-target-ref }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
           const inputTag = (process.env.INPUT_TAG || '').trim();
-          const inputTargetSha = (process.env.INPUT_TARGET_SHA || '').trim();
+          const inputTargetRef = (process.env.INPUT_TARGET_REF || '').trim();
           const { owner, repo } = context.repo;
 
           if (!inputTag) {
@@ -222,15 +224,15 @@ runs:
             });
 
             core.setOutput('compare-ref', `tags/${inputTag}`);
-            core.setOutput('commitish', inputTargetSha);
+            core.setOutput('target-ref', inputTargetRef);
           } catch (error) {
             if (error.status === 404) {
-              if (!inputTargetSha) {
-                return core.setFailed(`target-sha is required when explicit release tag does not already exist: ${inputTag}`);
+              if (!inputTargetRef) {
+                return core.setFailed(`target-ref is required when explicit release tag does not already exist: ${inputTag}`);
               }
 
-              core.setOutput('compare-ref', inputTargetSha);
-              core.setOutput('commitish', inputTargetSha);
+              core.setOutput('compare-ref', inputTargetRef);
+              core.setOutput('target-ref', inputTargetRef);
               return;
             }
 
@@ -308,7 +310,7 @@ runs:
       if: steps.resolve-release-inputs.outputs.mode == 'drafter' && inputs.skip-if-no-changes == 'true'
       uses: $/actions/release/prepare
       with:
-        token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.github-token }}
         dry-run: "true"
         # config-path is relative to ".github" directory
         config-name: file:${{ steps.prepare-change-detection-configuration.outputs.config-path }}
@@ -476,7 +478,7 @@ runs:
       if: steps.resolve-release-inputs.outputs.mode == 'drafter' && steps.resolve-create-condition.outputs.should-create == 'true'
       uses: $/actions/release/prepare
       with:
-        token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.github-token }}
         # config-path is relative to ".github" directory
         config-name: file:${{ steps.get-configuration.outputs.config-path }}
         prerelease: ${{ inputs.prerelease }}
@@ -486,9 +488,9 @@ runs:
       if: steps.resolve-release-inputs.outputs.mode == 'explicit' && steps.resolve-create-condition.outputs.should-create == 'true'
       uses: $/actions/release/prepare
       with:
-        token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.github-token }}
         tag: ${{ steps.resolve-release-inputs.outputs.explicit-tag }}
-        commitish: ${{ steps.resolve-explicit-release-inputs.outputs.commitish }} # codespell:ignore commitish
+        target-ref: ${{ steps.resolve-explicit-release-inputs.outputs.target-ref }}
         # config-path is relative to ".github" directory
         config-name: file:${{ steps.get-configuration.outputs.config-path }}
         prerelease: ${{ inputs.prerelease }}
@@ -498,7 +500,7 @@ runs:
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         SHOULD_CREATE: ${{ steps.resolve-create-condition.outputs.should-create }}
-        RELEASE_TAG: ${{ steps.draft-drafter-release.outputs.tag_name || steps.draft-explicit-release.outputs.tag_name }}
+        RELEASE_TAG: ${{ steps.draft-drafter-release.outputs.tag || steps.draft-explicit-release.outputs.tag }}
         RELEASE_BODY: ${{ steps.draft-drafter-release.outputs.body || steps.draft-explicit-release.outputs.body }}
         SUMMARY_ENABLED: ${{ steps.resolve-changelog-summary.outputs.enabled }}
       with:

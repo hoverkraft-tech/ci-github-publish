@@ -31,8 +31,8 @@ jobs:
         uses: $/actions/release/create
         with:
           tag: ${{ steps.test-release.outputs.tag }}
-          target-sha: ${{ github.sha }}
-          release-config: |
+          target-ref: ${{ github.sha }}
+          config-overrides: |
             name-template: Configured release
           prerelease: "true"
           publish: "false"

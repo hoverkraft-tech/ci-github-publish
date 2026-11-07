@@ -93,7 +93,7 @@ _Actions for managing releases._
 
 #### - [Update](actions/release/update/README.md)
 
-#### - [Recommended release workflow](.github/workflows/release.md)
+#### - [Recommended release workflow](docs/usage/release.md)
 
 #### - [Summarize changelog](actions/release/summarize-changelog/README.md)
 

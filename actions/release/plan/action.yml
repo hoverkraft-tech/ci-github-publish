@@ -6,12 +6,14 @@ branding:
   color: blue
 
 inputs:
-  release-config:
+  config-overrides:
     description: |
       Optional partial Release Drafter configuration as a YAML or JSON mapping.
-      Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.
-      Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.
-      Replacing categories also replaces generated path filters and version rules.
+      Precedence: generated defaults, repository configuration, then these overrides.
+      Supplied mappings and lists replace inherited values. Categories preserve inherited pre-include filters unless they contain an explicit pre-include category; an empty categories list clears changelog and version rules but keeps the scope.
+      Repository files with their own _extends chain use native Release Drafter inheritance instead of generated defaults and scope preservation.
+      The _extends key is reserved in this input. Pass identical overrides to release/plan and release/create.
+      See [release configuration](../../../docs/usage/release.md#override-release-configuration) for scope examples.
     default: ""
   force:
     description: |
@@ -33,18 +35,18 @@ inputs:
       They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
     required: false
     default: ""
-  include-paths:
+  additional-paths:
     description: |
       Additional paths to include in generated release notes and version calculation (JSON array).
       These paths are added to the working-directory scope when one is specified.
       Add the calling workflow path explicitly to include workflow-only changes.
-      To replace this scope, supply categories in the repository configuration or release-config input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.
+      To replace this scope, supply categories in the repository configuration or config-overrides input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.
     required: false
     default: "[]"
-  target-sha: # codespell:ignore commitish
+  target-ref:
     description: |
       Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.
-      Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.
+      Tag and pull request refs are resolved to commit SHAs.
     required: false
     default: ""
   github-token:
@@ -57,9 +59,9 @@ inputs:
     default: ${{ github.token }}
 
 outputs:
-  has-changes:
+  should-release:
     description: "Whether there are relevant changes, no previous matching release, or an explicit force request (true or false)"
-    value: ${{ steps.release-plan.outputs.has-changes }}
+    value: ${{ steps.release-plan.outputs.should-release }}
   tag:
     description: "The planned release tag, including when there are no relevant changes"
     value: ${{ steps.release-plan.outputs.tag }}
@@ -73,14 +75,14 @@ runs:
     - uses: hoverkraft-tech/ci-github-common/actions/checkout@4a6ed33ba735d57ebbcd89fe8ed35134de599a67 # 0.39.2
       with:
         fetch-depth: "0"
-        ref: ${{ inputs.target-sha || github.sha }}
+        ref: ${{ inputs.target-ref || github.sha }}
 
     - id: get-configuration
       uses: $/actions/release/get-configuration
       with:
-        release-config: ${{ inputs.release-config }}
+        config-overrides: ${{ inputs.config-overrides }}
         working-directory: ${{ inputs.working-directory }}
-        include-paths: ${{ inputs.include-paths }}
+        additional-paths: ${{ inputs.additional-paths }}
 
     - id: prepare-change-detection
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -101,11 +103,11 @@ runs:
     - id: prepare-release
       uses: $/actions/release/prepare
       with:
-        token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.github-token }}
         dry-run: "true"
         # config-path is relative to ".github" directory
         config-name: file:${{ steps.prepare-change-detection.outputs.config-path }}
-        commitish: ${{ inputs.target-sha || github.sha }}
+        target-ref: ${{ inputs.target-ref || github.sha }}
         prerelease: ${{ inputs.prerelease }}
         latest: ${{ inputs.prerelease != 'true' && !inputs.working-directory && 'true' || 'false' }}
 
@@ -114,7 +116,7 @@ runs:
       env:
         ACTION_PATH: ${{ github.action_path }}
         PLANNED_RELEASE_NAME: ${{ steps.prepare-release.outputs.name }}
-        PLANNED_RELEASE_TAG: ${{ steps.prepare-release.outputs.tag_name }}
+        PLANNED_RELEASE_TAG: ${{ steps.prepare-release.outputs.tag }}
         PLANNED_RELEASE_BODY: ${{ steps.prepare-release.outputs.body }}
         CHANGE_DETECTION_MARKER: ${{ steps.prepare-change-detection.outputs.marker }}
         FORCE: ${{ inputs.force }}
@@ -133,10 +135,10 @@ runs:
               github,
               repo: context.repo,
             });
-            core.info(plan.hasChanges
+            core.info(plan.shouldRelease
               ? 'Release planned with changes, no previous release, or an explicit force request.'
               : 'Release planned without relevant changes.');
-            core.setOutput('has-changes', plan.hasChanges ? 'true' : 'false');
+            core.setOutput('should-release', plan.shouldRelease ? 'true' : 'false');
             core.setOutput('tag', plan.tag);
             core.setOutput('name', plan.name);
           } catch (error) {

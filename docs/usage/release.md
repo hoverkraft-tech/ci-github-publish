@@ -21,13 +21,13 @@ That keeps release state changes explicit in the caller workflow and leaves vali
 
 ## Override release configuration
 
-Pass `release-config` to `actions/release/plan` and `actions/release/create` to
+Pass `config-overrides` to `actions/release/plan` and `actions/release/create` to
 override any supported Release Drafter setting without copying a complete
 configuration. Use the same value for both actions. The input accepts a YAML or
 JSON mapping, for example:
 
 ```yaml
-release-config: |
+config-overrides: |
   name-template: v$RESOLVED_VERSION
   tag-template: v$RESOLVED_VERSION
   tag-prefix: v
@@ -36,19 +36,84 @@ release-config: |
 Alternatively, put only your overrides in `.github/release-config.yml`, or in
 `.github/release-configs/{slug}.yml` for a scoped release. Both interfaces can be
 used together: shared defaults come first, repository settings override them,
-and the `release-config` input takes precedence over the repository file.
+and the `config-overrides` input takes precedence over the repository file.
 
 Supplied top-level keys replace inherited values, including whole mappings and
-lists; omitted keys stay inherited. An empty list clears an inherited list. These
-are Release Drafter's native inheritance rules. A repository file declaring its
-own `_extends` chain retains that base instead of inheriting shared defaults.
-The `_extends` key is reserved in the workflow input.
+lists; omitted keys stay inherited. Empty lists clear inherited lists, with one
+exception: `categories` preserves the inherited `pre-include` filters unless the
+replacement includes an explicit `type: pre-include` category.
+
+A repository file declaring its own `_extends` chain owns its defaults and scope.
+It uses Release Drafter's native inheritance rules, including whole-list
+replacement for categories, without generated defaults or scope preservation.
+The `_extends` key is reserved in `config-overrides`.
 
 Overrides are written to a separate temporary configuration. Repository files
 remain unchanged, and no configuration file is committed. Default compare links
 use the final resolved tag, including a customized prefix. Existing explicit
 workflow inputs, such as the prepared tag and prerelease mode, retain their
 normal precedence over configuration values.
+
+### Scope changes in a monorepo
+
+`working-directory` sets the component directory, configuration filename, and
+release identity prefix. `additional-paths` accepts a JSON array of shared paths
+that should also trigger a release. Include the caller workflow path explicitly
+if workflow-only changes should trigger a release:
+
+```yaml
+working-directory: images/widget
+additional-paths: '["shared", ".github/workflows/release.yml"]'
+```
+
+The generated `pre-include` category scopes both release notes and version
+calculation to these paths. No path filter is generated when both inputs are
+empty. A directory matches its descendants; Release Drafter also accepts path
+globs.
+
+When inheriting generated defaults, scope precedence is explicit:
+
+| Repository configuration or input override | Result                                                                                             |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| No `categories` key                        | Inherit all categories, including scope and version rules.                                         |
+| Categories without `type: pre-include`     | Replace changelog and version rules; retain the inherited scope.                                   |
+| `categories: []`                           | Clear changelog and version rules; retain the inherited scope and use the default patch increment. |
+| Categories with `type: pre-include`        | Replace the scope and all other categories.                                                        |
+
+For example, custom grouping still respects `working-directory` and
+`additional-paths`:
+
+```yaml
+config-overrides: |
+  categories:
+    - title: Features
+      semver-increment: minor
+      when:
+        conventional:
+          type: feat
+    - title: Other Changes
+```
+
+To replace the scope, include a `pre-include` category alongside the desired
+changelog and version rules:
+
+```yaml
+config-overrides: |
+  categories:
+    - type: pre-include
+      when:
+        paths:
+          - images/other
+    - title: Changes
+      semver-increment: patch
+```
+
+An explicit category replaces the inherited scope, including `additional-paths`.
+An unconditional `- type: pre-include` deliberately includes all changes.
+Multiple `pre-include` categories match alternatives; conditions within one
+category must all match. Input overrides that only change grouping retain an
+explicit scope supplied by the repository file. Repository files declaring their
+own `_extends` chain use native inheritance as described above.
 
 ## Core Rule
 
@@ -67,12 +132,17 @@ That means:
 ### `actions/release/plan`
 
 Resolve the release tag and release name without creating any durable release state.
-The `has-changes` output reports whether plan found relevant changes under the effective release configuration.
-It is also `true` for the first release. Planning always returns the proposed `tag` and `name`, even without changes.
-Planning targets `${{ github.sha }}` by default; set `target-sha` when the release identity must be computed from a different ref.
-The caller decides whether to release. Example 3 combines `has-changes` with its manual `force` input
-in a `should-release` job output, then gates validation and release preparation on that output.
-Use a commit containing the `has-changes` output when replacing `<sha>` in the planning examples.
+The `should-release` output is `true` when there are relevant changes, no previous
+matching release, or `force: "true"`. Planning always returns the proposed `tag`
+and `name`, even without changes. `force` uses the configured version rules and
+identity templates; it does not bypass existing-tag collision checks.
+Planning targets `${{ github.sha }}` by default; set `target-ref` to a branch,
+commit SHA, fully qualified tag ref, or pull request ref to plan from another
+commit.
+
+The caller decides when forcing is allowed. Example 3 passes a manual `force`
+request to the action, exposes `should-release` as a job output, and gates
+validation and release preparation on it.
 
 ### `actions/release/create`
 
@@ -274,13 +344,14 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      should-release: ${{ steps.plan.outputs.has-changes == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force) }}
+      should-release: ${{ steps.plan.outputs.should-release }}
       tag: ${{ steps.plan.outputs.tag }}
     steps:
       - id: plan
         uses: hoverkraft-tech/ci-github-publish/actions/release/plan@<sha> # x.y.z
         with:
           github-token: ${{ github.token }}
+          force: ${{ github.event_name == 'workflow_dispatch' && inputs.force }}
 
   validate-source:
     runs-on: ubuntu-latest
@@ -329,7 +400,7 @@ jobs:
         uses: hoverkraft-tech/ci-github-publish/actions/release/create@<sha> # x.y.z
         with:
           tag: ${{ needs.plan-release.outputs.tag }}
-          target-sha: ${{ needs.prepare-release-files.outputs.release-sha }}
+          target-ref: ${{ needs.prepare-release-files.outputs.release-sha }}
           publish: "false"
           github-token: ${{ github.token }}
 

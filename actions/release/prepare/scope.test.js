@@ -40,7 +40,7 @@ async function fixture(
 	{
 		paths = "[]",
 		workingDirectory = "images/widget",
-		releaseConfig = "",
+		configOverrides = "",
 		repositoryConfig = "",
 	} = {},
 ) {
@@ -72,7 +72,7 @@ async function fixture(
 				CONFIG_SLUG: workingDirectory ? "widget" : "",
 				CONFIG_PATH: "release.yml",
 				WORKING_DIRECTORY: workingDirectory,
-				INCLUDE_PATHS: paths,
+				ADDITIONAL_PATHS: paths,
 			},
 		},
 		core,
@@ -83,7 +83,7 @@ async function fixture(
 			repositoryConfig,
 		);
 	}
-	if (releaseConfig || repositoryConfig) {
+	if (configOverrides || repositoryConfig) {
 		override({
 			core,
 			inputs: {
@@ -91,7 +91,7 @@ async function fixture(
 				runnerTemp: workspace,
 				baseConfigPath: outputs["config-path"],
 				repositoryConfigPath: repositoryConfig ? "release-config.yml" : "",
-				releaseConfig,
+				configOverrides,
 			},
 		});
 	}
@@ -144,11 +144,10 @@ async function plan(t, pullRequests, options) {
 		[],
 		"Release Drafter should load without warnings",
 	);
-	if (options?.renderNotes)
-		return { tag: outputs.tag_name, body: outputs.body };
+	if (options?.renderNotes) return { tag: outputs.tag, body: outputs.body };
 	const result = await resolvePlan({
 		body: outputs.body,
-		tag: outputs.tag_name,
+		tag: outputs.tag,
 		name: outputs.name,
 		marker,
 		repo,
@@ -223,7 +222,7 @@ test("repository-wide releases load without warnings and include changes in any 
 		workingDirectory: "",
 		previousTag: "1.2.3",
 	});
-	assert.equal(result.hasChanges, true);
+	assert.equal(result.shouldRelease, true);
 	assert.equal(result.tag, "2.0.0");
 	assert.match(result.body, /#1/);
 	assert.match(result.body, /#2/);
@@ -231,7 +230,7 @@ test("repository-wide releases load without warnings and include changes in any 
 
 test("unrelated breaking changes produce a plan without relevant changes", async (t) => {
 	const result = await plan(t, unrelatedChanges);
-	assert.equal(result.hasChanges, false);
+	assert.equal(result.shouldRelease, false);
 	assert.doesNotMatch(result.body, /#1|#2/);
 });
 
@@ -245,7 +244,7 @@ for (const [title, version] of [
 			...unrelatedChanges,
 			change(3, title, "images/widget/Dockerfile"),
 		]);
-		assert.equal(result.hasChanges, true);
+		assert.equal(result.shouldRelease, true);
 		assert.equal(result.tag, `widget-${version}`);
 		assert.match(result.body, /#3/);
 		assert.doesNotMatch(result.body, /#1|#2/);
@@ -261,7 +260,7 @@ test("additional shared paths retain changes within the working directory", asyn
 		],
 		{ paths: '["shared/**"]' },
 	);
-	assert.equal(result.hasChanges, true);
+	assert.equal(result.shouldRelease, true);
 	assert.equal(result.tag, "widget-1.3.0");
 	assert.match(result.body, /#1/);
 	assert.match(result.body, /#2/);
@@ -271,7 +270,7 @@ test("callers can include the workflow through additional paths", async (t) => {
 	const result = await plan(t, unrelatedChanges, {
 		paths: JSON.stringify([workflow]),
 	});
-	assert.equal(result.hasChanges, true);
+	assert.equal(result.shouldRelease, true);
 	assert.equal(result.tag, "widget-2.0.0");
 	assert.match(result.body, /#1/);
 	assert.doesNotMatch(result.body, /#2/);
@@ -281,13 +280,13 @@ test("changes touching both the working directory and the workflow are included"
 	const result = await plan(t, [
 		change(1, "fix: update image build", "images/widget/Dockerfile", workflow),
 	]);
-	assert.equal(result.hasChanges, true);
+	assert.equal(result.shouldRelease, true);
 	assert.equal(result.tag, "widget-1.2.4");
 });
 
 for (const paths of ["{", "{}", '["images/widget/**", 1]']) {
-	test(`invalid include-paths ${paths} fails configuration generation`, async (t) => {
-		await assert.rejects(fixture(t, { paths }), /include-paths/);
+	test(`invalid additional-paths ${paths} fails configuration generation`, async (t) => {
+		await assert.rejects(fixture(t, { paths }), /additional-paths/);
 	});
 }
 
@@ -301,24 +300,24 @@ for (const [title, version] of [
 			t,
 			[change(1, title, "images/widget/Dockerfile")],
 			{
-				releaseConfig:
+				configOverrides:
 					"tag-prefix: v\ntag-template: v$RESOLVED_VERSION\nname-template: Custom $RESOLVED_VERSION\n",
 				previousTag: "v1.2.3",
 			},
 		);
 		assert.equal(result.tag, `v${version}`);
 		assert.equal(result.name, `Custom ${version}`);
-		assert.equal(result.hasChanges, true);
+		assert.equal(result.shouldRelease, true);
 	});
 }
 
 test("overridden presentation cannot hide no-change detection", async (t) => {
 	const result = await plan(t, unrelatedChanges, {
-		releaseConfig:
+		configOverrides:
 			"tag-prefix: v\ntag-template: v$RESOLVED_VERSION\ntemplate: Hidden\nno-changes-template: Hidden\n",
 		previousTag: "v1.2.3",
 	});
-	assert.equal(result.hasChanges, false);
+	assert.equal(result.shouldRelease, false);
 });
 
 test("release notes inherit categories and compare the resolved overridden tag", async (t) => {
@@ -326,7 +325,7 @@ test("release notes inherit categories and compare the resolved overridden tag",
 		t,
 		[change(1, "feat: expose API", "images/widget/Dockerfile")],
 		{
-			releaseConfig: '{"tag-prefix":"v","tag-template":"v$RESOLVED_VERSION"}',
+			configOverrides: '{"tag-prefix":"v","tag-template":"v$RESOLVED_VERSION"}',
 			previousTag: "v1.2.3",
 			renderNotes: true,
 		},
@@ -337,7 +336,7 @@ test("release notes inherit categories and compare the resolved overridden tag",
 	assert.doesNotMatch(result.body, /\$RESOLVED_TAG/);
 });
 
-for (const source of ["releaseConfig", "repositoryConfig"]) {
+for (const source of ["configOverrides", "repositoryConfig"]) {
 	test(`${source} categories replace the inherited release scope and version rules`, async (t) => {
 		const result = await plan(
 			t,
@@ -370,7 +369,7 @@ test("a partial repository file inherits version rules and release note defaults
 	const changes = [change(1, "feat: expose API", "images/widget/Dockerfile")];
 	const result = await plan(t, changes, options);
 	assert.equal(result.tag, "v1.3.0");
-	assert.equal(result.hasChanges, true);
+	assert.equal(result.shouldRelease, true);
 	const notes = await plan(t, changes, { ...options, renderNotes: true });
 	assert.match(notes.body, /### Features/);
 	assert.match(notes.body, /compare\/v1\.2\.3\.\.\.v1\.3\.0/);
@@ -383,17 +382,17 @@ test("workflow settings override repository settings while retaining omitted fie
 		{
 			repositoryConfig:
 				"tag-prefix: repo-\ntag-template: repo-$RESOLVED_VERSION\nname-template: From file $RESOLVED_VERSION\nheader: Repository header\n",
-			releaseConfig:
+			configOverrides:
 				"tag-prefix: input-\ntag-template: input-$RESOLVED_VERSION\n",
 			previousTag: "input-1.2.3",
 		},
 	);
 	assert.equal(result.tag, "input-1.3.0");
 	assert.equal(result.name, "From file 1.3.0");
-	assert.equal(result.hasChanges, true);
+	assert.equal(result.shouldRelease, true);
 });
 
-test("an empty categories list clears inherited path filtering and version rules", async (t) => {
+test("an empty categories list clears version rules while preserving the repository scope", async (t) => {
 	const result = await plan(
 		t,
 		[change(1, "feat: outside scope", "images/other/Dockerfile")],
@@ -404,9 +403,71 @@ test("an empty categories list clears inherited path filtering and version rules
 					{ title: "Features", "semver-increment": "minor" },
 				],
 			}),
-			releaseConfig: "categories: []",
+			configOverrides: "categories: []",
 		},
 	);
-	assert.equal(result.hasChanges, true);
+	assert.equal(result.shouldRelease, false);
 	assert.equal(result.tag, "widget-1.2.4");
+});
+
+for (const source of ["configOverrides", "repositoryConfig"]) {
+	for (const categories of [
+		[],
+		[{ title: "Custom", "semver-increment": "minor" }],
+	]) {
+		test(`${source} with ${categories.length} changelog categories preserves the directory and additional paths`, async (t) => {
+			const result = await plan(
+				t,
+				[
+					...unrelatedChanges,
+					change(3, "fix: repair widget", "images/widget/Dockerfile"),
+					change(4, "fix: repair shared script", "shared/build.sh"),
+				],
+				{
+					paths: '["shared/**"]',
+					[source]: JSON.stringify({ categories }),
+					renderNotes: true,
+				},
+			);
+			assert.equal(
+				result.tag,
+				categories.length ? "widget-1.3.0" : "widget-1.2.4",
+			);
+			assert.match(result.body, /#3/);
+			assert.match(result.body, /#4/);
+			assert.doesNotMatch(result.body, /#1|#2|### Features/);
+		});
+	}
+}
+
+test("category overrides retain an explicit repository pre-include filter", async (t) => {
+	const result = await plan(
+		t,
+		[
+			change(1, "feat!: outside repository scope", "images/widget/Dockerfile"),
+			change(2, "fix: inside repository scope", "images/other/Dockerfile"),
+		],
+		{
+			repositoryConfig: JSON.stringify({
+				categories: [
+					{ type: "pre-include", when: { paths: ["images/other/**"] } },
+				],
+			}),
+			configOverrides:
+				'categories: [{title: "Custom", semver-increment: minor}]',
+			renderNotes: true,
+		},
+	);
+	assert.equal(result.tag, "widget-1.3.0");
+	assert.match(result.body, /#2/);
+	assert.doesNotMatch(result.body, /#1/);
+});
+
+test("an unconditional pre-include explicitly enables repository-wide changes", async (t) => {
+	const result = await plan(t, unrelatedChanges, {
+		configOverrides: "categories: [{type: pre-include}]",
+	});
+	assert.equal(result.shouldRelease, true);
+	assert.match(result.body, /#1/);
+	assert.match(result.body, /#2/);
 });

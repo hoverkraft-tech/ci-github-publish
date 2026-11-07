@@ -18,7 +18,8 @@ on:
         description: |
           Working directory used to scope release preparation in a monorepo.
           If specified, the workflow looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-          Generated defaults scope changes to the working directory with a `pre-include` category. Repository categories replace these defaults, including path filters and version rules.
+          Generated defaults scope changes to the working directory with a `pre-include` category. Repository categories replace changelog and version rules while preserving this scope unless they include an explicit `pre-include` category.
+          Repository files with their own _extends chain use native Release Drafter inheritance instead of generated defaults and scope preservation.
           The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
           They also apply Conventional Commit labels.
           They credit co-authors and highlight new contributors, with an explicit empty state when there are none.

@@ -13,7 +13,7 @@
 
 ## Overview
 
-Verify that release artifacts belong to this run and commit, reject conflicting tags, and identify already published releases without changing repository state.
+Verify release tags and publication state without changing the repository. When artifacts are supplied, also verify their workflow run and source commit.
 
 <!-- overview:end -->
 <!-- usage:start -->
@@ -21,11 +21,11 @@ Verify that release artifacts belong to this run and commit, reject conflicting 
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/verify@f06e0e72a76bfca57c34d08d03e5c1914275fd4c # 2.0.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/verify@<commit-sha>
   with:
-    # JSON array of validated artifact IDs from this workflow run and source commit. Require successful producer jobs with needs; artifact metadata does not prove validation passed.
-    # This input is required.
-    artifact-ids: ""
+    # Optional JSON array of validated artifact IDs from this workflow run and source commit. Omit for source-only releases. Supplied artifacts must pass all identity checks. Require successful validation jobs with needs; this action does not prove validation passed.
+    # Default: `[]`
+    artifact-ids: "[]"
 
     # JSON array of release tags. Existing lightweight or annotated tags must resolve to this workflow's source commit. Package-specific version validation belongs to the caller.
     # This input is required.
@@ -41,11 +41,11 @@ Verify that release artifacts belong to this run and commit, reject conflicting 
 
 ## Inputs
 
-| **Input**          | **Description**                                                                                                                                                                 | **Required** | **Default** |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
-| **`artifact-ids`** | JSON array of validated artifact IDs from this workflow run and source commit. Require successful producer jobs with needs; artifact metadata does not prove validation passed. | **true**     | -           |
-| **`tags`**         | JSON array of release tags. Existing lightweight or annotated tags must resolve to this workflow's source commit. Package-specific version validation belongs to the caller.    | **true**     | -           |
-| **`require-tags`** | Require every tag to exist already, for releases prepared before validation. Leave false when publication creates new source tags.                                              | **false**    | `false`     |
+| **Input**          | **Description**                                                                                                                                                                                                                                                       | **Required** | **Default** |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
+| **`artifact-ids`** | Optional JSON array of validated artifact IDs from this workflow run and source commit. Omit for source-only releases. Supplied artifacts must pass all identity checks. Require successful validation jobs with needs; this action does not prove validation passed. | **false**    | `[]`        |
+| **`tags`**         | JSON array of release tags. Existing lightweight or annotated tags must resolve to this workflow's source commit. Package-specific version validation belongs to the caller.                                                                                          | **true**     | -           |
+| **`require-tags`** | Require every tag to exist already, for releases prepared before validation. Leave false when publication creates new source tags.                                                                                                                                    | **false**    | `false`     |
 
 <!-- inputs:end -->
 <!-- secrets:start -->

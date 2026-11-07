@@ -40,12 +40,19 @@ Detect release changes and plan a release identity without creating a Git tag or
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@f06e0e72a76bfca57c34d08d03e5c1914275fd4c # 2.0.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@<commit-sha>
   with:
     # Optional partial Release Drafter configuration as a YAML or JSON mapping.
     # Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.
     # Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.
     release-config: ""
+
+    # Plan a release even without relevant changes, using the version, tag and name calculated by Release Drafter.
+    # Configured version rules and identity templates remain authoritative. Existing tag collisions still fail; tags are never created or moved.
+    # Callers decide when forcing is allowed, for example only on manual default-branch runs.
+    #
+    # Default: `false`
+    force: "false"
 
     # Whether to plan the release as a prerelease
     # Default: `false`
@@ -91,6 +98,9 @@ Detect release changes and plan a release identity without creating a Git tag or
 | **`release-config`**    | Optional partial Release Drafter configuration as a YAML or JSON mapping.                                                                                                              | **false**    | -                     |
 |                         | Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.                                                      |              |                       |
 |                         | Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.                                                            |              |                       |
+| **`force`**             | Plan a release even without relevant changes, using the version, tag and name calculated by Release Drafter.                                                                           | **false**    | `false`               |
+|                         | Configured version rules and identity templates remain authoritative. Existing tag collisions still fail; tags are never created or moved.                                             |              |                       |
+|                         | Callers decide when forcing is allowed, for example only on manual default-branch runs.                                                                                                |              |                       |
 | **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                                                            | **false**    | `false`               |
 | **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                                      | **false**    | -                     |
 |                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                  |              |                       |
@@ -117,11 +127,11 @@ Detect release changes and plan a release identity without creating a Git tag or
 
 ## Outputs
 
-| **Output**        | **Description**                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------------------------ |
-| **`has-changes`** | Whether the release has relevant changes, or no previous matching release exists (true or false) |
-| **`tag`**         | The planned release tag, including when there are no relevant changes                            |
-| **`name`**        | The planned release name, including when there are no relevant changes                           |
+| **Output**        | **Description**                                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| **`has-changes`** | Whether there are relevant changes, no previous matching release, or an explicit force request (true or false) |
+| **`tag`**         | The planned release tag, including when there are no relevant changes                                          |
+| **`name`**        | The planned release name, including when there are no relevant changes                                         |
 
 <!-- outputs:end -->
 

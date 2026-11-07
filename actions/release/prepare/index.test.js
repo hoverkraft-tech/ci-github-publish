@@ -92,6 +92,38 @@ test("action loads generated configuration with repository inheritance and emits
 	assert.deepEqual(writes, []);
 });
 
+test("no-change planning delegates version rules and identity templates to Release Drafter", async (t) => {
+	for (const entry of [
+		{ increment: "minor", versionTemplate: "$MAJOR.$MINOR", expected: "1.3" },
+		{
+			increment: "major",
+			versionTemplate: "$MAJOR.$MINOR.$PATCH",
+			expected: "2.0.0",
+		},
+	]) {
+		const { workspace, input, outputs, writes } = await fixture(t);
+		await fs.writeFile(
+			path.join(workspace, ".github", "release.yml"),
+			JSON.stringify({
+				"tag-prefix": "",
+				"tag-template": "train-$RESOLVED_VERSION-final",
+				"name-template": "Release $RESOLVED_VERSION / protocol 1.2.0",
+				"version-template": entry.versionTemplate,
+				categories: [
+					{ type: "version-resolver", "semver-increment": entry.increment },
+				],
+				template: "$PREVIOUS_TAG\n$CHANGES",
+				"no-changes-template": "No changes detected",
+			}),
+		);
+		await run(input);
+		assert.equal(outputs.tag_name, `train-${entry.expected}-final`);
+		assert.equal(outputs.name, `Release ${entry.expected} / protocol 1.2.0`);
+		assert.equal(outputs.body, "1.2.0\nNo changes detected");
+		assert.deepEqual(writes, []);
+	}
+});
+
 test("explicit drafting uses the planned tag and tested commit without publishing", async (t) => {
 	const { input, outputs, writes } = await fixture(t);
 	input.env.RELEASE_DRY_RUN = "false";

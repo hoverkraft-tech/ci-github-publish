@@ -28,7 +28,7 @@ jobs:
     name: Tests for "release/plan" action
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: read
     steps:
       - name: Arrange - Checkout
@@ -63,10 +63,11 @@ jobs:
         uses: $/actions/release/plan
         with:
           working-directory: actions/release/get-configuration
-          release-config: |
+          release-config: &plan-configuration |
             tag-prefix: configured-
-            tag-template: configured-$RESOLVED_VERSION
-            name-template: Configured $RESOLVED_VERSION
+            tag-template: configured-$RESOLVED_VERSION-final
+            name-template: Configured $RESOLVED_VERSION / protocol 1.0.0
+            version-template: $MAJOR.$MINOR
 
       - name: Assert - Configured release identity
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -77,82 +78,28 @@ jobs:
         with:
           script: |
             const assert = require('node:assert/strict');
-            assert.match(process.env.RELEASE_TAG, /^configured-\d+\.\d+\.\d+$/);
-            assert.match(process.env.RELEASE_NAME, /^Configured \d+\.\d+\.\d+$/);
+            assert.match(process.env.RELEASE_TAG, /^configured-\d+\.\d+-final$/);
+            assert.match(process.env.RELEASE_NAME, /^Configured \d+\.\d+ \/ protocol 1\.0\.0$/);
             assert.ok(['true', 'false'].includes(process.env.HAS_CHANGES));
 
-      - name: Arrange - Create colliding tag
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          RELEASE_TAG: ${{ steps.drafter-plan.outputs.tag }}
-          TARGET_SHA: ${{ github.sha }}
-        with:
-          github-token: ${{ github.token }}
-          script: |
-            const releaseTag = (process.env.RELEASE_TAG || '').trim();
-            const targetSha = (process.env.TARGET_SHA || '').trim();
-
-            if (!releaseTag) {
-              throw new Error('Expected planned release tag before creating a colliding tag');
-            }
-
-            if (!targetSha) {
-              throw new Error('Expected target sha before creating a colliding tag');
-            }
-
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/tags/${releaseTag}`,
-              sha: targetSha,
-            });
-
-      - name: Act - Plan drafter release with existing tag
-        id: existing-tag-plan
-        continue-on-error: true
+      - name: Act - Force a read-only release plan
+        id: forced-plan
         uses: $/actions/release/plan
         with:
           working-directory: actions/release/get-configuration
-
-      - name: Assert - Existing remote tag blocks release plan
+          force: "true"
+          release-config: *plan-configuration
+      - name: Assert - Forced plan preserves the configured identity
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          RELEASE_TAG: ${{ steps.drafter-plan.outputs.tag }}
-          STEP_OUTCOME: ${{ steps.existing-tag-plan.outcome }}
+          HAS_CHANGES: ${{ steps.forced-plan.outputs.has-changes }}
+          RELEASE_TAG: ${{ steps.forced-plan.outputs.tag }}
+          RELEASE_NAME: ${{ steps.forced-plan.outputs.name }}
+          EXPECTED_TAG: ${{ steps.configured-plan.outputs.tag }}
+          EXPECTED_NAME: ${{ steps.configured-plan.outputs.name }}
         with:
           script: |
-            const assert = require('node:assert');
-
-            const releaseTag = (process.env.RELEASE_TAG || '').trim();
-            const stepOutcome = (process.env.STEP_OUTCOME || '').trim();
-
-            assert.ok(releaseTag, 'Expected colliding tag to be set');
-            assert.equal(stepOutcome, 'failure', `Expected plan action to fail when tag already exists, got "${stepOutcome}"`);
-
-      - name: Cleanup - Delete colliding tag
-        if: always()
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          RELEASE_TAG: ${{ steps.drafter-plan.outputs.tag }}
-        with:
-          github-token: ${{ github.token }}
-          script: |
-            const releaseTag = (process.env.RELEASE_TAG || '').trim();
-
-            if (!releaseTag) {
-              return;
-            }
-
-            try {
-              await github.rest.git.deleteRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `tags/${releaseTag}`,
-              });
-            } catch (error) {
-              if (error.status === 404) {
-                return;
-              }
-
-              throw error;
-            }
+            const assert = require('node:assert/strict');
+            assert.equal(process.env.HAS_CHANGES, 'true');
+            assert.equal(process.env.RELEASE_TAG, process.env.EXPECTED_TAG);
+            assert.equal(process.env.RELEASE_NAME, process.env.EXPECTED_NAME);

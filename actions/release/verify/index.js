@@ -4,11 +4,11 @@ class ReleaseVerification {
 		this.context = context;
 	}
 
-	async verify({ artifactIds, tags, requireTags = false }) {
+	async verify({ artifactIds = [], tags, requireTags = false }) {
 		for (const [name, values] of Object.entries({ artifactIds, tags })) {
 			if (
 				!Array.isArray(values) ||
-				!values.length ||
+				(name === "tags" && !values.length) ||
 				values.length > 256 ||
 				values.some(
 					(value) =>
@@ -17,7 +17,7 @@ class ReleaseVerification {
 				new Set(values).size !== values.length
 			) {
 				throw new Error(
-					`${name} must be a nonempty array of unique strings, with at most 256 entries.`,
+					`${name} must be an array of unique strings, with at most 256 entries; tags must not be empty.`,
 				);
 			}
 		}

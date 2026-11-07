@@ -40,11 +40,12 @@ Detect release changes and plan a release identity without creating a Git tag or
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@f06e0e72a76bfca57c34d08d03e5c1914275fd4c # 2.0.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@d983bd6279de308518b8b8df7c51e179fd50bffb # main
   with:
     # Optional partial Release Drafter configuration as a YAML or JSON mapping.
     # Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.
     # Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.
+    # Replacing categories also replaces generated path filters and version rules.
     release-config: ""
 
     # Plan a release even without relevant changes, using the version, tag and name calculated by Release Drafter.
@@ -60,7 +61,7 @@ Detect release changes and plan a release identity without creating a Git tag or
 
     # Working directory used to scope release automation in a monorepo.
     # If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.
-    # Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults include the working directory in include-paths.
+    # Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults scope changes to the working directory with a `pre-include` category.
     # The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.
     # They also define Conventional Commit labels.
     # They credit co-authors and highlight new contributors, with an explicit empty state when there are none.
@@ -69,7 +70,7 @@ Detect release changes and plan a release identity without creating a Git tag or
     # Additional paths to include in generated release notes and version calculation (JSON array).
     # These paths are added to the working-directory scope when one is specified.
     # Add the calling workflow path explicitly to include workflow-only changes.
-    # An include-paths setting in the repository configuration or release-config input replaces this generated scope.
+    # To replace this scope, supply categories in the repository configuration or release-config input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.
     #
     # Default: `[]`
     include-paths: "[]"
@@ -93,31 +94,32 @@ Detect release changes and plan a release identity without creating a Git tag or
 
 ## Inputs
 
-| **Input**               | **Description**                                                                                                                                                                        | **Required** | **Default**           |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| **`release-config`**    | Optional partial Release Drafter configuration as a YAML or JSON mapping.                                                                                                              | **false**    | -                     |
-|                         | Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.                                                      |              |                       |
-|                         | Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.                                                            |              |                       |
-| **`force`**             | Plan a release even without relevant changes, using the version, tag and name calculated by Release Drafter.                                                                           | **false**    | `false`               |
-|                         | Configured version rules and identity templates remain authoritative. Existing tag collisions still fail; tags are never created or moved.                                             |              |                       |
-|                         | Callers decide when forcing is allowed, for example only on manual default-branch runs.                                                                                                |              |                       |
-| **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                                                            | **false**    | `false`               |
-| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                                      | **false**    | -                     |
-|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                  |              |                       |
-|                         | Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults include the working directory in include-paths. |              |                       |
-|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.          |              |                       |
-|                         | They also define Conventional Commit labels.                                                                                                                                           |              |                       |
-|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                               |              |                       |
-| **`include-paths`**     | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                           | **false**    | `[]`                  |
-|                         | These paths are added to the working-directory scope when one is specified.                                                                                                            |              |                       |
-|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                             |              |                       |
-|                         | An include-paths setting in the repository configuration or release-config input replaces this generated scope.                                                                        |              |                       |
-| **`target-sha`**        | Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.                                                                                                | **false**    | -                     |
-|                         | Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.                                                                                    |              |                       |
-| **`github-token`**      | GitHub Token for planning the release.                                                                                                                                                 | **false**    | `${{ github.token }}` |
-|                         | Permissions:                                                                                                                                                                           |              |                       |
-|                         | - contents: read                                                                                                                                                                       |              |                       |
-|                         | - pull-requests: read                                                                                                                                                                  |              |                       |
+| **Input**               | **Description**                                                                                                                                                                                              | **Required** | **Default**           |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ | --------------------- |
+| **`release-config`**    | Optional partial Release Drafter configuration as a YAML or JSON mapping.                                                                                                                                    | **false**    | -                     |
+|                         | Supplied top-level keys override repository settings, which inherit shared defaults unless they declare their own _extends chain.                                                                            |              |                       |
+|                         | Mappings and lists are replaced. Pass identical overrides to release/plan and release/create. The _extends key is reserved.                                                                                  |              |                       |
+|                         | Replacing categories also replaces generated path filters and version rules.                                                                                                                                 |              |                       |
+| **`force`**             | Plan a release even without relevant changes, using the version, tag and name calculated by Release Drafter.                                                                                                 | **false**    | `false`               |
+|                         | Configured version rules and identity templates remain authoritative. Existing tag collisions still fail; tags are never created or moved.                                                                   |              |                       |
+|                         | Callers decide when forcing is allowed, for example only on manual default-branch runs.                                                                                                                      |              |                       |
+| **`prerelease`**        | Whether to plan the release as a prerelease                                                                                                                                                                  | **false**    | `false`               |
+| **`working-directory`** | Working directory used to scope release automation in a monorepo.                                                                                                                                            | **false**    | -                     |
+|                         | If specified, the action looks for `.github/release-configs/{slug}.yml`, where `slug` is derived from the working directory basename.                                                                        |              |                       |
+|                         | Repository configuration files override generated defaults unless they explicitly declare their own _extends chain. Generated defaults scope changes to the working directory with a `pre-include` category. |              |                       |
+|                         | The generated defaults follow Conventional Commits and Semantic Versioning: breaking changes increment major, `feat` increments minor, and all other changes increment patch.                                |              |                       |
+|                         | They also define Conventional Commit labels.                                                                                                                                                                 |              |                       |
+|                         | They credit co-authors and highlight new contributors, with an explicit empty state when there are none.                                                                                                     |              |                       |
+| **`include-paths`**     | Additional paths to include in generated release notes and version calculation (JSON array).                                                                                                                 | **false**    | `[]`                  |
+|                         | These paths are added to the working-directory scope when one is specified.                                                                                                                                  |              |                       |
+|                         | Add the calling workflow path explicitly to include workflow-only changes.                                                                                                                                   |              |                       |
+|                         | To replace this scope, supply categories in the repository configuration or release-config input with a `type: pre-include` entry using `when.paths`, plus the desired changelog and version rules.          |              |                       |
+| **`target-sha`**        | Optional branch, commit SHA, fully qualified tag ref, or pull request ref to plan from.                                                                                                                      | **false**    | -                     |
+|                         | Forwarded to Release Drafter as `commitish`; tag and pull request refs are resolved to commit SHAs.                                                                                                          |              |                       |
+| **`github-token`**      | GitHub Token for planning the release.                                                                                                                                                                       | **false**    | `${{ github.token }}` |
+|                         | Permissions:                                                                                                                                                                                                 |              |                       |
+|                         | - contents: read                                                                                                                                                                                             |              |                       |
+|                         | - pull-requests: read                                                                                                                                                                                        |              |                       |
 
 <!-- inputs:end -->
 
@@ -176,7 +178,7 @@ jobs:
       tag: ${{ steps.plan.outputs.tag }}
     steps:
       - id: plan
-        uses: hoverkraft-tech/ci-github-publish/actions/release/plan@f06e0e72a76bfca57c34d08d03e5c1914275fd4c # 2.0.0
+        uses: hoverkraft-tech/ci-github-publish/actions/release/plan@d983bd6279de308518b8b8df7c51e179fd50bffb # main
 
   release:
     needs: plan

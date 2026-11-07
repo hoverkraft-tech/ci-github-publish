@@ -141,7 +141,7 @@ test("detection configuration inherits release rules without rewriting user file
 	const configPath = "release-configs/package-a.yml";
 	const originalPath = path.join(workspace, ".github", configPath);
 	const original =
-		'_extends: shared.yml\ninclude-paths: [packages/a]\nno-changes-template: |\n  Nothing new\ntemplate: Custom body without changes\nreplacers:\n  - search: ".*"\n    replace: ""\n';
+		'_extends: shared.yml\ncategories:\n  - type: pre-include\n    when:\n      paths: [packages/a]\nno-changes-template: |\n  Nothing new\ntemplate: Custom body without changes\nreplacers:\n  - search: ".*"\n    replace: ""\n';
 	fs.writeFileSync(originalPath, original);
 
 	const result = prepareConfiguration({ workspace, runnerTemp, configPath });
@@ -169,7 +169,10 @@ test("generated configuration outside the repository is supported", (t) => {
 	);
 	t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
 	const originalPath = path.join(workspace, "generated.yml");
-	fs.writeFileSync(originalPath, "include-paths: [packages/a]\n");
+	fs.writeFileSync(
+		originalPath,
+		"categories:\n  - type: pre-include\n    when:\n      paths: [packages/a]\n",
+	);
 	const result = prepareConfiguration({
 		workspace,
 		runnerTemp: workspace,

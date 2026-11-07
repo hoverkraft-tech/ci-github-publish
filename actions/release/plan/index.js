@@ -84,7 +84,7 @@ async function resolvePlan({
 		throw new Error(`Remote tag already exists: ${releaseTag}`);
 	}
 	return {
-		hasChanges: hasChanges || force,
+		shouldRelease: hasChanges || force,
 		tag: releaseTag,
 		name: name?.trim() || releaseTag,
 	};

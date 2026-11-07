@@ -48,7 +48,7 @@ function fixture(
 						defaults,
 					),
 					repositoryConfigPath: "release-config.yml",
-					releaseConfig: input,
+					configOverrides: input,
 				},
 			});
 			const target = path.resolve(workspace, ".github", outputs["config-path"]);
@@ -94,6 +94,21 @@ test("repository files with explicit inheritance keep their original path withou
 	const { target } = await f.apply("");
 	assert.equal(target, f.base);
 	assert.equal(f.outputs["is-generated"], "false");
+	assert.equal(fs.readFileSync(f.base, "utf8"), f.source);
+});
+
+test("repository-owned inheritance uses native category replacement without generated scope", async (t) => {
+	const f = fixture(t);
+	fs.writeFileSync(
+		f.defaults,
+		"categories: [{type: pre-include, when: {paths: [images/widget]}}]\n",
+	);
+	const { target, config } = await f.apply("categories: []");
+	assert.deepEqual(config.categories, []);
+	assert.equal(
+		path.resolve(path.dirname(target), config._extends.slice(5)),
+		f.base,
+	);
 	assert.equal(fs.readFileSync(f.base, "utf8"), f.source);
 });
 

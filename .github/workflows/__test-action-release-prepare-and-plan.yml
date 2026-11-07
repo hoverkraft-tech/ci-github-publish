@@ -47,12 +47,12 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.drafter-plan.outputs.tag }}
           RELEASE_NAME: ${{ steps.drafter-plan.outputs.name }}
-          HAS_CHANGES: ${{ steps.drafter-plan.outputs.has-changes }}
+          SHOULD_RELEASE: ${{ steps.drafter-plan.outputs.should-release }}
         with:
           script: |
             const assert = require('node:assert');
 
-            assert.ok(['true', 'false'].includes(process.env.HAS_CHANGES), 'Expected a boolean has-changes output');
+            assert.ok(['true', 'false'].includes(process.env.SHOULD_RELEASE), 'Expected a boolean should-release output');
             assert.ok(process.env.RELEASE_TAG, 'Expected planned tag to be set');
             assert.ok(process.env.RELEASE_TAG.startsWith('get-configuration-'), `Expected tag to start with "get-configuration-", got "${process.env.RELEASE_TAG}"`);
             assert.ok(process.env.RELEASE_NAME, 'Expected planned name to be set');
@@ -63,7 +63,7 @@ jobs:
         uses: $/actions/release/plan
         with:
           working-directory: actions/release/get-configuration
-          release-config: &plan-configuration |
+          config-overrides: &plan-configuration |
             tag-prefix: configured-
             tag-template: configured-$RESOLVED_VERSION-final
             name-template: Configured $RESOLVED_VERSION / protocol 1.0.0
@@ -74,13 +74,13 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.configured-plan.outputs.tag }}
           RELEASE_NAME: ${{ steps.configured-plan.outputs.name }}
-          HAS_CHANGES: ${{ steps.configured-plan.outputs.has-changes }}
+          SHOULD_RELEASE: ${{ steps.configured-plan.outputs.should-release }}
         with:
           script: |
             const assert = require('node:assert/strict');
             assert.match(process.env.RELEASE_TAG, /^configured-\d+\.\d+-final$/);
             assert.match(process.env.RELEASE_NAME, /^Configured \d+\.\d+ \/ protocol 1\.0\.0$/);
-            assert.ok(['true', 'false'].includes(process.env.HAS_CHANGES));
+            assert.ok(['true', 'false'].includes(process.env.SHOULD_RELEASE));
 
       - name: Act - Force a read-only release plan
         id: forced-plan
@@ -88,11 +88,11 @@ jobs:
         with:
           working-directory: actions/release/get-configuration
           force: "true"
-          release-config: *plan-configuration
+          config-overrides: *plan-configuration
       - name: Assert - Forced plan preserves the configured identity
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          HAS_CHANGES: ${{ steps.forced-plan.outputs.has-changes }}
+          SHOULD_RELEASE: ${{ steps.forced-plan.outputs.should-release }}
           RELEASE_TAG: ${{ steps.forced-plan.outputs.tag }}
           RELEASE_NAME: ${{ steps.forced-plan.outputs.name }}
           EXPECTED_TAG: ${{ steps.configured-plan.outputs.tag }}
@@ -100,6 +100,6 @@ jobs:
         with:
           script: |
             const assert = require('node:assert/strict');
-            assert.equal(process.env.HAS_CHANGES, 'true');
+            assert.equal(process.env.SHOULD_RELEASE, 'true');
             assert.equal(process.env.RELEASE_TAG, process.env.EXPECTED_TAG);
             assert.equal(process.env.RELEASE_NAME, process.env.EXPECTED_NAME);

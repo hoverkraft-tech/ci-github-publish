@@ -38,7 +38,7 @@ test("unchanged release still produces the planned identity", async () => {
 		body: `${marker}:v1.0.0\n${marker}:no-changes`,
 	});
 	assert.deepEqual(await resolvePlan(input), {
-		hasChanges: false,
+		shouldRelease: false,
 		tag: "v1.1.0",
 		name: "Version 1.1.0",
 	});
@@ -48,7 +48,7 @@ test("unchanged release still produces the planned identity", async () => {
 test("relevant changes produce the planned identity", async () => {
 	const { input, calls } = fixture();
 	assert.deepEqual(await resolvePlan(input), {
-		hasChanges: true,
+		shouldRelease: true,
 		tag: "v1.1.0",
 		name: "Version 1.1.0",
 	});
@@ -59,7 +59,7 @@ test("first release is allowed without comparison history", async () => {
 	const { input } = fixture({
 		body: `${marker}:\n${marker}:no-changes\n---\nNo previous release\n`,
 	});
-	assert.equal((await resolvePlan(input)).hasChanges, true);
+	assert.equal((await resolvePlan(input)).shouldRelease, true);
 });
 
 test("filtered monorepo and prerelease plans report no changes with an identity", async () => {
@@ -68,7 +68,7 @@ test("filtered monorepo and prerelease plans report no changes with an identity"
 			body: `${marker}:${previousTag}\n${marker}:no-changes`,
 		});
 		const plan = await resolvePlan(input);
-		assert.equal(plan.hasChanges, false);
+		assert.equal(plan.shouldRelease, false);
 		assert.equal(plan.tag, "v1.1.0");
 		assert.equal(calls.length, 1);
 	}
@@ -224,7 +224,7 @@ test("force plans an unchanged release without lowering the planned version", as
 		force: true,
 	});
 	assert.deepEqual(await resolvePlan(input), {
-		hasChanges: true,
+		shouldRelease: true,
 		tag: "v1.1.0",
 		name: "Version 1.1.0",
 	});
@@ -243,7 +243,11 @@ test("force preserves custom tag and name formats from Release Drafter", async (
 			name,
 			force: true,
 		});
-		assert.deepEqual(await resolvePlan(input), { hasChanges: true, tag, name });
+		assert.deepEqual(await resolvePlan(input), {
+			shouldRelease: true,
+			tag,
+			name,
+		});
 		assert.deepEqual(calls, [{ ...repo, ref: `tags/${tag}` }]);
 	}
 });

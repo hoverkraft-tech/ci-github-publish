@@ -72,7 +72,7 @@ jobs:
         uses: $/actions/release/get-configuration
         with:
           working-directory: actions/release/get-configuration
-          include-paths: '["actions/release/create"]'
+          additional-paths: '["actions/release/create"]'
 
       - name: Assert - Generated temp config
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -133,7 +133,7 @@ jobs:
         id: overridden-config
         uses: $/actions/release/get-configuration
         with:
-          release-config: |
+          config-overrides: |
             tag-prefix: v
             tag-template: v$RESOLVED_VERSION
             categories: []

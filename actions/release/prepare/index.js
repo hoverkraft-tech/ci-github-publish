@@ -69,7 +69,7 @@ export async function run({ core, context, env = process.env, adapter }) {
 		logger: core,
 	});
 
-	core.setOutput("tag_name", result.releasePayload.tag);
+	core.setOutput("tag", result.releasePayload.tag);
 	core.setOutput("name", result.releasePayload.name);
 	core.setOutput("body", result.releasePayload.body);
 }

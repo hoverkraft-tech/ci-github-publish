@@ -12,6 +12,13 @@ function run({ core, inputs }) {
 	};
 	const githubDirectory = path.join(inputs.workspace, ".github");
 	let baseConfig = path.resolve(githubDirectory, inputs.baseConfigPath);
+	const defaults = mapping(
+		fs.readFileSync(baseConfig, "utf8"),
+		"Generated defaults",
+	);
+	let scope = (defaults.categories || []).filter(
+		(category) => category.type === "pre-include",
+	);
 	const repositoryConfig = inputs.repositoryConfigPath
 		? path.resolve(githubDirectory, inputs.repositoryConfigPath)
 		: "";
@@ -19,6 +26,19 @@ function run({ core, inputs }) {
 		path.join(inputs.runnerTemp, "release-config-"),
 	);
 	const inherit = (configuration, filename) => {
+		if (Array.isArray(configuration.categories)) {
+			const explicitScope = configuration.categories.filter(
+				(category) => category?.type === "pre-include",
+			);
+			if (explicitScope.length) {
+				scope = explicitScope;
+			} else if (scope.length) {
+				configuration = {
+					...configuration,
+					categories: [...scope, ...configuration.categories],
+				};
+			}
+		}
 		const target = path.join(directory, filename);
 		const content = {
 			...configuration,
@@ -36,15 +56,17 @@ function run({ core, inputs }) {
 		);
 		if (Object.hasOwn(repository, "_extends")) {
 			baseConfig = repositoryConfig;
+			// An explicit inheritance chain owns its defaults and merge semantics.
+			scope = [];
 		} else {
 			inherit(repository, "repository.json");
 		}
 	}
-	if (inputs.releaseConfig) {
-		const overrides = mapping(inputs.releaseConfig, "release-config");
+	if (inputs.configOverrides) {
+		const overrides = mapping(inputs.configOverrides, "config-overrides");
 		if (Object.hasOwn(overrides, "_extends")) {
 			throw new Error(
-				"release-config cannot override _extends; repository configuration inheritance is preserved automatically.",
+				"config-overrides cannot override _extends; repository configuration inheritance is preserved automatically.",
 			);
 		}
 		inherit(overrides, "overrides.json");

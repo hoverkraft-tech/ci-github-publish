@@ -40,7 +40,7 @@ Detect release changes and plan a release identity without creating a Git tag or
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@647b53a3e08fb4ea2c477fc6f79dcba94b1395e1 # fix/release-drafter-path-categories
+- uses: hoverkraft-tech/ci-github-publish/actions/release/plan@d983bd6279de308518b8b8df7c51e179fd50bffb # 2.1.0
   with:
     # Optional partial Release Drafter configuration as a YAML or JSON mapping.
     # Precedence: generated defaults, repository configuration, then these overrides.

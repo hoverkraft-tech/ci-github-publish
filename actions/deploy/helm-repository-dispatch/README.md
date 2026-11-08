@@ -45,7 +45,7 @@ See <https://docs.github.com/en/actions/writing-workflows/choosing-when-your-wor
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deploy/helm-repository-dispatch@a0a9d185c51c10710a5987822e78feb2b5ce1932 # 0.29.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deploy/helm-repository-dispatch@b942fb00f3115ca70f98f45f2289cc9838eb9312 # 3.0.0
   with:
     # Deployment ID to be used in the ArgoCD application manifest
     # This input is required.

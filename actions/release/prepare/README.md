@@ -40,7 +40,7 @@ Use release/plan for change detection and release/create to create or publish re
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/prepare@d983bd6279de308518b8b8df7c51e179fd50bffb # 2.1.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/prepare@b942fb00f3115ca70f98f45f2289cc9838eb9312 # 3.0.0
   with:
     # Release Drafter configuration target, relative to .github, including file: targets.
     # This input is required.

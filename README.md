@@ -165,7 +165,7 @@ actions/{category}/{action-name}/
 
 1. **Consistent branding**: All actions use `author: hoverkraft`, `icon: <specific-icon>`, `color: blue`
 2. **Composite actions**: Use `using: "composite"` with GitHub Script for complex logic
-3. **Pinned dependencies**: Pin external action versions with SHA (e.g., `@ed597411d8f924073f98dfc5c65a23a2325f34cd`); use `$/` references for actions in this repository
+3. **Pinned dependencies**: Pin external action versions with SHA (e.g., `@3a2844b7e9c422d3c10d287c895573f7108da1b3`); use `$/` references for actions in this repository
 4. **Input validation**: Validate inputs early in GitHub Script steps
 
 #### JavaScript Patterns
@@ -223,7 +223,7 @@ advisory and its dependent packages until an upstream fix is available.
 1. **Pinned Dependencies**: Use exact SHA commits for external action dependencies:
 
    ```yaml
-   uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+   uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
    ```
 
    Reference actions in this repository from its root with `$/`:

@@ -72,7 +72,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: hoverkraft-tech/ci-github-common/actions/checkout@4a6ed33ba735d57ebbcd89fe8ed35134de599a67 # 0.39.2
+    - uses: hoverkraft-tech/ci-github-common/actions/checkout@d92fc45447587bab1daef3834b6596fb09a76292 # 2.0.1
       with:
         fetch-depth: "0"
         ref: ${{ inputs.target-ref || github.sha }}

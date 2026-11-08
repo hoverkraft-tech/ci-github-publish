@@ -89,7 +89,7 @@ runs:
           core.setOutput('temp-config-path', tempConfigRelativePath);
 
     - if: steps.resolve-config-paths.outputs.requires-checkout == 'true'
-      uses: hoverkraft-tech/ci-github-common/actions/checkout@d92fc45447587bab1daef3834b6596fb09a76292 # 2.0.1
+      uses: hoverkraft-tech/ci-github-common/actions/checkout@90211d735aa0289702ddbd7eb95b218020ccadad # 2.0.2
       with:
         fetch-depth: "1"
         sparse-checkout: .github/${{ steps.resolve-config-paths.outputs.repository-config-path }}

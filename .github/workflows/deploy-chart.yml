@@ -209,7 +209,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@d92fc45447587bab1daef3834b6596fb09a76292 # 2.0.1
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@90211d735aa0289702ddbd7eb95b218020ccadad # 2.0.2
         if: inputs.tag == ''
         with:
           fetch-depth: 0
@@ -222,7 +222,7 @@ jobs:
 
       - id: get-issue-number
         if: inputs.tag == '' && github.event_name == 'issue_comment'
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@d92fc45447587bab1daef3834b6596fb09a76292 # 2.0.1
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@90211d735aa0289702ddbd7eb95b218020ccadad # 2.0.2
 
       - id: get-tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

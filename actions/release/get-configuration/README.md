@@ -41,7 +41,7 @@ configurations control their own heading structure.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@d983bd6279de308518b8b8df7c51e179fd50bffb # 2.1.0
+- uses: hoverkraft-tech/ci-github-publish/actions/release/get-configuration@b942fb00f3115ca70f98f45f2289cc9838eb9312 # 3.0.0
   with:
     # Optional partial Release Drafter configuration as a YAML or JSON mapping.
     # Precedence: generated defaults, repository configuration, then these overrides.

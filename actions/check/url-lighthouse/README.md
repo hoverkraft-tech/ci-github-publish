@@ -39,7 +39,7 @@ The action always sends `User-Agent: hoverkraft-tech-url-lighthouse-action` when
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/check/url-lighthouse@a0a9d185c51c10710a5987822e78feb2b5ce1932 # 0.29.0
+- uses: hoverkraft-tech/ci-github-publish/actions/check/url-lighthouse@b942fb00f3115ca70f98f45f2289cc9838eb9312 # 3.0.0
   with:
     # The URL to audit using Lighthouse.
     # This input is required.

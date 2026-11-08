@@ -42,7 +42,7 @@ Action to run ping check on given URL.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/check/url-ping@a0a9d185c51c10710a5987822e78feb2b5ce1932 # 0.29.0
+- uses: hoverkraft-tech/ci-github-publish/actions/check/url-ping@b942fb00f3115ca70f98f45f2289cc9838eb9312 # 3.0.0
   with:
     # The URL to check.
     # This input is required.

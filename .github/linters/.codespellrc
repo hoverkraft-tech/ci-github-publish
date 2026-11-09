@@ -1,5 +1,5 @@
 [codespell]
-skip = *.svg
+skip = *.svg,*actions/*/dist/*
 # npm integrity hashes are generated binary data, not prose.
 ignore-regex = \bsha(?:256|384|512)-[A-Za-z0-9+/]+=*
 ignore-words-list =

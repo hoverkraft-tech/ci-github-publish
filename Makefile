@@ -59,7 +59,7 @@ endef
 define run_npm_for_packages
 	@set -uo pipefail; \
 	overall_status=0; \
-	packages="$$(find actions -type f -name package.json -not -path '*/node_modules/*' -print | sort)"; \
+	packages="$$(find actions -type f -name package.json -not -path '*/node_modules/*' -not -path '*/dist/*' -print | sort)"; \
 	for pkg in $$packages; do \
 		pkg_dir="$$(dirname "$$pkg")"; \
 		echo "---"; \

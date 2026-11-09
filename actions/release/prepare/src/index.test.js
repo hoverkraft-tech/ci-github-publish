@@ -3,8 +3,10 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { run } from "./index.js";
+
 import { ReleaseConfiguration } from "./ReleaseConfiguration.js";
+
+const { run } = await import(process.env.ACTION_ENTRYPOINT || "./index.js");
 
 async function fixture(t) {
 	const directory = await fs.mkdtemp(

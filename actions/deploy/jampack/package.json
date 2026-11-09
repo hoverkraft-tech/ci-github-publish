@@ -5,7 +5,8 @@
 	"description": "Locked Jampack dependency for the deploy/jampack GitHub Action",
 	"scripts": {
 		"test": "node --test",
-		"test:ci": "node --test"
+		"test:ci": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=coverage/junit.xml",
+		"pretest:ci": "node -e \"require('node:fs').mkdirSync('coverage', { recursive: true })\""
 	},
 	"author": "hoverkraft",
 	"license": "MIT",

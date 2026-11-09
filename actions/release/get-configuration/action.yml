@@ -89,7 +89,7 @@ runs:
           core.setOutput('temp-config-path', tempConfigRelativePath);
 
     - if: steps.resolve-config-paths.outputs.requires-checkout == 'true'
-      uses: hoverkraft-tech/ci-github-common/actions/checkout@90211d735aa0289702ddbd7eb95b218020ccadad # 2.0.2
+      uses: hoverkraft-tech/ci-github-common/actions/checkout@66882b24f9f13e45a6541896a5a7c638cb91c94c # 4.0.0
       with:
         fetch-depth: "1"
         sparse-checkout: .github/${{ steps.resolve-config-paths.outputs.repository-config-path }}
@@ -287,13 +287,6 @@ runs:
           fs.writeFileSync(configPath, configContent, 'utf8');
           core.setOutput('config-path', process.env.CONFIG_PATH);
 
-    - name: Setup Node.js
-      if: steps.local-config.outputs.config-path != '' || inputs.config-overrides != ''
-      uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@31cd29bfb95f6bc6490d6abe5d66690431b518e3 # 2.0.0
-      with:
-        working-directory: ${{ github.action_path }}
-        ignore-scripts: "true"
-
     - name: Compose release configuration overrides
       id: override-config
       if: steps.local-config.outputs.config-path != '' || inputs.config-overrides != ''
@@ -305,7 +298,8 @@ runs:
         REPOSITORY_CONFIG_PATH: ${{ steps.local-config.outputs.config-path }}
       with:
         script: |
-          const { run } = require(`${process.env.ACTION_PATH}/src/index.js`);
+          const { pathToFileURL } = require('node:url');
+          const { run } = await import(pathToFileURL(`${process.env.ACTION_PATH}/dist/index.js`));
           run({
             core,
             inputs: {

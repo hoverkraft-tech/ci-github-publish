@@ -1,6 +1,6 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const { parse } = require("yaml");
+import fs from "node:fs";
+import path from "node:path";
+import { parse } from "yaml";
 
 function run({ core, inputs }) {
 	const mapping = (source, label) => {
@@ -78,4 +78,4 @@ function run({ core, inputs }) {
 	core.setOutput("is-generated", String(baseConfig !== repositoryConfig));
 }
 
-module.exports = { run };
+export { run };

@@ -6,13 +6,14 @@ import path from "node:path";
 import { test } from "node:test";
 import { compileFunction } from "node:vm";
 import { parse } from "yaml";
-import { prepareConfiguration, resolvePlan } from "../plan/index.js";
-import { run } from "./index.js";
+import { prepareConfiguration, resolvePlan } from "../../plan/index.js";
+
+const { run } = await import(process.env.ACTION_ENTRYPOINT || "./index.js");
 
 const require = createRequire(import.meta.url);
 const action = parse(
 	await fs.readFile(
-		new URL("../get-configuration/action.yml", import.meta.url),
+		new URL("../../get-configuration/action.yml", import.meta.url),
 		"utf8",
 	),
 );
@@ -21,17 +22,10 @@ const generate = compileFunction(
 		.script,
 	["require", "process", "core"],
 );
-// Load the actual configuration action with this package's YAML dependency.
-// Each action's CI installs only its own package dependencies.
-const configurationModule = { exports: {} };
-compileFunction(
-	await fs.readFile(
-		new URL("../get-configuration/src/index.js", import.meta.url),
-		"utf8",
-	),
-	["require", "module"],
-)((name) => (name === "yaml" ? { parse } : require(name)), configurationModule);
-const { run: override } = configurationModule.exports;
+
+// Exercise the shipped configuration action without installing sibling dependencies.
+import { run as override } from "../../get-configuration/dist/index.js";
+
 const workflow = ".github/workflows/release.yml";
 const repo = { owner: "example", repo: "project" };
 

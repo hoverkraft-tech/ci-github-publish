@@ -11,14 +11,20 @@ on: # yamllint disable-line rule:truthy
 permissions: {}
 
 jobs:
+  test-action-distributions:
+    uses: hoverkraft-tech/ci-github-common/.github/workflows/test-action-distributions.yml@66882b24f9f13e45a6541896a5a7c638cb91c94c # 4.0.0
+    permissions:
+      contents: read
+
   test-action-release-verify:
     uses: $/.github/workflows/__test-action-release-verify.yml
     permissions:
       actions: read
       contents: read
 
-  linter:
-    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@90211d735aa0289702ddbd7eb95b218020ccadad # 2.0.2
+  lint:
+    name: linter
+    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@66882b24f9f13e45a6541896a5a7c638cb91c94c # 4.0.0
     permissions:
       actions: read
       contents: read
@@ -27,27 +33,29 @@ jobs:
       pull-requests: write
       security-events: write
       statuses: write
+    with:
+      comment: false
 
   test-action-check-url-lighthouse:
-    needs: linter
+    needs: lint
     uses: $/.github/workflows/__test-action-check-url-lighthouse.yml
     permissions:
       contents: read
 
   test-action-check-url-ping:
-    needs: linter
+    needs: lint
     uses: $/.github/workflows/__test-action-check-url-ping.yml
     permissions:
       contents: read
 
   test-action-deploy-argocd-manifest-files:
-    needs: linter
+    needs: lint
     uses: $/.github/workflows/__test-action-deploy-argocd-manifest-files.yml
     permissions:
       contents: read
 
   test-action-deploy-jekyll-jampack:
-    needs: linter
+    needs: lint
     uses: $/.github/workflows/__test-action-deploy-jekyll-jampack.yml
     permissions:
       contents: read
@@ -57,7 +65,7 @@ jobs:
       security-events: write
 
   test-action-deployment:
-    needs: linter
+    needs: lint
     uses: $/.github/workflows/__test-action-deployment.yml
     secrets:
       CI_BOT_APP_PRIVATE_KEY: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
@@ -67,7 +75,7 @@ jobs:
       pull-requests: read
 
   test-action-release-get-configuration:
-    needs: linter
+    needs: lint
     uses: $/.github/workflows/__test-action-release-get-configuration.yml
     permissions:
       contents: read
@@ -77,21 +85,21 @@ jobs:
       security-events: write
 
   test-action-release-create:
-    needs: linter
+    needs: lint
     uses: $/.github/workflows/__test-action-release-create.yml
     permissions:
       contents: write
       pull-requests: read
 
   test-action-release-delete:
-    needs: [linter, test-action-release-create]
+    needs: [lint, test-action-release-create]
     uses: $/.github/workflows/__test-action-release-delete.yml
     permissions:
       contents: write
       pull-requests: read
 
   test-action-release-prepare-and-plan:
-    needs: linter
+    needs: lint
     uses: $/.github/workflows/__test-action-release-prepare-and-plan.yml
     permissions:
       contents: write
@@ -101,7 +109,7 @@ jobs:
       security-events: write
 
   test-action-release-summarize-changelog:
-    needs: linter
+    needs: lint
     uses: $/.github/workflows/__test-action-release-summarize-changelog.yml
     permissions:
       contents: read
@@ -109,3 +117,18 @@ jobs:
       packages: read
       pull-requests: write
       security-events: write
+
+  reports:
+    needs:
+      - lint
+      - test-action-deploy-jekyll-jampack
+      - test-action-release-get-configuration
+      - test-action-release-prepare-and-plan
+      - test-action-release-summarize-changelog
+    if: always()
+    uses: hoverkraft-tech/ci-github-common/.github/workflows/ci-reports.yml@66882b24f9f13e45a6541896a5a7c638cb91c94c # 4.0.0
+    permissions:
+      contents: read
+      pull-requests: write
+    with:
+      job-results: ${{ toJSON(needs) }}

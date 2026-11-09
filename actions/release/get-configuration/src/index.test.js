@@ -1,11 +1,16 @@
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const os = require("node:os");
-const path = require("node:path");
-const { test } = require("node:test");
-const { parse } = require("yaml");
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { test } from "node:test";
+import { pathToFileURL } from "node:url";
+import { parse } from "yaml";
 
-const { run } = require("./index.js");
+const { run } = await import(
+	process.env.ACTION_ENTRYPOINT
+		? pathToFileURL(process.env.ACTION_ENTRYPOINT)
+		: new URL("./index.js", import.meta.url)
+);
 
 function fixture(
 	t,

@@ -59,7 +59,7 @@ on:
 permissions: {}
 jobs:
   deploy-checks:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-checks.yml@b942fb00f3115ca70f98f45f2289cc9838eb9312 # 3.0.0
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-checks.yml@704e6c786af0f5dfd84a8851e428bb36b6cf180f # 3.0.1
     permissions:
       contents: read
     with:

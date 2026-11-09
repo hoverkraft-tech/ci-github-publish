@@ -50,7 +50,7 @@ permissions:
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/update@b942fb00f3115ca70f98f45f2289cc9838eb9312 # 3.0.0
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/update@704e6c786af0f5dfd84a8851e428bb36b6cf180f # 3.0.1
   with:
     # The ID of the deployment to update
     # This input is required.

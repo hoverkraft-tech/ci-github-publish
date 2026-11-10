@@ -40,7 +40,7 @@ Action to retrieve some deployment information.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/deployment/read@704e6c786af0f5dfd84a8851e428bb36b6cf180f # 3.0.1
+- uses: hoverkraft-tech/ci-github-publish/actions/deployment/read@4193622a365c0ab0bcbd6645895fd2c3126b72ba # 3.0.2
   with:
     # The ID of the deployment to update
     # This input is required.

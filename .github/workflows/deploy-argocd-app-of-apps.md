@@ -87,7 +87,7 @@ on:
 permissions: {}
 jobs:
   deploy-argocd-app-of-apps:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-argocd-app-of-apps.yml@6fce52c137caa00ad2d2a71287822122d07083d0 # chore/update-actions-stable
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-argocd-app-of-apps.yml@4193622a365c0ab0bcbd6645895fd2c3126b72ba # 3.0.2
     permissions:
       contents: read
       pull-requests: write

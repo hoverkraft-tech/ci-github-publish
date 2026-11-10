@@ -1,7 +1,10 @@
+const { setTimeout: sleep } = require("node:timers/promises");
+
 class ReleaseVerification {
-	constructor({ github, context }) {
+	constructor({ github, context, sleep: wait = sleep }) {
 		this.github = github;
 		this.context = context;
+		this.sleep = wait;
 	}
 
 	async verify({ artifactIds = [], tags, requireTags = false }) {
@@ -40,10 +43,7 @@ class ReleaseVerification {
 	}
 
 	async verifyArtifact(artifactId) {
-		const { data: artifact } = await this.github.rest.actions.getArtifact({
-			...this.context.repo,
-			artifact_id: Number(artifactId),
-		});
+		const artifact = await this.getArtifact(artifactId);
 		if (
 			artifact.expired ||
 			artifact.workflow_run?.id !== this.context.runId ||
@@ -52,6 +52,22 @@ class ReleaseVerification {
 			throw new Error(
 				"Release artifacts must be unexpired and belong to this run and commit.",
 			);
+		}
+	}
+
+	async getArtifact(artifactId) {
+		for (let attempt = 0; attempt < 4; attempt++) {
+			try {
+				const { data } = await this.github.rest.actions.getArtifact({
+					...this.context.repo,
+					artifact_id: Number(artifactId),
+				});
+				return data;
+			} catch (error) {
+				if (error.status !== 404 || attempt === 3) throw error;
+				// Newly uploaded artifacts can briefly be missing from the REST API.
+				await this.sleep(1000 * 2 ** attempt);
+			}
 		}
 	}
 

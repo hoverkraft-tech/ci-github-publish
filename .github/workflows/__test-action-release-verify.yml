@@ -21,28 +21,26 @@ jobs:
           name: release-verification-${{ github.run_id }}-${{ github.run_attempt }}
           path: actions/release/verify/action.yml
           if-no-files-found: error
-      - name: Act - Verify workflow artifact identity without creating a tag
-        id: verify
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
-        uses: $/actions/release/verify
-        with:
-          artifact-ids: '["${{ steps.artifact.outputs.artifact-id }}"]'
-          tags: '["verify-${{ github.run_id }}-${{ github.run_attempt }}"]'
-      - name: Assert - Release identity follows the workflow source commit
+      - name: Verify uploaded artifact identity and reject a different source commit
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          RELEASES: ${{ steps.verify.outputs.releases }}
-          OUTCOME: ${{ steps.verify.outcome }}
-          EXPECT_MISMATCH: ${{ github.event_name == 'pull_request' && github.sha != github.event.pull_request.head.sha }}
-        run: |
-          node <<'NODE'
-          const assert = require('node:assert/strict');
-          // PR artifacts identify the head commit, while github.sha identifies the test merge.
-          if (process.env.EXPECT_MISMATCH === 'true') assert.equal(process.env.OUTCOME, 'failure');
-          else {
-            assert.equal(process.env.OUTCOME, 'success');
-            assert.equal(JSON.parse(process.env.RELEASES)[0].published, false);
-          }
-          NODE
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact-id }}
+          TAG: verify-${{ github.run_id }}-${{ github.run_attempt }}
+        with:
+          script: |
+            const assert = require('node:assert/strict');
+            const { ReleaseVerification } = require('./actions/release/verify/index.js');
+            // PR artifacts identify the head commit, while context.sha identifies the test merge.
+            const sourceSha = context.payload.pull_request?.head.sha ?? context.sha;
+            const sourceContext = { repo: context.repo, runId: context.runId, sha: sourceSha };
+            const inputs = { artifactIds: [process.env.ARTIFACT_ID], tags: [process.env.TAG] };
+            const verification = new ReleaseVerification({ github, context: sourceContext });
+            assert.deepEqual(await verification.verify(inputs), [{ tag: process.env.TAG, published: false }]);
+
+            const otherSource = new ReleaseVerification({ github, context: { ...sourceContext, sha: '0'.repeat(40) } });
+            await assert.rejects(otherSource.verify(inputs), {
+              message: 'Release artifacts must be unexpired and belong to this run and commit.',
+            });
       - name: Act - Verify source-only release without artifacts
         id: source
         uses: $/actions/release/verify

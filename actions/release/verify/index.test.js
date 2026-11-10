@@ -16,6 +16,7 @@ function arrange({
 	releases = [],
 	drafts = [],
 	annotated = {},
+	sleep = async () => {},
 } = {}) {
 	const github = {
 		rest: {
@@ -47,7 +48,7 @@ function arrange({
 		},
 		paginate: async () => drafts,
 	};
-	const verification = new ReleaseVerification({ github, context });
+	const verification = new ReleaseVerification({ github, context, sleep });
 	const verify = (options = {}) =>
 		verification.verify({ artifactIds: ["10"], tags: ["v1.2.3"], ...options });
 	return { github, verify };
@@ -67,6 +68,77 @@ test("rejects expired artifacts, another run or commit, and missing source metad
 		{ workflow_run: { id: 42, head_sha: "old" } },
 	]) {
 		await assert.rejects(arrange({ artifact }).verify(), /this run and commit/);
+	}
+});
+test("waits for a newly uploaded artifact to become visible", async () => {
+	const delays = [];
+	const { github, verify } = arrange({
+		sleep: async (milliseconds) => delays.push(milliseconds),
+	});
+	const getArtifact = github.rest.actions.getArtifact;
+	const requests = [];
+	github.rest.actions.getArtifact = async (request) => {
+		requests.push(request);
+		if (requests.length < 4) return missing();
+		return getArtifact(request);
+	};
+
+	assert.deepEqual(await verify(), [{ tag: "v1.2.3", published: false }]);
+	assert.deepEqual(delays, [1000, 2000, 4000]);
+	assert.deepEqual(
+		requests,
+		Array(4).fill({ ...context.repo, artifact_id: 10 }),
+	);
+});
+test("fails with the original error when an artifact remains unavailable", async () => {
+	const delays = [];
+	const { github, verify } = arrange({
+		sleep: async (milliseconds) => delays.push(milliseconds),
+	});
+	const error = Object.assign(new Error("Artifact not found"), { status: 404 });
+	let attempts = 0;
+	github.rest.actions.getArtifact = async () => {
+		attempts++;
+		throw error;
+	};
+
+	await assert.rejects(verify(), (caught) => caught === error);
+	assert.equal(attempts, 4);
+	assert.deepEqual(delays, [1000, 2000, 4000]);
+});
+test("does not retry artifact authorization or other API errors", async () => {
+	for (const status of [401, 403, 422, 500, undefined]) {
+		const { github, verify } = arrange({
+			sleep: async () => assert.fail("Only artifact 404s may be retried."),
+		});
+		const error = Object.assign(new Error("Request failed"), { status });
+		let attempts = 0;
+		github.rest.actions.getArtifact = async () => {
+			attempts++;
+			throw error;
+		};
+
+		await assert.rejects(verify(), (caught) => caught === error);
+		assert.equal(attempts, 1);
+	}
+});
+test("still checks artifact identity after it becomes visible", async () => {
+	for (const artifact of [
+		{ expired: true },
+		{ workflow_run: null },
+		{ workflow_run: { id: 41, head_sha: context.sha } },
+		{ workflow_run: { id: 42, head_sha: "other-commit" } },
+	]) {
+		const { github, verify } = arrange({ artifact });
+		const getArtifact = github.rest.actions.getArtifact;
+		let attempts = 0;
+		github.rest.actions.getArtifact = async (request) => {
+			if (++attempts === 1) return missing();
+			return getArtifact(request);
+		};
+
+		await assert.rejects(verify(), /this run and commit/);
+		assert.equal(attempts, 2);
 	}
 });
 test("rejects malformed artifacts and malformed or empty tags before API calls", async () => {

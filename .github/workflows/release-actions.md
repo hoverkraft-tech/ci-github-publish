@@ -139,9 +139,10 @@ jobs:
 
 ## Outputs
 
-| **Output**        | **Description**                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **`artifact-id`** | ID of the uploaded artifact containing generated documentation. If no documentation was generated, this will be empty. |
+| **Output**        | **Description**                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **`artifact-id`** | ID of the uploaded artifact containing documentation ready to publish.                                                  |
+|                   | Empty when there are no documentation changes or their pull request is waiting for reviews, checks, or the merge queue. |
 
 <!-- outputs:end -->
 

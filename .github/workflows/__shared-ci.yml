@@ -11,6 +11,11 @@ on: # yamllint disable-line rule:truthy
 permissions: {}
 
 jobs:
+  test-workflow-release-actions:
+    permissions:
+      contents: read
+    uses: $/.github/workflows/__test-workflow-release-actions.yml
+
   test-action-distributions:
     uses: hoverkraft-tech/ci-github-common/.github/workflows/test-action-distributions.yml@66882b24f9f13e45a6541896a5a7c638cb91c94c # 4.0.0
     permissions:

@@ -60,7 +60,9 @@ on:
           See https://github.com/actions/create-github-app-token.
     outputs:
       artifact-id:
-        description: "ID of the uploaded artifact containing generated documentation. If no documentation was generated, this will be empty."
+        description: |
+          ID of the uploaded artifact containing documentation ready to publish.
+          Empty when there are no documentation changes or their pull request is waiting for reviews, checks, or the merge queue.
         value: ${{ jobs.upload-documentation-artifact.outputs.artifact-id }}
 
 permissions:
@@ -314,6 +316,8 @@ jobs:
     needs: generate-documentation
     if: needs.generate-documentation.outputs.artifact-id
     runs-on: ${{ fromJson(inputs.runs-on) }}
+    outputs:
+      merge-pending: ${{ steps.update-documentation.outputs.merge-pending }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -338,7 +342,8 @@ jobs:
 
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@66882b24f9f13e45a6541896a5a7c638cb91c94c # 4.0.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@d205cae08e3bda0c21826d7ce92f352a485f364a
+        id: update-documentation
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           branch: docs/actions-workflows-documentation-update
@@ -348,12 +353,15 @@ jobs:
           commit-message: |
             docs: update actions and workflows documentation
 
-            [skip ci]
-
   upload-documentation-artifact:
     name: Upload Documentation Artifact
-    needs: [get-documentation-changes, generate-documentation]
-    if: always() && (needs.generate-documentation.outputs.artifact-id || needs.get-documentation-changes.outputs.documentation-files)
+    needs:
+      [get-documentation-changes, generate-documentation, update-documentation]
+    if: >-
+      always()
+      && (needs.update-documentation.result == 'success' || needs.update-documentation.result == 'skipped')
+      && needs.update-documentation.outputs.merge-pending != 'true'
+      && (needs.generate-documentation.outputs.artifact-id || needs.get-documentation-changes.outputs.documentation-files)
     runs-on: ${{ fromJson(inputs.runs-on) }}
     outputs:
       artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}

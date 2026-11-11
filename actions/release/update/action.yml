@@ -167,6 +167,7 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github-token }}
+        GH_REPO: ${{ github.repository }}
         RELEASE_TAG: ${{ steps.resolve-update-intent.outputs.tag }}
         RELEASE_ARTIFACT_ID: ${{ inputs.release-artifact-id }}
         DOWNLOADED_RELEASE_ASSETS_PATH: ${{ steps.download-release-artifact.outputs.download-path }}

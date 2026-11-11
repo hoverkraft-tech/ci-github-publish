@@ -130,14 +130,35 @@ jobs:
             assert.equal(release.draft, true);
             assert.equal(release.body, 'Release notes updated before publication.');
 
-      - name: Act - Publish release
+      - name: Arrange - Create release asset without Git metadata
+        id: release-asset
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('node:fs/promises');
+            const path = require('node:path');
+            const assetPath = path.join(process.env.RUNNER_TEMP, 'release-test.txt');
+            await fs.writeFile(assetPath, 'Release asset uploaded without a checkout.\n');
+            await io.rmRF(path.join(process.env.GITHUB_WORKSPACE, '.git'));
+            core.setOutput('path', assetPath);
+
+      - name: Arrange - Upload release artifact
+        id: release-artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-update-test-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.release-asset.outputs.path }}
+          if-no-files-found: error
+
+      - name: Act - Upload asset and publish release without a checkout
         uses: $/actions/release/update
         with:
           tag: ${{ steps.test-release.outputs.tag }}
+          release-artifact-id: ${{ steps.release-artifact.outputs.artifact-id }}
           publish: "true"
           github-token: ${{ github.token }}
 
-      - name: Assert - Published release and Git tag
+      - name: Assert - Published release, asset and Git tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           RELEASE_ID: ${{ steps.draft-release.outputs.release-id }}
@@ -146,6 +167,7 @@ jobs:
         with:
           script: |
             const assert = require('node:assert/strict');
+            const { createHash } = require('node:crypto');
             const tag = process.env.EXPECTED_TAG;
             const { data: release } = await github.rest.repos.getReleaseByTag({
               ...context.repo,
@@ -162,6 +184,11 @@ jobs:
             assert.equal(release.prerelease, true);
             assert.equal(release.body, 'Release notes updated before publication.');
             assert.equal(tagRef.object.sha, process.env.EXPECTED_SHA);
+            assert.equal(release.assets.length, 1);
+            assert.equal(release.assets[0].name, 'release-test.txt');
+            const expectedContent = 'Release asset uploaded without a checkout.\n';
+            assert.equal(release.assets[0].size, Buffer.byteLength(expectedContent));
+            assert.equal(release.assets[0].digest, `sha256:${createHash('sha256').update(expectedContent).digest('hex')}`);
 
       - name: Cleanup - Delete test release and tag
         if: always()

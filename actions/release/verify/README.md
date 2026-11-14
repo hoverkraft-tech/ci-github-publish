@@ -21,7 +21,7 @@ Verify release tags and publication state without changing the repository. When 
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/verify@5b821495b1c3b68eb2e7fba71992dfe851612ae6 # 3.0.3
+- uses: hoverkraft-tech/ci-github-publish/actions/release/verify@78a540b1bf0b18dd2f160c98943f61eefb03e8b9 # 3.0.4
   with:
     # Optional JSON array of validated artifact IDs from this workflow run and source commit. Omit for source-only releases. Supplied artifacts must pass all identity checks. Require successful validation jobs with needs; this action does not prove validation passed.
     # Default: `[]`

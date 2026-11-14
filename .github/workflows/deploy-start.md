@@ -71,7 +71,7 @@ on:
 permissions: {}
 jobs:
   deploy-start:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-start.yml@5b821495b1c3b68eb2e7fba71992dfe851612ae6 # 3.0.3
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-start.yml@78a540b1bf0b18dd2f160c98943f61eefb03e8b9 # 3.0.4
     permissions:
       actions: read
       contents: read

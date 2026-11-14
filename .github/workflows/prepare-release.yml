@@ -1,6 +1,9 @@
 # Reusable workflow that performs release preparation tasks:
 #
-# - Add proper labels to pull requests
+# - Add proper labels to pull requests from branches in the same repository
+#
+# Pull requests from forks are skipped because their `pull_request` token is read-only.
+# Callers do not need their own fork condition. Default-branch pushes are also supported.
 
 name: Prepare release
 
@@ -43,7 +46,9 @@ permissions: {}
 jobs:
   prepare:
     runs-on: ${{ fromJson(inputs.runs-on) }}
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
     permissions:
       contents: read
       pull-requests: write

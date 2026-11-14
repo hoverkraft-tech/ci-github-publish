@@ -32,7 +32,10 @@
 
 Reusable workflow that performs release preparation tasks:
 
-- Add proper labels to pull requests
+- Add proper labels to pull requests from branches in the same repository
+
+Pull requests from forks are skipped because their `pull_request` token is read-only.
+Callers do not need their own fork condition. Default-branch pushes are also supported.
 
 ### Permissions
 

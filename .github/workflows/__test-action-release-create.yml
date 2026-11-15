@@ -26,12 +26,32 @@ jobs:
             const tag = `test-release-create-${context.runId}-${context.runAttempt}`;
             core.setOutput('tag', tag);
 
+            // A release fixture must not introduce workflows relative to a moving main.
+            // Keep the checked-out action code, but omit workflows from the target tree.
+            const { data: source } = await github.rest.git.getCommit({
+              ...context.repo,
+              commit_sha: context.sha,
+            });
+            const { data: tree } = await github.rest.git.createTree({
+              ...context.repo,
+              base_tree: source.tree.sha,
+              tree: [{ path: '.github/workflows', mode: '040000', type: 'tree', sha: null }],
+            });
+            const { data: fixture } = await github.rest.git.createCommit({
+              ...context.repo,
+              message: `test: release fixture for ${context.runId}/${context.runAttempt}`,
+              tree: tree.sha,
+              parents: [context.sha],
+            });
+            // No branch is created or moved. Only the disposable release tags reference this commit.
+            core.setOutput('target-sha', fixture.sha);
+
       - name: Act - Create explicit draft release
         id: create-release
         uses: $/actions/release/create
         with:
           tag: ${{ steps.test-release.outputs.tag }}
-          target-ref: ${{ github.sha }}
+          target-ref: ${{ steps.test-release.outputs.target-sha }}
           config-overrides: |
             name-template: Configured release
           prerelease: "true"
@@ -44,7 +64,7 @@ jobs:
         env:
           CREATED_TAG: ${{ steps.test-release.outputs.tag }}
           OUTPUT_TAG: ${{ steps.create-release.outputs.tag }}
-          EXPECTED_RELEASE_SHA: ${{ github.sha }}
+          EXPECTED_RELEASE_SHA: ${{ steps.test-release.outputs.target-sha }}
         with:
           github-token: ${{ github.token }}
           script: |
@@ -163,7 +183,7 @@ jobs:
         env:
           RELEASE_ID: ${{ steps.draft-release.outputs.release-id }}
           EXPECTED_TAG: ${{ steps.test-release.outputs.tag }}
-          EXPECTED_SHA: ${{ github.sha }}
+          EXPECTED_SHA: ${{ steps.test-release.outputs.target-sha }}
         with:
           script: |
             const assert = require('node:assert/strict');

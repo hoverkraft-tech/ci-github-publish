@@ -38,7 +38,7 @@ Determine all the manifest files needed to deploy the application using ArgoCD f
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/argocd/get-manifest-files@c005f188ef879f96cf2f2b1cfa5d0b9c86eb0389 # 3.0.5
+- uses: hoverkraft-tech/ci-github-publish/actions/argocd/get-manifest-files@c3cd9bbbc4909bb341bd2aafe50a8673afc58fd0 # 3.0.6
   with:
     # Environment name (e.g. production, review-apps:pr-1234).
     # This is used to determine the application directory and extra manifest directory.

@@ -209,7 +209,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@2fa562bd44f9e752a99a374c85ae14644e7f2bdd # 4.2.2
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@c63b4ce928082260ab263abc01faf3c1fa20c52b # 4.2.3
         if: inputs.tag == ''
         with:
           fetch-depth: 0
@@ -222,7 +222,7 @@ jobs:
 
       - id: get-issue-number
         if: inputs.tag == '' && github.event_name == 'issue_comment'
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@2fa562bd44f9e752a99a374c85ae14644e7f2bdd # 4.2.2
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@c63b4ce928082260ab263abc01faf3c1fa20c52b # 4.2.3
 
       - id: get-tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -340,7 +340,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@d6569ca423f29f68152ee561f51f7de0c08db709 # 1.0.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@0592b66c9ed74d8cb7b0c015881ca590fc5d550b # 2.0.0
     permissions:
       attestations: write
       contents: read
@@ -467,7 +467,7 @@ jobs:
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
       - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@d6569ca423f29f68152ee561f51f7de0c08db709 # 1.0.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@0592b66c9ed74d8cb7b0c015881ca590fc5d550b # 2.0.0
         with:
           chart: ${{ inputs.chart-name }}
           path: ${{ inputs.chart-path }}

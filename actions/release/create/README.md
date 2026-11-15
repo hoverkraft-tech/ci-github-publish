@@ -43,7 +43,7 @@ The release is published by default after optional changelog summarization and a
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@c005f188ef879f96cf2f2b1cfa5d0b9c86eb0389 # 3.0.5
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@c3cd9bbbc4909bb341bd2aafe50a8673afc58fd0 # 3.0.6
   with:
     # Optional partial Release Drafter configuration as a YAML or JSON mapping.
     # Precedence: generated defaults, repository configuration, then these overrides.

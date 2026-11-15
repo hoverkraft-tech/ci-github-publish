@@ -40,7 +40,7 @@ Delete an existing GitHub release for a tag, with optional draft-only cleanup be
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/delete@c005f188ef879f96cf2f2b1cfa5d0b9c86eb0389 # 3.0.5
+- uses: hoverkraft-tech/ci-github-publish/actions/release/delete@c3cd9bbbc4909bb341bd2aafe50a8673afc58fd0 # 3.0.6
   with:
     # Existing tag name of the GitHub release to delete
     # This input is required.

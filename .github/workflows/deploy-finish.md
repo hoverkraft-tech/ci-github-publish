@@ -64,7 +64,7 @@ on:
 permissions: {}
 jobs:
   deploy-finish:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@c005f188ef879f96cf2f2b1cfa5d0b9c86eb0389 # 3.0.5
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-finish.yml@c3cd9bbbc4909bb341bd2aafe50a8673afc58fd0 # 3.0.6
     permissions:
       actions: read
       contents: read

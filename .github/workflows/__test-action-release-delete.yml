@@ -26,11 +26,31 @@ jobs:
             core.setOutput('draft-tag', `test-release-delete-draft-${context.runId}-${context.runAttempt}`);
             core.setOutput('published-tag', `test-release-delete-published-${context.runId}-${context.runAttempt}`);
 
+            // A release fixture must not introduce workflows relative to a moving main.
+            // Keep the checked-out action code, but omit workflows from the target tree.
+            const { data: source } = await github.rest.git.getCommit({
+              ...context.repo,
+              commit_sha: context.sha,
+            });
+            const { data: tree } = await github.rest.git.createTree({
+              ...context.repo,
+              base_tree: source.tree.sha,
+              tree: [{ path: '.github/workflows', mode: '040000', type: 'tree', sha: null }],
+            });
+            const { data: fixture } = await github.rest.git.createCommit({
+              ...context.repo,
+              message: `test: release fixture for ${context.runId}/${context.runAttempt}`,
+              tree: tree.sha,
+              parents: [context.sha],
+            });
+            // No branch is created or moved. Only the disposable release tags reference this commit.
+            core.setOutput('target-sha', fixture.sha);
+
       - name: Arrange - Create explicit draft release
         uses: $/actions/release/create
         with:
           tag: ${{ steps.test-releases.outputs.draft-tag }}
-          target-ref: ${{ github.sha }}
+          target-ref: ${{ steps.test-releases.outputs.target-sha }}
           publish: "false"
           github-token: ${{ github.token }}
 
@@ -102,7 +122,7 @@ jobs:
         uses: $/actions/release/create
         with:
           tag: ${{ steps.test-releases.outputs.published-tag }}
-          target-ref: ${{ github.sha }}
+          target-ref: ${{ steps.test-releases.outputs.target-sha }}
           publish: "true"
           github-token: ${{ github.token }}
 

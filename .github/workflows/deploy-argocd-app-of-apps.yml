@@ -143,7 +143,7 @@ jobs:
             core.setOutput("initiated-by", initiatedBy);
 
       - id: chart-variables
-        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@0592b66c9ed74d8cb7b0c015881ca590fc5d550b # 2.0.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/parse-chart-uri@b055d6ce0f3a5e223615ad494d88d92e17af11e5 # 4.2.0
         with:
           uri: ${{ steps.check-client-payload.outputs.chart }}
 
@@ -152,7 +152,7 @@ jobs:
           persist-credentials: false
 
       - id: slugify-namespace
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@c63b4ce928082260ab263abc01faf3c1fa20c52b # 4.2.3
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
         with:
           value: ${{ format('{0}-{1}', steps.check-client-payload.outputs.repository, steps.check-client-payload.outputs.environment) }}
 
@@ -227,7 +227,7 @@ jobs:
           permission-pull-requests: write
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@c63b4ce928082260ab263abc01faf3c1fa20c52b # 4.2.3
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           branch: feat/deploy-${{ steps.slugify-namespace.outputs.result }}

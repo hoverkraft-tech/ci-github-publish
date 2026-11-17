@@ -40,7 +40,8 @@ called via `workflow_call` from other workflows or repositories.
 Key features:
 
 - Builds OCI images using a separate reusable workflow.
-- Releases a Helm chart and injects image and placeholder values.
+- Prepares and validates the Helm chart in a dedicated CI job.
+- Publishes the unchanged validated artifact in a separate job.
 - Supports configurable deployment actions (via `deploy-type` and
   `deploy-parameters`).
 - Posts status and uses local actions via a self-checkout when needed.
@@ -90,7 +91,7 @@ on:
 permissions: {}
 jobs:
   deploy-chart:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@c3cd9bbbc4909bb341bd2aafe50a8673afc58fd0 # 3.0.6
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@670ca4c77490bcc898a8e8974e83f5ac38113062
     permissions:
       actions: read
       attestations: write
@@ -101,6 +102,11 @@ jobs:
       packages: write
       pull-requests: write
     secrets:
+      # Read-only registry password for installing the prepared chart with private images.
+      # Defaults to the validation job's read-only GITHUB_TOKEN for GHCR.
+      # Publication credentials are not forwarded to chart validation.
+      oci-registry-pull-password: ""
+
       # OCI registry password.
       # This input is required.
       oci-registry-password: ""
@@ -203,14 +209,14 @@ jobs:
       # Default: `{}`
       build-parameters: "{}"
 
-      # Chart name to release.
-      # See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
+      # Chart component in the publication namespace: {owner}/{repository}/charts/{chart-name}.
+      # The published root chart keeps the calling repository name.
       #
       # Default: `application`
       chart-name: application
 
-      # Path to the chart to release.
-      # See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
+      # Path to the chart to validate and release.
+      # See https://github.com/hoverkraft-tech/ci-github-container/blob/main/.github/workflows/helm-chart-ci.md.
       #
       # Default: `charts/application`
       chart-path: charts/application
@@ -222,8 +228,8 @@ jobs:
       # Default: `true`
       chart-sign: true
 
-      # Define chart values to be filled.
-      # See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
+      # Define chart values to be filled before validation and publication.
+      # See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/prepare-chart/README.md.
       # Accept placeholders:
       # - `{{ tag }}`: will be replaced by the tag.
       # - `{{ url }}`: will be replaced by the URL.
@@ -295,15 +301,15 @@ jobs:
 |                             | - `attest`                                                                                                                                                                                                                                                              |              |             |                            |
 |                             | Example:                                                                                                                                                                                                                                                                |              |             |                            |
 |                             | <!-- textlint-disable --><pre lang="json">{&#13; "cache-type": "registry",&#13; "sign": false,&#13; "buildkitd-config-inline": "[registry.\"my-registry.local:5000\"]\nhttp = true\ninsecure = true"&#13;}</pre><!-- textlint-enable -->                                |              |             |                            |
-| **`chart-name`**            | Chart name to release.                                                                                                                                                                                                                                                  | **false**    | **string**  | `application`              |
-|                             | See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.                                                                                                                                                            |              |             |                            |
-| **`chart-path`**            | Path to the chart to release.                                                                                                                                                                                                                                           | **false**    | **string**  | `charts/application`       |
-|                             | See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.                                                                                                                                                            |              |             |                            |
+| **`chart-name`**            | Chart component in the publication namespace: {owner}/{repository}/charts/{chart-name}.                                                                                                                                                                                 | **false**    | **string**  | `application`              |
+|                             | The published root chart keeps the calling repository name.                                                                                                                                                                                                             |              |             |                            |
+| **`chart-path`**            | Path to the chart to validate and release.                                                                                                                                                                                                                              | **false**    | **string**  | `charts/application`       |
+|                             | See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/.github/workflows/helm-chart-ci.md>.                                                                                                                                                              |              |             |                            |
 | **`chart-sign`**            | Sign the published Helm chart.                                                                                                                                                                                                                                          | **false**    | **boolean** | `true`                     |
 |                             | See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.                                                                                                                                                            |              |             |                            |
 |                             | Requires `id-token: write` on the chart release job when enabled.                                                                                                                                                                                                       |              |             |                            |
-| **`chart-values`**          | Define chart values to be filled.                                                                                                                                                                                                                                       | **false**    | **string**  | `[]`                       |
-|                             | See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md>.                                                                                                                                                            |              |             |                            |
+| **`chart-values`**          | Define chart values to be filled before validation and publication.                                                                                                                                                                                                     | **false**    | **string**  | `[]`                       |
+|                             | See <https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/prepare-chart/README.md>.                                                                                                                                                            |              |             |                            |
 |                             | Accept placeholders:                                                                                                                                                                                                                                                    |              |             |                            |
 |                             | - `{{ tag }}`: will be replaced by the tag.                                                                                                                                                                                                                             |              |             |                            |
 |                             | - `{{ url }}`: will be replaced by the URL.                                                                                                                                                                                                                             |              |             |                            |
@@ -321,6 +327,9 @@ jobs:
 
 | **Secret**                        | **Description**                                                                           | **Required** |
 | --------------------------------- | ----------------------------------------------------------------------------------------- | ------------ |
+| **`oci-registry-pull-password`**  | Read-only registry password for installing the prepared chart with private images.        | **false**    |
+|                                   | Defaults to the validation job's read-only GITHUB_TOKEN for GHCR.                         |              |
+|                                   | Publication credentials are not forwarded to chart validation.                            |              |
 | **`oci-registry-password`**       | OCI registry password.                                                                    | **true**     |
 | **`build-secrets`**               | List of secrets to expose to the build.                                                   | **false**    |
 |                                   | See <https://docs.docker.com/build/ci/github-actions/secrets/>.                           |              |
@@ -375,7 +384,7 @@ permissions:
 jobs:
   deploy:
     name: Deploy
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@c3cd9bbbc4909bb341bd2aafe50a8673afc58fd0 # 3.0.6
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@670ca4c77490bcc898a8e8974e83f5ac38113062
     secrets:
       oci-registry-password: ${{ secrets.GITHUB_TOKEN }}
       github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}

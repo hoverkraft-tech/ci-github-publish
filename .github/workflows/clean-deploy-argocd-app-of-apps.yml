@@ -118,7 +118,7 @@ jobs:
           permission-pull-requests: write
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@c63b4ce928082260ab263abc01faf3c1fa20c52b # 4.2.3
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
         if: steps.remove-files.outputs.has-changes == 'true'
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional

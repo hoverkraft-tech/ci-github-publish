@@ -1,6 +1,6 @@
 # Contributing
 
-Use the [common commit process](https://github.com/hoverkraft-tech/ci-github-common/blob/9e235e87e1da898e33689b346590dfc69b45b0a6/docs/usage/commits.md)
+Use the [common commit process](https://github.com/hoverkraft-tech/ci-github-common/blob/a86c260e07b11a7a0ca3b7205bbdba9908230917/docs/usage/commits.md)
 for commit messages, PR titles and dependency updates.
 
 When contributing to this repository, please first discuss the change you wish to make via issue,

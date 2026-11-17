@@ -8,7 +8,8 @@
 # Key features:
 #
 # - Builds OCI images using a separate reusable workflow.
-# - Releases a Helm chart and injects image and placeholder values.
+# - Prepares and validates the Helm chart in a dedicated CI job.
+# - Publishes the unchanged validated artifact in a separate job.
 # - Supports configurable deployment actions (via `deploy-type` and
 #   `deploy-parameters`).
 # - Posts status and uses local actions via a self-checkout when needed.
@@ -112,15 +113,15 @@ on:
         default: "{}"
       chart-name:
         description: |
-          Chart name to release.
-          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
+          Chart component in the publication namespace: {owner}/{repository}/charts/{chart-name}.
+          The published root chart keeps the calling repository name.
         required: false
         type: string
         default: application
       chart-path:
         description: |
-          Path to the chart to release.
-          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
+          Path to the chart to validate and release.
+          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/.github/workflows/helm-chart-ci.md.
         required: false
         type: string
         default: charts/application
@@ -134,8 +135,8 @@ on:
         default: true
       chart-values:
         description: |
-          Define chart values to be filled.
-          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/release-chart/README.md.
+          Define chart values to be filled before validation and publication.
+          See https://github.com/hoverkraft-tech/ci-github-container/blob/main/actions/helm/prepare-chart/README.md.
           Accept placeholders:          
           - `{{ tag }}`: will be replaced by the tag.
           - `{{ url }}`: will be replaced by the URL.
@@ -158,6 +159,12 @@ on:
         required: false
         type: string
     secrets:
+      oci-registry-pull-password:
+        description: |
+          Read-only registry password for installing the prepared chart with private images.
+          Defaults to the validation job's read-only GITHUB_TOKEN for GHCR.
+          Publication credentials are not forwarded to chart validation.
+        required: false
       oci-registry-password:
         description: "OCI registry password."
         required: true
@@ -209,7 +216,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: hoverkraft-tech/ci-github-common/actions/checkout@c63b4ce928082260ab263abc01faf3c1fa20c52b # 4.2.3
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
         if: inputs.tag == ''
         with:
           fetch-depth: 0
@@ -222,7 +229,7 @@ jobs:
 
       - id: get-issue-number
         if: inputs.tag == '' && github.event_name == 'issue_comment'
-        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@c63b4ce928082260ab263abc01faf3c1fa20c52b # 4.2.3
+        uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
 
       - id: get-tag
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -340,7 +347,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@0592b66c9ed74d8cb7b0c015881ca590fc5d550b # 2.0.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@b055d6ce0f3a5e223615ad494d88d92e17af11e5 # 4.2.0
     permissions:
       attestations: write
       contents: read
@@ -367,18 +374,19 @@ jobs:
       build-secrets: ${{ secrets.build-secrets }}
       build-secret-github-app-key: ${{ secrets.build-secret-github-app-key || secrets.github-app-key }}
 
-  release-chart:
-    name: Release chart
+  prepare-chart:
+    name: Prepare chart values
     runs-on: ${{ fromJson(inputs.runs-on) }}
     needs: [prepare-deploy, build-oci-images]
     permissions:
       contents: read
-      id-token: write
-      packages: write
     outputs:
-      chart: ${{ steps.release.outputs.image }}
+      source-ref: ${{ steps.set-chart-values.outputs.source-ref }}
+      chart-values: ${{ steps.set-chart-values.outputs.chart-values }}
       deploy-values: ${{ steps.set-chart-values.outputs.deploy-values }}
     steps:
+      - uses: hoverkraft-tech/ci-github-common/actions/checkout@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
+
       - id: set-chart-values
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
@@ -387,6 +395,8 @@ jobs:
           CHART_VALUES: ${{ inputs.chart-values }}
         with:
           script: |
+            const { stdout: sourceRef } = await exec.getExecOutput('git', ['rev-parse', 'HEAD'], { silent: true });
+            core.setOutput('source-ref', sourceRef.trim());
             const tag = process.env.TAG;
 
             const builtImagesInput = process.env.BUILT_IMAGES;
@@ -466,21 +476,56 @@ jobs:
 
             core.setOutput('deploy-values', JSON.stringify(deployValues));
 
-      - id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@0592b66c9ed74d8cb7b0c015881ca590fc5d550b # 2.0.0
+  validate-chart:
+    name: Validate chart
+    needs: [prepare-deploy, prepare-chart]
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/helm-chart-ci.yml@b055d6ce0f3a5e223615ad494d88d92e17af11e5 # 4.2.0
+    permissions:
+      contents: read
+      packages: read
+    with:
+      runs-on: ${{ inputs.runs-on }}
+      name: ${{ github.event.repository.name }}
+      path: ${{ inputs.chart-path }}
+      ref: ${{ needs.prepare-chart.outputs.source-ref }}
+      tag: ${{ needs.prepare-deploy.outputs.tag }}
+      values: ${{ needs.prepare-chart.outputs.chart-values }}
+      oci-registry: ${{ inputs.oci-registry }}
+      upload-artifact: true
+    secrets:
+      oci-registry-password: ${{ secrets.oci-registry-pull-password }}
+
+  release-chart:
+    name: Publish validated chart
+    needs: validate-chart
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    timeout-minutes: 15
+    concurrency:
+      group: helm-chart-publication-${{ github.repository_id }}-${{ inputs.oci-registry }}-${{ github.repository }}/charts/${{ inputs.chart-name }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    outputs:
+      image: ${{ job.status == 'success' && steps.release.outputs.image || '' }}
+    steps:
+      - name: Publish and sign unchanged archive
+        id: release
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@b055d6ce0f3a5e223615ad494d88d92e17af11e5 # 4.2.0
         with:
-          chart: ${{ inputs.chart-name }}
-          path: ${{ inputs.chart-path }}
-          tag: ${{ needs.prepare-deploy.outputs.tag }}
-          values: ${{ steps.set-chart-values.outputs.chart-values }}
+          artifact-id: ${{ needs.validate-chart.outputs.artifact-id }}
+          archive-name: ${{ needs.validate-chart.outputs.archive-name }}
+          checksum: ${{ needs.validate-chart.outputs.checksum }}
           oci-registry: ${{ inputs.oci-registry }}
           oci-registry-password: ${{ secrets.oci-registry-password }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
+          oci-repository: ${{ github.repository }}/charts/${{ inputs.chart-name }}
           sign: ${{ inputs.chart-sign }}
 
   deploy-chart:
     name: Deploy chart
     runs-on: ${{ fromJson(inputs.runs-on) }}
-    needs: [deploy-start, prepare-deploy, release-chart]
+    needs: [deploy-start, prepare-deploy, prepare-chart, release-chart]
     steps:
       - id: prepare-deployment
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -488,7 +533,7 @@ jobs:
           REPOSITORY: ${{ fromJSON(inputs.deploy-parameters).repository }}
           ENVIRONMENT: ${{ needs.deploy-start.outputs.environment }}
           URL: ${{ inputs.url }}
-          DEPLOY_VALUES: ${{ needs.release-chart.outputs.deploy-values }}
+          DEPLOY_VALUES: ${{ needs.prepare-chart.outputs.deploy-values }}
         with:
           script: |
             // Repository
@@ -580,7 +625,7 @@ jobs:
         uses: $/actions/deploy/helm-repository-dispatch
         with:
           deployment-id: ${{ needs.deploy-start.outputs.deployment-id }}
-          chart: ${{ needs.release-chart.outputs.chart }}
+          chart: ${{ needs.release-chart.outputs.image }}
           chart-values: ${{ steps.prepare-deployment.outputs.deploy-values }}
           environment: ${{ needs.deploy-start.outputs.environment }}
           url: ${{ steps.prepare-deployment.outputs.url }}

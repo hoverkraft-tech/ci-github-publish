@@ -10,16 +10,13 @@
  * change, exit 0) when the dataset cannot be fetched, so scheduled runs never
  * break on a transient upstream outage.
  */
-import { readFileSync, writeFileSync, appendFileSync } from "node:fs";
+import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { computeDefaultModels } from "./selectDefaultModels.js";
 
 const MODELS_DEV_URL = "https://models.dev/api.json";
 const FETCH_TIMEOUT_MS = 30_000;
 
-const dataFileUrl = new URL(
-	"../src/default-llm-models.json",
-	import.meta.url,
-);
+const dataFileUrl = new URL("../src/default-llm-models.json", import.meta.url);
 
 function log(message) {
 	process.stdout.write(`${message}\n`);
@@ -105,7 +102,9 @@ async function main() {
 	try {
 		apiData = await fetchModelsDataset();
 	} catch (error) {
-		warn(`Could not fetch models dataset, keeping current map: ${error.message}`);
+		warn(
+			`Could not fetch models dataset, keeping current map: ${error.message}`,
+		);
 		setOutput("changed", "false");
 		return;
 	}

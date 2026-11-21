@@ -1,7 +1,7 @@
 {
-  "openai": "gpt-5",
-  "anthropic": "claude-sonnet-latest",
-  "google-genai": "gemini-2.5-flash",
-  "xai": "grok-4.7",
-  "deepseek": "deepseek-flash"
+	"openai": "gpt-5",
+	"anthropic": "claude-sonnet-latest",
+	"google-genai": "gemini-2.5-flash",
+	"xai": "grok-4.7",
+	"deepseek": "deepseek-flash"
 }

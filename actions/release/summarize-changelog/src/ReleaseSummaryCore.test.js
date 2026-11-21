@@ -1,7 +1,7 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { ReleaseSummaryCore } from "./ReleaseSummaryCore.js";
+import { describe, it } from "node:test";
 import { PromptBuilder } from "./PromptBuilder.js";
+import { ReleaseSummaryCore } from "./ReleaseSummaryCore.js";
 
 function createFileSystemServiceStub(relativeWorkingDirectory = ".") {
 	return {

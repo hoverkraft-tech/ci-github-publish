@@ -456,7 +456,7 @@ jobs:
 
 Use this when the published release notes should open with a short, human readable summary generated from the drafted changelog. Pick one of the two modes below.
 
-Store the complete changelog summary configuration in the organization-level `CHANGELOG_SUMMARY` secret. It is passed directly to the release action, avoiding provider credential and model JSON duplication across repositories. The summarizer inspects referenced commits and pull requests through the GitHub API, so the job needs `contents: read` and `pull-requests: read` in addition to the permissions each release action already requires.
+Store the LLM provider credential as a repository secret (for example `OPENAI_API_KEY`) and pass it through to the summarizer. The summarizer inspects referenced commits and pull requests through the GitHub API, so the job needs `contents: read` and `pull-requests: read` in addition to the permissions each release action already requires.
 
 #### Mode A: Let `actions/release/create` summarize the changelog
 
@@ -494,7 +494,11 @@ jobs:
         with:
           github-token: ${{ github.token }}
           # The summary is generated and prepended automatically before publication.
-          changelog-summary: ${{ secrets.CHANGELOG_SUMMARY }}
+          changelog-summary: |
+            {
+              "llmAuth": "${{ secrets.OPENAI_API_KEY }}",
+              "llmProvider": "openai"
+            }
 ```
 
 #### Mode B: Summarize directly so the summary can be reviewed or transformed

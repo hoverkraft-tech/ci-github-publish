@@ -11,7 +11,13 @@ const SYSTEM_PROMPT = [
 	"If breaking changes reference URLs, use the linked evidence when it is available below.",
 ].join(" ");
 
-const SUPPORTED_PROVIDERS = new Set(["openai", "anthropic", "google-genai"]);
+const SUPPORTED_PROVIDERS = new Set([
+	"openai",
+	"anthropic",
+	"google-genai",
+	"xai",
+	"deepseek",
+]);
 const DEFAULT_MAX_RETRIES = 8;
 
 export class LlmSummaryService {
@@ -23,7 +29,7 @@ export class LlmSummaryService {
 	async generate(inputs, llmPrompt) {
 		if (!SUPPORTED_PROVIDERS.has(inputs.llmProvider)) {
 			throw new Error(
-				"Unsupported llm-provider. Supported values: openai, anthropic, google-genai.",
+				"Unsupported llm-provider. Supported values: openai, anthropic, google-genai, xai, deepseek.",
 			);
 		}
 

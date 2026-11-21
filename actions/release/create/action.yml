@@ -68,7 +68,7 @@ inputs:
       Supported properties:
         - llmAuth (required)
         - llmProvider (optional, default: `openai`)
-        - llmModel (optional, default: `gpt-5.4`)
+        - llmModel (optional, defaults are resolved by `release/summarize-changelog` when omitted)
         - llmConfig (optional object or JSON string forwarded to `release/summarize-changelog`)
         - workingDirectory (optional, default: `working-directory` input or `.`)
         - summaryTemplate (optional template forwarded to `release/summarize-changelog`)
@@ -81,7 +81,7 @@ inputs:
       {
         "llmAuth": "$\{{ secrets.OPENAI_API_KEY }}",
         "llmProvider": "openai",
-        "llmModel": "gpt-5.4",
+        "llmModel": "gpt-5"
       }
       ```
     required: false
@@ -159,7 +159,7 @@ runs:
           core.setSecret(llmAuth);
 
           const llmProvider = (summaryConfig.llmProvider || 'openai').trim() || 'openai';
-          const llmModel = (summaryConfig.llmModel || 'gpt-5.4').trim() || 'gpt-5.4';
+          const llmModel = (summaryConfig.llmModel || '').trim();
           const workingDirectory = (summaryConfig.workingDirectory || fallbackWorkingDirectory).trim() || '.';
           const summaryTemplate = typeof summaryConfig.summaryTemplate === 'string'
             ? summaryConfig.summaryTemplate

@@ -115,6 +115,40 @@ describe("ReleaseSummaryCore", () => {
 		);
 	});
 
+	it("rejects missing llm-model input", async () => {
+		const core = new ReleaseSummaryCore(
+			createFileSystemServiceStub(),
+			createLoggerStub(),
+			{
+				async collect() {
+					return "";
+				},
+			},
+			{
+				async collect() {
+					return "";
+				},
+			},
+			new PromptBuilder(),
+			{
+				async generate() {
+					return "";
+				},
+			},
+		);
+
+		await assert.rejects(
+			() =>
+				core.summarize({
+					changelogBody: "feat: add search",
+					llmProvider: "anthropic",
+					llmAuth: "token",
+					llmConfig: "{}",
+				}),
+			/The llm-model input is required\./,
+		);
+	});
+
 	it("rejects llm-config values that are not JSON objects", async () => {
 		const core = new ReleaseSummaryCore(
 			createFileSystemServiceStub(),

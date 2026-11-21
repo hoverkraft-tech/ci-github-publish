@@ -1,0 +1,57 @@
+---
+name: Internal - Update LLM default models
+
+on: # yamllint disable-line rule:truthy
+  workflow_dispatch:
+  schedule:
+    - cron: "41 4 * * 1"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  update-default-models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.CI_BOT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }} # zizmor: ignore[secrets-outside-env] scheduled maintenance uses the CI bot
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Refresh default model map
+        id: refresh
+        run: node actions/release/summarize-changelog/maintenance/update-default-models.mjs
+
+      - name: Create review pull request
+        if: steps.refresh.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          base: ${{ github.event.repository.default_branch }}
+          branch: chore/update-llm-default-models
+          delete-branch: true
+          signoff: true
+          sign-commits: true
+          add-paths: actions/release/summarize-changelog/src/default-llm-models.json
+          labels: |
+            dependencies
+            release
+          title: "chore(release): review summarize-changelog default models"
+          body: ${{ steps.refresh.outputs.pr-body }}
+          commit-message: |
+            chore(release): review summarize-changelog default models
+
+            Regenerated the summarize-changelog default model map from models.dev.

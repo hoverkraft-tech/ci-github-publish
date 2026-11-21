@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "gitIgnoredAuthors": [
+    "128996893+hoverkraft-bot[bot]@users.noreply.github.com"
+  ],
+  "enabledManagers": ["github-actions"],
+  "semanticCommits": "enabled",
+  "semanticCommitType": "build",
+  "minimumReleaseAge": "7 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
+  "pinDigests": true,
+  "packageRules": [
+    {
+      "description": "Dependabot is the primary dependency updater.",
+      "matchPackageNames": ["*"],
+      "enabled": false
+    },
+    {
+      "description": "Update docker:// action references unsupported by Dependabot.",
+      "matchDatasources": ["docker"],
+      "matchDepTypes": ["docker"],
+      "enabled": true
+    }
+  ]
+}

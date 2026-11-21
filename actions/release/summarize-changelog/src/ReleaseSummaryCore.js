@@ -65,8 +65,8 @@ export class ReleaseSummaryCore {
 
 	#normalizeInputs(inputs) {
 		const changelogBody = (inputs.changelogBody || "").trim();
-		const llmModel = (inputs.llmModel || "").trim();
 		const llmProvider = (inputs.llmProvider || "openai").trim();
+		const llmModel = (inputs.llmModel || "").trim();
 		const llmAuth = (inputs.llmAuth || "").trim();
 		const llmConfig = this.#parseLlmConfig(inputs.llmConfig);
 		const summaryTemplate = inputs.summaryTemplate || DEFAULT_SUMMARY_TEMPLATE;

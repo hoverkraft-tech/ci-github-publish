@@ -14,11 +14,11 @@ inputs:
     required: false
     default: "."
   llm-model:
-    description: "Provider model name used to generate the release summary. The action resolves it as `${llm-provider}:${llm-model}` for LangChain `initChatModel`."
+    description: "Provider model name used to generate the release summary. When omitted, a maintained per-provider default is used."
     required: false
-    default: "gpt-5.4"
+    default: ""
   llm-provider:
-    description: "LangChain provider name used to resolve the final model identifier `${llm-provider}:${llm-model}` (`openai`, `anthropic`, `google-genai`)."
+    description: "LangChain provider name used to resolve the final model identifier `${llm-provider}:${llm-model}` (`openai`, `anthropic`, `google-genai`, `xai`, `deepseek`)."
     required: false
     default: "openai"
   llm-auth:

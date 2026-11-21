@@ -5,6 +5,7 @@ import { run } from "./index.js";
 describe("index.run", () => {
 	it("sets outputs from the release summary core flow", async () => {
 		const outputs = {};
+		const seenInputs = [];
 		await run({
 			core: {
 				info() {},
@@ -31,7 +32,8 @@ describe("index.run", () => {
 			},
 			services: {
 				releaseSummaryCore: {
-					async summarize() {
+					async summarize(inputs) {
+						seenInputs.push(inputs);
 						return {
 							llmPrompt:
 								"Changelog body:\nfeat(api): add project filters (#42)",
@@ -50,8 +52,52 @@ describe("index.run", () => {
 			},
 		});
 
+		assert.equal(seenInputs.length, 1);
+		assert.equal(seenInputs[0].llmProvider, "openai");
+		assert.equal(seenInputs[0].llmModel, "gpt-5.4");
 		assert.match(outputs["llm-prompt"], /Changelog body:/);
 		assert.match(outputs.summary, /^## Release Summary/m);
 		assert.match(outputs.summary, /^## Breaking changes/m);
+	});
+
+	it("resolves provider defaults when llm-model is omitted", async () => {
+		const seenInputs = [];
+		await run({
+			core: {
+				info() {},
+				warning() {},
+				setOutput() {},
+				setFailed(message) {
+					throw new Error(message);
+				},
+			},
+			github: {},
+			context: {
+				repo: { owner: "hoverkraft-tech", repo: "ci-github-publish" },
+			},
+			inputs: {
+				changelogBody: "feat(api): add project filters (#42)",
+				workingDirectory: ".",
+				llmProvider: "anthropic",
+				llmAuth: "token",
+				llmConfig: "{}",
+			},
+			services: {
+				releaseSummaryCore: {
+					async summarize(inputs) {
+						seenInputs.push(inputs);
+						return {
+							llmPrompt: "prompt",
+							summary:
+								"## Release Summary\n\nAdded filters.\n\n## Breaking changes\n\nThere is no breaking change.",
+						};
+					},
+				},
+			},
+		});
+
+		assert.equal(seenInputs.length, 1);
+		assert.equal(seenInputs[0].llmProvider, "anthropic");
+		assert.equal(seenInputs[0].llmModel, "claude-sonnet-latest");
 	});
 });

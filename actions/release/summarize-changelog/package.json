@@ -20,8 +20,10 @@
 	"license": "MIT",
 	"dependencies": {
 		"@langchain/anthropic": "1.6.4",
+		"@langchain/deepseek": "1.1.26",
 		"@langchain/google-genai": "2.3.6",
 		"@langchain/openai": "1.8.4",
+		"@langchain/xai": "1.5.7",
 		"html-to-text": "^10.0.1",
 		"langchain": "1.6.5"
 	},

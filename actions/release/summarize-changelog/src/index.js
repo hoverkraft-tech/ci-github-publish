@@ -2,10 +2,7 @@ import { readFileSync } from "node:fs";
 
 const DEFAULT_LLM_MODEL_BY_PROVIDER = Object.freeze(
 	JSON.parse(
-		readFileSync(
-			new URL("./default-llm-models.json", import.meta.url),
-			"utf8",
-		),
+		readFileSync(new URL("./default-llm-models.json", import.meta.url), "utf8"),
 	),
 );
 

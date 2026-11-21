@@ -24,7 +24,10 @@ describe("isRelevantSummaryModel", () => {
 	});
 
 	it("excludes deprecated models", () => {
-		assert.equal(isRelevantSummaryModel(model({ status: "deprecated" })), false);
+		assert.equal(
+			isRelevantSummaryModel(model({ status: "deprecated" })),
+			false,
+		);
 	});
 
 	it("excludes models without tool-calling", () => {
@@ -34,7 +37,10 @@ describe("isRelevantSummaryModel", () => {
 	it("excludes image generation models", () => {
 		assert.equal(
 			isRelevantSummaryModel(
-				model({ id: "gpt-image-2", modalities: { input: ["text"], output: ["image"] } }),
+				model({
+					id: "gpt-image-2",
+					modalities: { input: ["text"], output: ["image"] },
+				}),
 			),
 			false,
 		);
@@ -43,7 +49,10 @@ describe("isRelevantSummaryModel", () => {
 	it("excludes audio and realtime models by output modality", () => {
 		assert.equal(
 			isRelevantSummaryModel(
-				model({ id: "gpt-realtime", modalities: { input: ["text"], output: ["text", "audio"] } }),
+				model({
+					id: "gpt-realtime",
+					modalities: { input: ["text"], output: ["text", "audio"] },
+				}),
 			),
 			false,
 		);
@@ -69,11 +78,15 @@ describe("isRelevantSummaryModel", () => {
 
 	it("excludes preview and experimental releases", () => {
 		assert.equal(
-			isRelevantSummaryModel(model({ id: "gemini-3.5-live-translate-preview" })),
+			isRelevantSummaryModel(
+				model({ id: "gemini-3.5-live-translate-preview" }),
+			),
 			false,
 		);
 		assert.equal(
-			isRelevantSummaryModel(model({ id: "model-exp", name: "Model (experimental)" })),
+			isRelevantSummaryModel(
+				model({ id: "model-exp", name: "Model (experimental)" }),
+			),
 			false,
 		);
 	});
@@ -85,7 +98,11 @@ describe("selectDefaultModel", () => {
 			models: {
 				a: model({ id: "chat-old", release_date: "2024-01-01" }),
 				b: model({ id: "chat-new", release_date: "2025-06-01" }),
-				c: model({ id: "chat-img", release_date: "2025-09-01", modalities: { input: ["text"], output: ["image"] } }),
+				c: model({
+					id: "chat-img",
+					release_date: "2025-09-01",
+					modalities: { input: ["text"], output: ["image"] },
+				}),
 			},
 		};
 
@@ -115,8 +132,14 @@ describe("selectDefaultModel", () => {
 describe("computeDefaultModels", () => {
 	it("updates changed providers and reports the changes", () => {
 		const apiData = {
-			openai: { models: { a: model({ id: "gpt-next", release_date: "2025-07-01" }) } },
-			anthropic: { models: { a: model({ id: "claude-sonnet-latest", release_date: "2025-07-01" }) } },
+			openai: {
+				models: { a: model({ id: "gpt-next", release_date: "2025-07-01" }) },
+			},
+			anthropic: {
+				models: {
+					a: model({ id: "claude-sonnet-latest", release_date: "2025-07-01" }),
+				},
+			},
 		};
 
 		const { map, changes } = computeDefaultModels(apiData, {
@@ -130,7 +153,11 @@ describe("computeDefaultModels", () => {
 		});
 		assert.equal(changes.length, 1);
 		assert.deepEqual(
-			{ provider: changes[0].provider, from: changes[0].from, to: changes[0].to },
+			{
+				provider: changes[0].provider,
+				from: changes[0].from,
+				to: changes[0].to,
+			},
 			{ provider: "openai", from: "gpt-5", to: "gpt-next" },
 		);
 	});
@@ -145,7 +172,10 @@ describe("computeDefaultModels", () => {
 	});
 
 	it("keeps unknown providers untouched", () => {
-		const { map, changes } = computeDefaultModels({}, { "custom-provider": "x" });
+		const { map, changes } = computeDefaultModels(
+			{},
+			{ "custom-provider": "x" },
+		);
 
 		assert.deepEqual(map, { "custom-provider": "x" });
 		assert.equal(changes.length, 0);

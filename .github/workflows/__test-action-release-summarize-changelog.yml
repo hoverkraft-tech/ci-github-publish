@@ -42,7 +42,15 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
+            const fs = require('node:fs');
             const http = require('http');
+
+            const defaultModels = JSON.parse(
+              fs.readFileSync(
+                'actions/release/summarize-changelog/src/default-llm-models.json',
+                'utf8',
+              ),
+            );
 
             const delay = (milliseconds) => new Promise((resolve) => {
               setTimeout(resolve, milliseconds);
@@ -140,7 +148,7 @@ jobs:
                     id: 'chatcmpl-test',
                     object: 'chat.completion',
                     created: 0,
-                    model: 'gpt-5.4',
+                    model: defaultModels.openai,
                     choices: [
                       {
                         index: 0,
@@ -193,6 +201,7 @@ jobs:
         with:
           script: |
             const assert = require('node:assert/strict');
+            const fs = require('node:fs');
             const http = require('http');
 
             const makeWireMockRequest = (path) => {
@@ -239,6 +248,12 @@ jobs:
 
             const summary = process.env.SUMMARY;
             const llmPrompt = process.env.LLM_PROMPT;
+            const defaultModels = JSON.parse(
+              fs.readFileSync(
+                'actions/release/summarize-changelog/src/default-llm-models.json',
+                'utf8',
+              ),
+            );
             const requestJournal = JSON.parse(await makeWireMockRequest('/__admin/requests'));
             const llmRequestEntry = requestJournal.requests.find(({ request }) => {
               return request.url === '/v1/chat/completions' || request.absoluteUrl?.includes('/v1/chat/completions');
@@ -260,7 +275,7 @@ jobs:
                 'There is no breaking change.',
               ].join('\n'),
             );
-            assert.equal(llmRequest.model, 'gpt-5.4');
+            assert.equal(llmRequest.model, defaultModels.openai);
             assert.match(llmRequest.messages[0].role, /^(system|developer)$/);
             assert.equal(llmRequest.messages[1].role, 'user');
             assert.match(

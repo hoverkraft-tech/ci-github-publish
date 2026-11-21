@@ -43,7 +43,7 @@ The release is published by default after optional changelog summarization and a
 ## Usage
 
 ````yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/release/create@c3cd9bbbc4909bb341bd2aafe50a8673afc58fd0 # 3.0.6
+- uses: hoverkraft-tech/ci-github-publish/actions/release/create@80fa7011b27f49f2e04a19f932d36047d17a28f2 # 3.0.7
   with:
     # Optional partial Release Drafter configuration as a YAML or JSON mapping.
     # Precedence: generated defaults, repository configuration, then these overrides.
@@ -99,7 +99,7 @@ The release is published by default after optional changelog summarization and a
     # Supported properties:
     # - llmAuth (required)
     # - llmProvider (optional, default: `openai`)
-    # - llmModel (optional, default: `gpt-5.4`)
+    # - llmModel (optional, defaults are resolved by `release/summarize-changelog` when omitted)
     # - llmConfig (optional object or JSON string forwarded to `release/summarize-changelog`)
     # - workingDirectory (optional, default: `working-directory` input or `.`)
     # - summaryTemplate (optional template forwarded to `release/summarize-changelog`)
@@ -112,7 +112,7 @@ The release is published by default after optional changelog summarization and a
     # {
     # "llmAuth": "$\{{ secrets.OPENAI_API_KEY }}",
     # "llmProvider": "openai",
-    # "llmModel": "gpt-5.4",
+    # "llmModel": "gpt-5"
     # }
     # ```
     changelog-summary: ""
@@ -172,7 +172,7 @@ The release is published by default after optional changelog summarization and a
 |                           | Supported properties:                                                                                                                                                                                                                          |              |                       |
 |                           | - llmAuth (required)                                                                                                                                                                                                                           |              |                       |
 |                           | - llmProvider (optional, default: `openai`)                                                                                                                                                                                                    |              |                       |
-|                           | - llmModel (optional, default: `gpt-5.4`)                                                                                                                                                                                                      |              |                       |
+|                           | - llmModel (optional, defaults are resolved by `release/summarize-changelog` when omitted)                                                                                                                                                     |              |                       |
 |                           | - llmConfig (optional object or JSON string forwarded to `release/summarize-changelog`)                                                                                                                                                        |              |                       |
 |                           | - workingDirectory (optional, default: `working-directory` input or `.`)                                                                                                                                                                       |              |                       |
 |                           | - summaryTemplate (optional template forwarded to `release/summarize-changelog`)                                                                                                                                                               |              |                       |
@@ -181,7 +181,7 @@ The release is published by default after optional changelog summarization and a
 |                           |                                                                                                                                                                                                                                                |              |                       |
 |                           | Example value:                                                                                                                                                                                                                                 |              |                       |
 |                           |                                                                                                                                                                                                                                                |              |                       |
-|                           | <!-- textlint-disable --><pre lang="json">{&#13; "llmAuth": "$\{{ secrets.OPENAI_API_KEY }}",&#13; "llmProvider": "openai",&#13; "llmModel": "gpt-5.4",&#13;}</pre><!-- textlint-enable -->                                                    |              |                       |
+|                           | <!-- textlint-disable --><pre lang="json">{&#13; "llmAuth": "$\{{ secrets.OPENAI_API_KEY }}",&#13; "llmProvider": "openai",&#13; "llmModel": "gpt-5"&#13;}</pre><!-- textlint-enable -->                                                       |              |                       |
 | **`release-artifact-id`** | Optional workflow artifact ID containing files to upload as GitHub release assets after the draft release is created or updated.                                                                                                               | **false**    | -                     |
 |                           | The artifact is downloaded automatically before upload.                                                                                                                                                                                        |              |                       |
 |                           | Prefer `actions/release/update` when you only need to mutate an existing release.                                                                                                                                                              |              |                       |

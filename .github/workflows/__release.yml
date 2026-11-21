@@ -69,15 +69,9 @@ jobs:
       - name: Create and publish release
         if: steps.plan-release.outputs.should-release == 'true' && steps.plan-release.outputs.tag != ''
         uses: $/actions/release/create
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # zizmor: ignore[secrets-outside-env] repository secret is scoped to the release summary step
         with:
           tag: ${{ steps.plan-release.outputs.tag }}
           target-ref: ${{ github.sha }}
           publish: "true"
-          changelog-summary: |
-            {
-              "llmAuth": ${{ toJSON(env.OPENAI_API_KEY) }},
-              "llmProvider": "openai"
-            }
+          changelog-summary: ${{ secrets.CHANGELOG_SUMMARY }}
           github-token: ${{ steps.generate-token.outputs.token }}

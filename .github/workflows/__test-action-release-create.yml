@@ -170,6 +170,39 @@ jobs:
           path: ${{ steps.release-asset.outputs.path }}
           if-no-files-found: error
 
+      - name: Arrange - Wait for release artifact registration
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_ARTIFACT_ID: ${{ steps.release-artifact.outputs.artifact-id }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const artifactId = Number(process.env.RELEASE_ARTIFACT_ID || 0);
+            if (!artifactId) {
+              throw new Error("Upload did not return a release artifact id");
+            }
+
+            const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));
+            for (let attempt = 1; attempt <= 10; attempt += 1) {
+              try {
+                const { data: artifact } = await github.rest.actions.getArtifact({
+                  ...context.repo,
+                  artifact_id: artifactId,
+                });
+                if (!artifact.expired) {
+                  core.info(`Release artifact ${artifactId} is registered`);
+                  return;
+                }
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+              }
+              await wait(attempt * 500);
+            }
+
+            throw new Error(`Release artifact ${artifactId} was not registered`);
+
       - name: Act - Upload asset and publish release without a checkout
         uses: $/actions/release/update
         with:

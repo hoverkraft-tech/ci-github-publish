@@ -11,7 +11,10 @@
  * break on a transient upstream outage.
  */
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
-import { computeDefaultModels } from "./selectDefaultModels.js";
+import {
+	computeDefaultModels,
+	serializeDefaultModels,
+} from "./selectDefaultModels.js";
 
 const MODELS_DEV_URL = "https://models.dev/api.json";
 const FETCH_TIMEOUT_MS = 30_000;
@@ -61,7 +64,7 @@ function readCurrentMap() {
 }
 
 function writeMap(map) {
-	writeFileSync(dataFileUrl, `${JSON.stringify(map, null, 2)}\n`);
+	writeFileSync(dataFileUrl, serializeDefaultModels(map));
 }
 
 function formatCost(model) {

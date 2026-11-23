@@ -4,6 +4,7 @@ import {
 	computeDefaultModels,
 	isRelevantSummaryModel,
 	selectDefaultModel,
+	serializeDefaultModels,
 } from "./selectDefaultModels.js";
 
 function model(overrides) {
@@ -179,5 +180,23 @@ describe("computeDefaultModels", () => {
 
 		assert.deepEqual(map, { "custom-provider": "x" });
 		assert.equal(changes.length, 0);
+	});
+});
+
+describe("serializeDefaultModels", () => {
+	it("writes valid JSON using Biome-compatible indentation and a final newline", () => {
+		const serialized = serializeDefaultModels({
+			openai: "gpt-5",
+			anthropic: "claude-sonnet-latest",
+		});
+
+		assert.equal(
+			serialized,
+			'{\n\t"openai": "gpt-5",\n\t"anthropic": "claude-sonnet-latest"\n}\n',
+		);
+		assert.deepEqual(JSON.parse(serialized), {
+			openai: "gpt-5",
+			anthropic: "claude-sonnet-latest",
+		});
 	});
 });

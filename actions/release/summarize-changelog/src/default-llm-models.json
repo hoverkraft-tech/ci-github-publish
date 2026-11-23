@@ -1,7 +1,7 @@
 {
-  "openai": "gpt-6.2-sol",
-  "anthropic": "claude-fable-5-2",
-  "google-genai": "gemini-4-neon",
-  "xai": "grok-4.7",
-  "deepseek": "deepseek-flash"
+	"openai": "gpt-6.2-sol",
+	"anthropic": "claude-fable-5-2",
+	"google-genai": "gemini-4-neon",
+	"xai": "grok-4.7",
+	"deepseek": "deepseek-flash"
 }

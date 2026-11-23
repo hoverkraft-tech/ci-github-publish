@@ -144,3 +144,10 @@ export function computeDefaultModels(apiData, currentMap) {
 
 	return { map, changes };
 }
+
+/**
+ * Serializes the default model map using the repository's Biome JSON style.
+ */
+export function serializeDefaultModels(map) {
+	return `${JSON.stringify(map, null, "\t")}\n`;
+}

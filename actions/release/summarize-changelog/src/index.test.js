@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { run } from "./index.js";
+
+const defaultModels = JSON.parse(
+	readFileSync(new URL("./default-llm-models.json", import.meta.url), "utf8"),
+);
 
 describe("index.run", () => {
 	it("sets outputs from the release summary core flow", async () => {
@@ -98,6 +103,6 @@ describe("index.run", () => {
 
 		assert.equal(seenInputs.length, 1);
 		assert.equal(seenInputs[0].llmProvider, "anthropic");
-		assert.equal(seenInputs[0].llmModel, "claude-sonnet-latest");
+		assert.equal(seenInputs[0].llmModel, defaultModels.anthropic);
 	});
 });

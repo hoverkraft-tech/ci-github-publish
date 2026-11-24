@@ -54,7 +54,7 @@ runs:
   steps:
     - id: download-artifact
       if: ${{ inputs.build-artifact-id != '' }}
-      uses: hoverkraft-tech/ci-github-common/actions/download-artifact@53fa326bbb9960d2cb31f853613f7a91830fc845 # fix/artifact-discovery (pending release)
+      uses: hoverkraft-tech/ci-github-common/actions/download-artifact@af0bdd6313bd49aaf4a8a7f0de005fb0db856b03 # 4.3.3
       with:
         artifact-ids: ${{ inputs.build-artifact-id }}
         path: "/"

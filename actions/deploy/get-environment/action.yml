@@ -26,7 +26,7 @@ runs:
   steps:
     - id: get-issue-number
       if: ${{ github.event_name == 'issue_comment' || github.event_name == 'pull_request' }}
-      uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
+      uses: hoverkraft-tech/ci-github-common/actions/get-issue-number@af0bdd6313bd49aaf4a8a7f0de005fb0db856b03 # 4.3.3
 
     - id: get-environment
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

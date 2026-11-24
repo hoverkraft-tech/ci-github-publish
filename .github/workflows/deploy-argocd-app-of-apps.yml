@@ -152,7 +152,7 @@ jobs:
           persist-credentials: false
 
       - id: slugify-namespace
-        uses: hoverkraft-tech/ci-github-common/actions/slugify@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
+        uses: hoverkraft-tech/ci-github-common/actions/slugify@af0bdd6313bd49aaf4a8a7f0de005fb0db856b03 # 4.3.3
         with:
           value: ${{ format('{0}-{1}', steps.check-client-payload.outputs.repository, steps.check-client-payload.outputs.environment) }}
 
@@ -227,7 +227,7 @@ jobs:
           permission-pull-requests: write
       # jscpd:ignore-end
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@af0bdd6313bd49aaf4a8a7f0de005fb0db856b03 # 4.3.3
         with:
           github-token: ${{ steps.generate-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
           branch: feat/deploy-${{ steps.slugify-namespace.outputs.result }}

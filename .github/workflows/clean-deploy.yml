@@ -169,7 +169,7 @@ jobs:
           environment: ${{ fromJSON(steps.delete-deployment.outputs.environments)[0] }}
           github-token: ${{ steps.generate-dispatch-token.outputs.token || secrets.github-token || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@a86c260e07b11a7a0ca3b7205bbdba9908230917 # 4.3.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-or-update-comment@af0bdd6313bd49aaf4a8a7f0de005fb0db856b03 # 4.3.3
         if: ${{ steps.delete-deployment.outputs.environments && steps.delete-deployment.outputs.environments != '[]' }}
         with:
           title: "Deployment(s) have been deleted :wastebasket:."

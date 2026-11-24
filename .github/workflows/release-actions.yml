@@ -319,6 +319,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Wait for artifact discovery
+        uses: hoverkraft-tech/ci-github-common/actions/wait-for-artifacts@6f439721e3124a9d689cc75936ab638240a05fdc # fix/artifact-discovery (pending release)
+        with:
+          artifact-ids: ${{ needs.generate-documentation.outputs.artifact-id }}
+
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           artifact-ids: ${{ needs.generate-documentation.outputs.artifact-id }}
@@ -361,6 +366,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Wait for artifact discovery
+        if: needs.generate-documentation.outputs.artifact-id
+        uses: hoverkraft-tech/ci-github-common/actions/wait-for-artifacts@6f439721e3124a9d689cc75936ab638240a05fdc # fix/artifact-discovery (pending release)
+        with:
+          artifact-ids: ${{ needs.generate-documentation.outputs.artifact-id }}
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         if: needs.generate-documentation.outputs.artifact-id

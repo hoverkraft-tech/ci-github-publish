@@ -1,5 +1,7 @@
 name: "Deploy - GitHub Pages"
-description: "Action to deploy a static site to GitHub Pages."
+description: |
+  Deploy a static site to GitHub Pages. Wait for uploaded build and Pages artifacts
+  to become discoverable before consuming them, with bounded retries for missing IDs.
 author: hoverkraft
 branding:
   icon: upload-cloud
@@ -50,6 +52,12 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Wait for artifact discovery
+      if: ${{ inputs.build-artifact-id != '' }}
+      uses: hoverkraft-tech/ci-github-common/actions/wait-for-artifacts@6f439721e3124a9d689cc75936ab638240a05fdc # fix/artifact-discovery (pending release)
+      with:
+        artifact-ids: ${{ inputs.build-artifact-id }}
+
     - id: download-artifact
       if: ${{ inputs.build-artifact-id != '' }}
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -106,10 +114,16 @@ runs:
         enablement: true
 
     - name: 📦 Upload website build artifact
+      id: upload-pages
       uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
       with:
         path: ${{ steps.prepare-variables.outputs.build-path }}
         name: ${{ steps.prepare-variables.outputs.artifact-name }}
+
+    - name: Wait for Pages artifact discovery
+      uses: hoverkraft-tech/ci-github-common/actions/wait-for-artifacts@6f439721e3124a9d689cc75936ab638240a05fdc # fix/artifact-discovery (pending release)
+      with:
+        artifact-ids: ${{ steps.upload-pages.outputs.artifact_id }}
 
     - name: 🚀 Deploy to GitHub Pages
       id: deployment

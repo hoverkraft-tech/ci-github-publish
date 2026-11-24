@@ -30,8 +30,8 @@
 
 ## Overview
 
-Deploy a static site to GitHub Pages. Wait for uploaded build and Pages artifacts
-to become discoverable before consuming them, with bounded retries for missing IDs.
+Deploy a static site to GitHub Pages with bounded retries for delayed artifact
+availability during build downloads and Pages metadata discovery.
 
 <!-- overview:end -->
 

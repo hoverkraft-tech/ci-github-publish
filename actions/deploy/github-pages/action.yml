@@ -1,7 +1,7 @@
 name: "Deploy - GitHub Pages"
 description: |
-  Deploy a static site to GitHub Pages. Wait for uploaded build and Pages artifacts
-  to become discoverable before consuming them, with bounded retries for missing IDs.
+  Deploy a static site to GitHub Pages with bounded retries for delayed artifact
+  availability during build downloads and Pages metadata discovery.
 author: hoverkraft
 branding:
   icon: upload-cloud
@@ -52,15 +52,9 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Wait for artifact discovery
-      if: ${{ inputs.build-artifact-id != '' }}
-      uses: hoverkraft-tech/ci-github-common/actions/wait-for-artifacts@6f439721e3124a9d689cc75936ab638240a05fdc # fix/artifact-discovery (pending release)
-      with:
-        artifact-ids: ${{ inputs.build-artifact-id }}
-
     - id: download-artifact
       if: ${{ inputs.build-artifact-id != '' }}
-      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      uses: hoverkraft-tech/ci-github-common/actions/download-artifact@53fa326bbb9960d2cb31f853613f7a91830fc845 # fix/artifact-discovery (pending release)
       with:
         artifact-ids: ${{ inputs.build-artifact-id }}
         path: "/"
@@ -114,20 +108,14 @@ runs:
         enablement: true
 
     - name: 📦 Upload website build artifact
-      id: upload-pages
       uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
       with:
         path: ${{ steps.prepare-variables.outputs.build-path }}
         name: ${{ steps.prepare-variables.outputs.artifact-name }}
 
-    - name: Wait for Pages artifact discovery
-      uses: hoverkraft-tech/ci-github-common/actions/wait-for-artifacts@6f439721e3124a9d689cc75936ab638240a05fdc # fix/artifact-discovery (pending release)
-      with:
-        artifact-ids: ${{ steps.upload-pages.outputs.artifact_id }}
-
     - name: 🚀 Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      uses: neilime/deploy-pages@eb6bb52b57e77a2443b71bd3187996bec22de67a # actions/deploy-pages PR #455 (pending release)
       with:
         artifact_name: ${{ steps.prepare-variables.outputs.artifact-name }}
 

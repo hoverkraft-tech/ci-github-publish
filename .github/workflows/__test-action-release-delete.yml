@@ -199,6 +199,7 @@ jobs:
           PUBLISHED_TAG: ${{ steps.test-releases.outputs.published-tag }}
         with:
           github-token: ${{ github.token }}
+          retries: 3
           script: |
             // jscpd:ignore-start
             const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs));

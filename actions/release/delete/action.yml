@@ -44,6 +44,7 @@ runs:
         DRAFT_ONLY: ${{ inputs.draft-only }}
       with:
         github-token: ${{ inputs.github-token }}
+        retries: 3
         script: |
           const releaseTag = (process.env.RELEASE_TAG || '').trim();
           const draftOnly = (process.env.DRAFT_ONLY || 'false').trim().toLowerCase() || 'false';

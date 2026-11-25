@@ -115,6 +115,9 @@ runs:
 
     - name: 🚀 Deploy to GitHub Pages
       id: deployment
+      # FIXME: Temporary workaround for delayed Pages artifact discovery.
+      # Switch back to actions/deploy-pages after this fix is merged and released:
+      # https://github.com/actions/deploy-pages/pull/455
       uses: neilime/deploy-pages@eb6bb52b57e77a2443b71bd3187996bec22de67a # actions/deploy-pages PR #455 (pending release)
       with:
         artifact_name: ${{ steps.prepare-variables.outputs.artifact-name }}

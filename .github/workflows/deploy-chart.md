@@ -91,7 +91,7 @@ on:
 permissions: {}
 jobs:
   deploy-chart:
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@79515002f850e714d4c76f07983e6eb1ba97bea5 # 3.1.1
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@bf24f894f60a3def62a8750f3964d05acb052c11 # 3.1.2
     permissions:
       actions: read
       attestations: write
@@ -384,7 +384,7 @@ permissions:
 jobs:
   deploy:
     name: Deploy
-    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@79515002f850e714d4c76f07983e6eb1ba97bea5 # 3.1.1
+    uses: hoverkraft-tech/ci-github-publish/.github/workflows/deploy-chart.yml@bf24f894f60a3def62a8750f3964d05acb052c11 # 3.1.2
     secrets:
       oci-registry-password: ${{ secrets.GITHUB_TOKEN }}
       github-app-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}

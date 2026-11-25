@@ -50,7 +50,7 @@ It requires the `actions: read` permission on the token used.
 ## Usage
 
 ```yaml
-- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@79515002f850e714d4c76f07983e6eb1ba97bea5 # 3.1.1
+- uses: hoverkraft-tech/ci-github-publish/actions/workflow/get-workflow-failure@bf24f894f60a3def62a8750f3964d05acb052c11 # 3.1.2
   with:
     # GitHub Token to get workflow information.
     # Permissions:

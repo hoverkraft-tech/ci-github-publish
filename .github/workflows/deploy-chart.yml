@@ -347,7 +347,7 @@ jobs:
   build-oci-images:
     name: Build OCI images
     needs: prepare-deploy
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@b055d6ce0f3a5e223615ad494d88d92e17af11e5 # 4.2.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@a5dc1ea7c1f4c2dffc3267c5be7304d01284f2ec # 4.2.1
     permissions:
       attestations: write
       contents: read
@@ -479,7 +479,7 @@ jobs:
   validate-chart:
     name: Validate chart
     needs: [prepare-deploy, prepare-chart]
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/helm-chart-ci.yml@b055d6ce0f3a5e223615ad494d88d92e17af11e5 # 4.2.0
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/helm-chart-ci.yml@a5dc1ea7c1f4c2dffc3267c5be7304d01284f2ec # 4.2.1
     permissions:
       contents: read
       packages: read
@@ -512,7 +512,7 @@ jobs:
     steps:
       - name: Publish and sign unchanged archive
         id: release
-        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@b055d6ce0f3a5e223615ad494d88d92e17af11e5 # 4.2.0
+        uses: hoverkraft-tech/ci-github-container/actions/helm/release-chart@a5dc1ea7c1f4c2dffc3267c5be7304d01284f2ec # 4.2.1
         with:
           artifact-id: ${{ needs.validate-chart.outputs.artifact-id }}
           archive-name: ${{ needs.validate-chart.outputs.archive-name }}

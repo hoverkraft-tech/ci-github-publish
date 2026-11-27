@@ -280,7 +280,7 @@ jobs:
 
       - name: 📖 Generate documentation
         id: generate-documentation
-        uses: hoverkraft-tech/ci-dokumentor@f4ef352022353a38b944e6d46a8fb458a9f6d06f # 0.6.0
+        uses: hoverkraft-tech/ci-dokumentor@93a10eb9c637d6b06ef394f12d60189b192b87c2 # 0.6.1
         with:
           source: ${{ needs.get-documentation-changes.outputs.manifest-files }}
           extra-badges: ${{ inputs.extra-badges }}
@@ -326,7 +326,7 @@ jobs:
 
       # jscpd:ignore-start
 
-      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         if: inputs.github-app-client-id
         id: generate-token
         with:

@@ -37831,7 +37831,7 @@ var { Gitlab: dist_Gitlab } = API;
 
 
 
-;// CONCATENATED MODULE: ./node_modules/release-drafter/dist/chunks/src-Bp2nxB0_.js
+;// CONCATENATED MODULE: ./node_modules/release-drafter/dist/chunks/src-xnCw1jiX.js
 
 
 
@@ -37842,7 +37842,7 @@ var { Gitlab: dist_Gitlab } = API;
 
 
 
-//#region ../../node_modules/conventional-commits-parser/dist/regex.js
+// ../../node_modules/conventional-commits-parser/dist/regex.js
 var nomatchRegex = /(?!.*)/;
 function escape$1(string) {
 	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -37858,13 +37858,15 @@ function getNotesRegex(noteKeywords, notesPattern) {
 }
 function getReferencePartsRegex(issuePrefixes, issuePrefixesCaseSensitive) {
 	if (!issuePrefixes) return nomatchRegex;
-	const flags = issuePrefixesCaseSensitive ? "g" : "gi";
-	return new RegExp(`(?:.*?)??\\s*([\\w-\\.\\/]*?)??(${joinOr(issuePrefixes)})([\\w-]+)(?=\\s|$|[,;.)\\]])`, flags);
+	const flags = issuePrefixesCaseSensitive ? "gy" : "giy";
+	const repositoryChar = "[\\w-\\.\\/]";
+	return new RegExp(`.*?(?<!${repositoryChar})(?:(${repositoryChar}+)(?!${repositoryChar}))?(${joinOr(issuePrefixes)})((?=[\\w-]*\\d)[\\w-]+)(?=\\s|$|[,;.)\\]])`, flags);
 }
-function getReferencesRegex(referenceActions) {
+function getReferencesRegex(referenceActions, separator = "") {
 	if (!referenceActions) return /()(.+)/gi;
 	const joinedKeywords = joinOr(referenceActions);
-	return new RegExp(`(${joinedKeywords})(?:\\s+(.*?))(?=(?:${joinedKeywords})|$)`, "gi");
+	const nextKeyword = `(?<!\\w)(?:${joinedKeywords})(?!\\w)`;
+	return new RegExp(`(?<!\\w)(${joinedKeywords})${separator}(?:\\s+(.*?))(?=${nextKeyword}|$)`, "gi");
 }
 function getFooterTokenRegex(issuePrefixes) {
 	const issuePrefixSeparator = issuePrefixes ? `|\\s+(?:${joinOr(issuePrefixes)})` : "";
@@ -37875,13 +37877,13 @@ function getParserRegexes(options = {}) {
 		notes: getNotesRegex(options.noteKeywords, options.notesPattern),
 		referenceParts: getReferencePartsRegex(options.issuePrefixes, options.issuePrefixesCaseSensitive),
 		references: getReferencesRegex(options.referenceActions),
+		footerReferences: getReferencesRegex(options.referenceActions, ":?"),
 		footerToken: getFooterTokenRegex(options.issuePrefixes),
 		mentions: /@([\w-]+)/g,
 		url: /\b(?:https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%_+.~#?&//=])+\b/
 	};
 }
-//#endregion
-//#region ../../node_modules/conventional-commits-parser/dist/utils.js
+// ../../node_modules/conventional-commits-parser/dist/utils.js
 var SCISSOR = "------------------------ >8 ------------------------";
 function trimNewLines(input) {
 	const matches = input.match(/[^\r\n]/);
@@ -37913,8 +37915,7 @@ function assignMatchedCorrespondence(target, matches, correspondence) {
 	}
 	return target;
 }
-//#endregion
-//#region ../../node_modules/conventional-commits-parser/dist/options.js
+// ../../node_modules/conventional-commits-parser/dist/options.js
 var defaultOptions = {
 	noteKeywords: ["BREAKING CHANGE", "BREAKING-CHANGE"],
 	issuePrefixes: ["#"],
@@ -37939,8 +37940,7 @@ var defaultOptions = {
 	revertCorrespondence: ["header", "hash"],
 	fieldPattern: /^-(?=.*\w)(.*?)-$/
 };
-//#endregion
-//#region ../../node_modules/conventional-commits-parser/dist/CommitParser.js
+// ../../node_modules/conventional-commits-parser/dist/CommitParser.js
 function createCommitObject(initialData = {}) {
 	return {
 		merge: null,
@@ -37999,24 +37999,25 @@ var CommitParser = class {
 			issue
 		};
 	}
-	parseReferences(input) {
+	parseReferences(input, isFooterToken = false) {
 		const { regexes } = this;
-		const regex = input.match(regexes.references) ? regexes.references : /()(.+)/gi;
-		const references = [];
+		const regex = isFooterToken ? regexes.footerReferences : regexes.references;
+		const sentences = [];
+		let lastIndex = 0;
 		let matches;
-		let action;
-		let sentence;
-		let reference;
 		while (true) {
 			matches = regex.exec(input);
 			if (!matches) break;
-			action = matches[1] || null;
-			sentence = matches[2] || "";
-			while (true) {
-				reference = this.parseReference(sentence, action);
-				if (!reference) break;
-				references.push(reference);
-			}
+			sentences.push([null, input.slice(lastIndex, matches.index)], [matches[1] || null, matches[2] || ""]);
+			lastIndex = regex.lastIndex;
+		}
+		sentences.push([null, input.slice(lastIndex)]);
+		const references = [];
+		let reference;
+		for (const [action, sentence] of sentences) while (true) {
+			reference = this.parseReference(sentence, action);
+			if (!reference) break;
+			references.push(reference);
 		}
 		return references;
 	}
@@ -38091,7 +38092,7 @@ var CommitParser = class {
 				if (this.parseMeta()) return true;
 				if (this.parseNotes()) return true;
 				isFooterToken = regexes.footerToken.test(this.currentLine());
-				commit.references.push(...this.parseReferences(this.currentLine()));
+				commit.references.push(...this.parseReferences(this.currentLine(), isFooterToken));
 				if (!isFooterToken) note.text = appendLine(note.text, this.currentLine());
 				commit.footer = appendLine(commit.footer, this.currentLine());
 				this.nextLine();
@@ -38104,8 +38105,9 @@ var CommitParser = class {
 	parseBodyAndFooter(isBody) {
 		const { commit, regexes } = this;
 		if (!this.isLineAvailable()) return isBody;
-		const isStillBody = !regexes.footerToken.test(this.currentLine()) && isBody;
-		commit.references.push(...this.parseReferences(this.currentLine()));
+		const isFooterToken = regexes.footerToken.test(this.currentLine());
+		const isStillBody = !isFooterToken && isBody;
+		commit.references.push(...this.parseReferences(this.currentLine(), isFooterToken));
 		if (isStillBody) commit.body = appendLine(commit.body, this.currentLine());
 		else commit.footer = appendLine(commit.footer, this.currentLine());
 		this.nextLine();
@@ -38176,8 +38178,7 @@ var CommitParser = class {
 		return commit;
 	}
 };
-//#endregion
-//#region ../../node_modules/balanced-match/dist/esm/index.js
+// ../../node_modules/balanced-match/dist/esm/index.js
 var balanced = (a, b, str) => {
 	const ma = a instanceof RegExp ? maybeMatch(a, str) : a;
 	const mb = b instanceof RegExp ? maybeMatch(b, str) : b;
@@ -38224,8 +38225,7 @@ var range = (a, b, str) => {
 	}
 	return result;
 };
-//#endregion
-//#region ../../node_modules/brace-expansion/dist/esm/index.js
+// ../../node_modules/brace-expansion/dist/esm/index.js
 var escSlash = "\0SLASH" + Math.random() + "\0";
 var escOpen = "\0OPEN" + Math.random() + "\0";
 var escClose = "\0CLOSE" + Math.random() + "\0";
@@ -38281,7 +38281,7 @@ function parseCommaParts(str) {
 		str = post;
 	}
 }
-function src_Bp2nxB0_expand(str, options = {}) {
+function src_xnCw1jiX_expand(str, options = {}) {
 	if (!str) return [];
 	const { max = EXPANSION_MAX, maxLength = EXPANSION_MAX_LENGTH, maxDepth = EXPANSION_MAX_DEPTH, maxRewrites = EXPANSION_MAX_REWRITES } = options;
 	if (str.slice(0, 2) === "{}") str = "\\{\\}" + str.slice(2);
@@ -38417,15 +38417,13 @@ function expand_(str, max, maxLength, maxDepth, depth, maxRewrites, isTop) {
 	}
 	return acc;
 }
-//#endregion
-//#region ../../node_modules/minimatch/dist/esm/assert-valid-pattern.js
+// ../../node_modules/minimatch/dist/esm/assert-valid-pattern.js
 var MAX_PATTERN_LENGTH = 65536;
 var assertValidPattern = (pattern) => {
 	if (typeof pattern !== "string") throw new TypeError("invalid pattern");
 	if (pattern.length > MAX_PATTERN_LENGTH) throw new TypeError("pattern is too long");
 };
-//#endregion
-//#region ../../node_modules/minimatch/dist/esm/brace-expressions.js
+// ../../node_modules/minimatch/dist/esm/brace-expressions.js
 var posixClasses = {
 	"[:alnum:]": ["\\p{L}\\p{Nl}\\p{Nd}", true],
 	"[:alpha:]": ["\\p{L}\\p{Nl}", true],
@@ -38543,14 +38541,12 @@ var parseClass = (glob, position) => {
 		true
 	];
 };
-//#endregion
-//#region ../../node_modules/minimatch/dist/esm/unescape.js
-var src_Bp2nxB0_unescape = (s, { windowsPathsNoEscape = false, magicalBraces = true } = {}) => {
+// ../../node_modules/minimatch/dist/esm/unescape.js
+var src_xnCw1jiX_unescape = (s, { windowsPathsNoEscape = false, magicalBraces = true } = {}) => {
 	if (magicalBraces) return windowsPathsNoEscape ? s.replace(/\[([^/\\])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^/\\])\]/g, "$1$2").replace(/\\([^/])/g, "$1");
 	return windowsPathsNoEscape ? s.replace(/\[([^/\\{}])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^/\\{}])\]/g, "$1$2").replace(/\\([^/{}])/g, "$1");
 };
-//#endregion
-//#region ../../node_modules/minimatch/dist/esm/ast.js
+// ../../node_modules/minimatch/dist/esm/ast.js
 var _a$2;
 var types = new Set([
 	"!",
@@ -38918,7 +38914,7 @@ var AST = class {
 			if (this.isEnd() && this.#root.#filledNegs && this.#parent?.type === "!") end = "(?:$|\\/)";
 			return [
 				start + src + end,
-				src_Bp2nxB0_unescape(src),
+				src_xnCw1jiX_unescape(src),
 				this.#hasMagic = !!this.#hasMagic,
 				this.#uflag
 			];
@@ -38934,7 +38930,7 @@ var AST = class {
 			me.#hasMagic = void 0;
 			return [
 				s,
-				src_Bp2nxB0_unescape(this.toString()),
+				src_xnCw1jiX_unescape(this.toString()),
 				false,
 				false
 			];
@@ -38950,7 +38946,7 @@ var AST = class {
 		}
 		return [
 			final,
-			src_Bp2nxB0_unescape(body),
+			src_xnCw1jiX_unescape(body),
 			this.#hasMagic = !!this.#hasMagic,
 			this.#uflag
 		];
@@ -39034,21 +39030,19 @@ var AST = class {
 		}
 		return [
 			re,
-			src_Bp2nxB0_unescape(glob),
+			src_xnCw1jiX_unescape(glob),
 			!!hasMagic,
 			uflag
 		];
 	}
 };
 _a$2 = AST;
-//#endregion
-//#region ../../node_modules/minimatch/dist/esm/escape.js
-var src_Bp2nxB0_escape = (s, { windowsPathsNoEscape = false, magicalBraces = false } = {}) => {
+// ../../node_modules/minimatch/dist/esm/escape.js
+var src_xnCw1jiX_escape = (s, { windowsPathsNoEscape = false, magicalBraces = false } = {}) => {
 	if (magicalBraces) return windowsPathsNoEscape ? s.replace(/[?*()[\]{}]/g, "[$&]") : s.replace(/[?*()[\]\\{}]/g, "\\$&");
 	return windowsPathsNoEscape ? s.replace(/[?*()[\]]/g, "[$&]") : s.replace(/[?*()[\]\\]/g, "\\$&");
 };
-//#endregion
-//#region ../../node_modules/minimatch/dist/esm/index.js
+// ../../node_modules/minimatch/dist/esm/index.js
 var minimatch = (p, pattern, options = {}) => {
 	assertValidPattern(pattern);
 	if (!options.nocomment && pattern.charAt(0) === "#") return false;
@@ -39152,7 +39146,7 @@ minimatch.defaults = defaults;
 var braceExpand = (pattern, options = {}) => {
 	assertValidPattern(pattern);
 	if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) return [pattern];
-	return src_Bp2nxB0_expand(pattern, { max: options.braceExpandMax });
+	return src_xnCw1jiX_expand(pattern, { max: options.braceExpandMax });
 };
 minimatch.braceExpand = braceExpand;
 var makeRe = (pattern, options = {}) => new Minimatch(pattern, options).makeRe();
@@ -39657,10 +39651,9 @@ var Minimatch = class {
 };
 minimatch.AST = AST;
 minimatch.Minimatch = Minimatch;
-minimatch.escape = src_Bp2nxB0_escape;
-minimatch.unescape = src_Bp2nxB0_unescape;
-//#endregion
-//#region ../core/src/path-matcher.ts
+minimatch.escape = src_xnCw1jiX_escape;
+minimatch.unescape = src_xnCw1jiX_unescape;
+// ../core/src/path-matcher.ts
 var trimTrailingUnescapedSpaces = (pattern) => {
 	let end = pattern.length;
 	while (end > 0 && pattern[end - 1] === " ") {
@@ -39717,8 +39710,7 @@ var createPathMatcher = (patterns) => {
 		return false;
 	};
 };
-//#endregion
-//#region ../core/src/category-matching.ts
+// ../core/src/category-matching.ts
 var conventionalParser = new CommitParser({
 	headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
 	breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/
@@ -39826,8 +39818,7 @@ var filterPullRequestsByPreCategories = (pullRequests, categories) => pullReques
 var needsPullRequestChangedFiles = (categories) => categories.some((category) => category.when.some((condition) => condition.paths.length > 0));
 var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
 var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
-//#endregion
-//#region ../../node_modules/zod/v4/core/util.js
+// ../../node_modules/zod/v4/core/util.js
 function getEnumValues(entries) {
 	const numericValues = Object.values(entries).filter((v) => typeof v === "number");
 	return Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
@@ -39936,7 +39927,7 @@ function slugify(input) {
 	return input.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
 }
 var captureStackTrace = "captureStackTrace" in Error ? Error.captureStackTrace : (..._args) => {};
-function src_Bp2nxB0_isObject(data) {
+function src_xnCw1jiX_isObject(data) {
 	return typeof data === "object" && data !== null && !Array.isArray(data);
 }
 var allowsEval = cached(() => {
@@ -39949,18 +39940,18 @@ var allowsEval = cached(() => {
 		return false;
 	}
 });
-function src_Bp2nxB0_isPlainObject(o) {
-	if (src_Bp2nxB0_isObject(o) === false) return false;
+function src_xnCw1jiX_isPlainObject(o) {
+	if (src_xnCw1jiX_isObject(o) === false) return false;
 	const ctor = o.constructor;
 	if (ctor === void 0) return true;
 	if (typeof ctor !== "function") return true;
 	const prot = ctor.prototype;
-	if (src_Bp2nxB0_isObject(prot) === false) return false;
+	if (src_xnCw1jiX_isObject(prot) === false) return false;
 	if (Object.prototype.hasOwnProperty.call(prot, "isPrototypeOf") === false) return false;
 	return true;
 }
 function shallowClone(o) {
-	if (src_Bp2nxB0_isPlainObject(o)) return { ...o };
+	if (src_xnCw1jiX_isPlainObject(o)) return { ...o };
 	if (Array.isArray(o)) return [...o];
 	if (o instanceof Map) return new Map(o);
 	if (o instanceof Set) return new Set(o);
@@ -40035,7 +40026,7 @@ function maskedKeys(schema, mask) {
 	}
 	return keys;
 }
-function src_Bp2nxB0_omit(schema, mask) {
+function src_xnCw1jiX_omit(schema, mask) {
 	const currDef = schema._zod.def;
 	const checks = currDef.checks;
 	if (checks && checks.length > 0) throw new Error(".omit() cannot be used on object schemas containing refinements");
@@ -40048,7 +40039,7 @@ function src_Bp2nxB0_omit(schema, mask) {
 	}));
 }
 function extend(schema, shape) {
-	if (!src_Bp2nxB0_isPlainObject(shape)) throw new Error("Invalid input to extend: expected a plain object");
+	if (!src_xnCw1jiX_isPlainObject(shape)) throw new Error("Invalid input to extend: expected a plain object");
 	const checks = schema._zod.def.checks;
 	if (checks && checks.length > 0) {
 		const existingShape = sourceShape(schema);
@@ -40063,7 +40054,7 @@ function extended(schema, shape) {
 	return newShape;
 }
 function safeExtend(schema, shape) {
-	if (!src_Bp2nxB0_isPlainObject(shape)) throw new Error("Invalid input to safeExtend: expected a plain object");
+	if (!src_xnCw1jiX_isPlainObject(shape)) throw new Error("Invalid input to safeExtend: expected a plain object");
 	return clone(schema, mergeDefs(schema._zod.def, { shape: extended(schema, shape) }));
 }
 function merge$1(a, b) {
@@ -40123,6 +40114,16 @@ function prefixIssues(path, issues) {
 }
 function unwrapMessage(message) {
 	return typeof message === "string" ? message : message?.message;
+}
+function sizeCaps(defChecks) {
+	const caps = [];
+	for (const ch of defChecks ?? []) {
+		const d = ch._zod.def;
+		if (!/_(length|size)$|_equals$/.test(d.check)) break;
+		const max = d.maximum ?? d.length ?? d.size;
+		if (max >= 0) caps.push([max, ch]);
+	}
+	return caps;
 }
 function attachSchema(issues, start, inst) {
 	var _a;
@@ -40318,8 +40319,7 @@ function constantCatch(value) {
 	fn[CONSTANT_CATCH] = true;
 	return fn;
 }
-//#endregion
-//#region ../../node_modules/zod/v4/core/core.js
+// ../../node_modules/zod/v4/core/core.js
 var _a$1;
 var _zodDesc = {
 	value: void 0,
@@ -40424,8 +40424,7 @@ function config(newConfig) {
 	if (newConfig) Object.assign(globalConfig, newConfig);
 	return globalConfig;
 }
-//#endregion
-//#region ../../node_modules/zod/v4/core/errors.js
+// ../../node_modules/zod/v4/core/errors.js
 function _getMessage() {
 	const internals = this._zod;
 	internals.message ?? (internals.message = JSON.stringify(internals.def, jsonStringifyReplacer, 2));
@@ -40477,7 +40476,6 @@ var initializer$1 = (inst, def) => {
 	}
 };
 var $ZodError = $constructor("$ZodError", initializer$1);
-$constructor("$ZodError", initializer$1, void 0, { Parent: Error });
 function node(obj, key, make) {
 	if (!Object.prototype.hasOwnProperty.call(obj, key)) {
 		if (key === "__proto__") Object.defineProperty(obj, key, {
@@ -40558,8 +40556,7 @@ function prettifyError$1(error) {
 	}
 	return lines.join("\n");
 }
-//#endregion
-//#region ../../node_modules/zod/v4/core/parse.js
+// ../../node_modules/zod/v4/core/parse.js
 function finalizeParams(callee, params) {
 	return {
 		callee: params?.callee ?? callee,
@@ -40761,8 +40758,7 @@ var _safeEncodeAsync = (_Err) => async (schema, value, _ctx) => {
 var _safeDecodeAsync = (_Err) => async (schema, value, _ctx) => {
 	return _safeParseAsync(_Err)(schema, value, _ctx);
 };
-//#endregion
-//#region ../../node_modules/zod/v4/core/regexes.js
+// ../../node_modules/zod/v4/core/regexes.js
 var cuid = /^[cC][0-9a-z]{6,}$/;
 var cuid2 = /^[0-9a-z]+$/;
 var ulid = /^[0-7][0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{25}$/;
@@ -40792,10 +40788,10 @@ var base64url = /^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2,3})?$/;
 var httpProtocol = /^https?$/;
 var e164 = /^\+[1-9]\d{6,14}$/;
 var dateSource = `(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))`;
-function src_Bp2nxB0_anchor(source) {
+function src_xnCw1jiX_anchor(source) {
 	return new RegExp(`^${source}$`);
 }
-var date = src_Bp2nxB0_anchor(dateSource);
+var date = src_xnCw1jiX_anchor(dateSource);
 function timeSource(args) {
 	const hhmm = `(?:[01]\\d|2[0-3]):[0-5]\\d`;
 	return typeof args.precision === "number" ? args.precision === -1 ? `${hhmm}` : args.precision === 0 ? `${hhmm}:[0-5]\\d` : `${hhmm}:[0-5]\\d\\.\\d{${args.precision}}` : args.seconds ? `${hhmm}:[0-5]\\d(?:\\.\\d+)?` : `${hhmm}(?::[0-5]\\d(?:\\.\\d+)?)?`;
@@ -40820,8 +40816,7 @@ var boolean$1 = /^(?:true|false)$/i;
 var _null$2 = /^null$/i;
 var lowercase = /^[^A-Z]*$/;
 var uppercase = /^[^a-z]*$/;
-//#endregion
-//#region ../../node_modules/zod/v4/core/checks.js
+// ../../node_modules/zod/v4/core/checks.js
 var $ZodCheck = $constructor("$ZodCheck", (inst, def) => {
 	var _a;
 	inst._zod ?? (inst._zod = {});
@@ -41115,8 +41110,7 @@ var $ZodCheckOverwrite = $constructor("$ZodCheckOverwrite", (inst, def) => {
 		payload.value = def.tx(payload.value);
 	};
 });
-//#endregion
-//#region ../../node_modules/zod/v4/core/doc.js
+// ../../node_modules/zod/v4/core/doc.js
 var Doc = class {
 	constructor(args = [], closed = {}) {
 		this.content = [];
@@ -41149,15 +41143,13 @@ var Doc = class {
 		return new F(...Object.keys(this.closed), `return function (${this.args.join(", ")}) {\n${content.join("\n")}\n};`)(...Object.values(this.closed));
 	}
 };
-//#endregion
-//#region ../../node_modules/zod/v4/core/versions.js
+// ../../node_modules/zod/v4/core/versions.js
 var version = {
 	major: 4,
 	minor: 6,
-	patch: 5
+	patch: 7
 };
-//#endregion
-//#region ../../node_modules/zod/v4/core/schemas.js
+// ../../node_modules/zod/v4/core/schemas.js
 var $ZodType = $constructor("$ZodType", (inst, def) => {
 	var _a;
 	inst ?? (inst = {});
@@ -41661,6 +41653,26 @@ var $ZodNever = $constructor("$ZodNever", (inst, def) => {
 		return payload;
 	};
 });
+function capSize(inst, size) {
+	const caps = sizeCaps(inst._zod.def.checks);
+	if (!caps.length) return;
+	const cap = Math.min(...caps.map((c) => c[0]));
+	const parse = inst._zod.parse;
+	inst._zod.parse = (payload, ctx) => {
+		const n = size(payload.value);
+		if (n > cap && !ctx?.skipChecks && ctx?.direction !== "backward") {
+			for (const [max, ch] of sizeCaps(inst._zod.def.checks)) if (n > max && ch._zod.def.when(payload)) {
+				const start = payload.issues.length;
+				ch._zod.check(payload);
+				payload.issues[start].continue = false;
+				attachSchema(payload.issues, start, inst);
+				return payload;
+			}
+		}
+		return parse(payload, ctx);
+	};
+}
+var arraySize = (input) => Array.isArray(input) ? input.length : -1;
 function handleArrayResult(result, final, index) {
 	if (result.issues.length) final.issues.push(...prefixIssues(index, result.issues));
 	final.value[index] = result.value;
@@ -41698,6 +41710,7 @@ var $ZodArray = $constructor("$ZodArray", (inst, def) => {
 		if (proms.length) return Promise.all(proms).then(() => payload);
 		return payload;
 	};
+	capSize(inst, arraySize);
 });
 function handlePropertyResult(result, final, key, input, optin, optout) {
 	const isPresent = key in input;
@@ -41806,7 +41819,7 @@ var $ZodObject = $constructor("$ZodObject", (inst, def) => {
 		}
 		return propValues;
 	});
-	const isObject$2 = src_Bp2nxB0_isObject;
+	const isObject$1 = src_xnCw1jiX_isObject;
 	const catchall = def.catchall;
 	let value;
 	const memo = globalConfig.memoizer;
@@ -41814,7 +41827,7 @@ var $ZodObject = $constructor("$ZodObject", (inst, def) => {
 	inst._zod.parse = (payload, ctx) => {
 		value ?? (value = _normalized.value);
 		const input = payload.value;
-		if (!isObject$2(input)) {
+		if (!isObject$1(input)) {
 			payload.issues.push({
 				expected: "object",
 				code: "invalid_type",
@@ -41944,7 +41957,7 @@ var $ZodObjectJIT = $constructor("$ZodObjectJIT", (inst, def) => {
 		return doc.compile();
 	};
 	let fastpass;
-	const isObject$1 = src_Bp2nxB0_isObject;
+	const isObject$2 = src_xnCw1jiX_isObject;
 	const jit = !globalConfig.jitless;
 	const fastEnabled = jit && allowsEval.value;
 	const catchall = def.catchall;
@@ -41952,7 +41965,7 @@ var $ZodObjectJIT = $constructor("$ZodObjectJIT", (inst, def) => {
 	inst._zod.parse = (payload, ctx) => {
 		value ?? (value = _normalized.value);
 		const input = payload.value;
-		if (!isObject$1(input)) {
+		if (!isObject$2(input)) {
 			payload.issues.push({
 				expected: "object",
 				code: "invalid_type",
@@ -42052,7 +42065,7 @@ function mergeValues(a, b) {
 		valid: true,
 		data: a
 	};
-	if (src_Bp2nxB0_isPlainObject(a) && src_Bp2nxB0_isPlainObject(b)) {
+	if (src_xnCw1jiX_isPlainObject(a) && src_xnCw1jiX_isPlainObject(b)) {
 		const bKeys = Object.keys(b);
 		const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);
 		const newObj = {
@@ -42145,7 +42158,7 @@ var $ZodRecord = $constructor("$ZodRecord", (inst, def) => {
 	memo?.attach(inst);
 	inst._zod.parse = (payload, ctx) => {
 		const input = payload.value;
-		if (!src_Bp2nxB0_isPlainObject(input)) {
+		if (!src_xnCw1jiX_isPlainObject(input)) {
 			payload.issues.push({
 				expected: "record",
 				code: "invalid_type",
@@ -42573,8 +42586,7 @@ function handleRefineResult(result, payload, input, inst) {
 		payload.issues.push(issue(_iss));
 	}
 }
-//#endregion
-//#region ../../node_modules/zod/v4/core/memoizer.js
+// ../../node_modules/zod/v4/core/memoizer.js
 var $ZodCyclicError = class extends Error {
 	constructor() {
 		super(`Cannot parse a reference cycle that closes through a transform`);
@@ -42720,7 +42732,7 @@ function bucketFor(state, inst) {
 	return bucket;
 }
 var handoff;
-var src_Bp2nxB0_open = [];
+var src_xnCw1jiX_open = [];
 var memo = {
 	alloc(_inst, payload, empty) {
 		const bucket = handoff;
@@ -42731,7 +42743,7 @@ var memo = {
 			issues: null
 		};
 		bucket.set(payload.value, entry);
-		src_Bp2nxB0_open.push(entry);
+		src_xnCw1jiX_open.push(entry);
 		return empty;
 	},
 	guard(inst) {
@@ -42797,10 +42809,10 @@ var memo = {
 					return payload;
 				}
 				handoff = bucket;
-				const depth = src_Bp2nxB0_open.length;
+				const depth = src_xnCw1jiX_open.length;
 				const result = base(payload, ctx);
 				handoff = void 0;
-				const entry = src_Bp2nxB0_open.length > depth ? src_Bp2nxB0_open.pop() : void 0;
+				const entry = src_xnCw1jiX_open.length > depth ? src_xnCw1jiX_open.pop() : void 0;
 				if (result instanceof Promise) return result.then((r) => {
 					if (entry) entry.issues = r.issues.length ? cloneIssues(r.issues) : NO_ISSUES;
 					return r;
@@ -42820,8 +42832,7 @@ function isBackEdge(ctx, value) {
 	const backEdges = ctx[STATE]?.backEdges;
 	return backEdges !== void 0 && isRef(value) && backEdges.has(value);
 }
-//#endregion
-//#region ../../node_modules/zod/v4/locales/en.js
+// ../../node_modules/zod/v4/locales/en.js
 var error = () => {
 	const Sizable = {
 		string: {
@@ -42928,8 +42939,7 @@ var error = () => {
 function en_default() {
 	return { localeError: error() };
 }
-//#endregion
-//#region ../../node_modules/zod/v4/core/registries.js
+// ../../node_modules/zod/v4/core/registries.js
 var _a;
 var $ZodRegistry = class {
 	constructor() {
@@ -42975,8 +42985,7 @@ function registry() {
 }
 (_a = globalThis).__zod_globalRegistry ?? (_a.__zod_globalRegistry = registry());
 var globalRegistry = globalThis.__zod_globalRegistry;
-//#endregion
-//#region ../../node_modules/zod/v4/core/api.js
+// ../../node_modules/zod/v4/core/api.js
 function snapshotChecks(def) {
 	if (def.checks) def.checks = [...def.checks];
 	return def;
@@ -43493,8 +43502,7 @@ function _stringbool(Classes, _params) {
 	codec._zod.bag.case = params.case ?? "insensitive";
 	return codec;
 }
-//#endregion
-//#region ../../node_modules/zod/v4/core/to-json-schema.js
+// ../../node_modules/zod/v4/core/to-json-schema.js
 function assignProps(target, ...sources) {
 	for (const source of sources) for (const key of Reflect.ownKeys(source)) if (Object.prototype.propertyIsEnumerable.call(source, key)) assignProp(target, key, source[key]);
 	return target;
@@ -43913,8 +43921,7 @@ var createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) =
 	extractDefs(ctx, schema);
 	return finalize(ctx, schema);
 };
-//#endregion
-//#region ../../node_modules/zod/v4/core/json-schema-processors.js
+// ../../node_modules/zod/v4/core/json-schema-processors.js
 var narrowMin = (agg, key, value) => {
 	if (agg[key] === void 0 || value > agg[key]) agg[key] = value;
 };
@@ -44355,8 +44362,7 @@ var optionalProcessor = (schema, ctx, _json, params) => {
 	const seen = ctx.seen.get(schema);
 	seen.ref = def.innerType;
 };
-//#endregion
-//#region ../../node_modules/zod/v4/classic/errors.js
+// ../../node_modules/zod/v4/classic/errors.js
 var _installedErrorProtos = new WeakSet([Object.prototype, Error.prototype]);
 function _lazyMethod(proto, key, make) {
 	Object.defineProperty(proto, key, {
@@ -44406,8 +44412,7 @@ var initializer = (inst, issues) => {
 };
 var ZodError = $constructor("ZodError", initializer);
 var ZodRealError = $constructor("ZodError", initializer, void 0, { Parent: Error });
-//#endregion
-//#region ../../node_modules/zod/v4/classic/parse.js
+// ../../node_modules/zod/v4/classic/parse.js
 var parse$2 = _parse(ZodRealError);
 var parseAsync = _parseAsync(ZodRealError);
 var safeParse = _safeParse(ZodRealError);
@@ -44420,8 +44425,7 @@ var safeEncode = _safeEncode(ZodRealError);
 var safeDecode = _safeDecode(ZodRealError);
 var safeEncodeAsync = _safeEncodeAsync(ZodRealError);
 var safeDecodeAsync = _safeDecodeAsync(ZodRealError);
-//#endregion
-//#region ../../node_modules/zod/v4/classic/schemas.js
+// ../../node_modules/zod/v4/classic/schemas.js
 function _ensureDefaultLocale() {
 	if (!globalConfig.localeError) config(en_default());
 }
@@ -44915,7 +44919,7 @@ var ZodBoolean = $constructor("ZodBoolean", (inst, def) => {
 	ZodType.init(inst, def);
 	inst._zod.processJSONSchema = (ctx, json, params) => booleanProcessor(inst, ctx, json, params);
 });
-function src_Bp2nxB0_boolean(params) {
+function src_xnCw1jiX_boolean(params) {
 	return _boolean(ZodBoolean, params);
 }
 var ZodNull = $constructor("ZodNull", (inst, def) => {
@@ -45006,7 +45010,7 @@ var ZodObject = $constructor("ZodObject", (inst, def) => {
 		return pick(this, mask);
 	},
 	omit(mask) {
-		return src_Bp2nxB0_omit(this, mask);
+		return src_xnCw1jiX_omit(this, mask);
 	},
 	partial(...args) {
 		return partial(ZodOptional, this, args[0]);
@@ -45315,27 +45319,25 @@ var stringbool = (...args) => _stringbool({
 	Boolean: ZodBoolean,
 	String: ZodString
 }, ...args);
-//#endregion
-//#region ../core/src/config/common-config.schema.ts
+// ../core/src/config/common-config.schema.ts
 var commonConfigSchema = object({
-	latest: stringbool().or(src_Bp2nxB0_boolean()).optional(),
-	prerelease: stringbool().or(src_Bp2nxB0_boolean()).optional(),
+	latest: stringbool().or(src_xnCw1jiX_boolean()).or(literal("legacy")).optional(),
+	prerelease: stringbool().or(src_xnCw1jiX_boolean()).optional(),
 	"prerelease-identifier": string$1().optional(),
-	"include-pre-releases": stringbool().or(src_Bp2nxB0_boolean()).optional(),
+	"include-pre-releases": stringbool().or(src_xnCw1jiX_boolean()).optional(),
 	commitish: string$1().optional(),
 	header: string$1().optional(),
 	footer: string$1().optional(),
 	"filter-by-range": string$1().optional()
 });
-//#endregion
-//#region ../core/src/config/config.schema.ts
+// ../core/src/config/config.schema.ts
 var changeConditionSchema = object({
 	conventional: union([literal(true), object({
 		type: string$1().min(1).optional(),
 		types: array(string$1().min(1)).optional().default([]),
 		scope: string$1().min(1).optional(),
 		scopes: array(string$1().min(1)).optional().default([]),
-		breaking: src_Bp2nxB0_boolean().optional()
+		breaking: src_xnCw1jiX_boolean().optional()
 	})]).optional(),
 	label: string$1().min(1).optional(),
 	labels: array(string$1().min(1)).optional().default([]),
@@ -45363,7 +45365,7 @@ var categorySchema = object({
 		"pre-exclude",
 		"version-resolver"
 	]).optional().default("changelog"),
-	exclusive: src_Bp2nxB0_boolean().optional().default(false),
+	exclusive: src_xnCw1jiX_boolean().optional().default(false),
 	"collapse-after": number().int().min(-1).optional().default(-1),
 	"semver-increment": _enum([
 		"major",
@@ -45382,6 +45384,7 @@ var groupChangeSchema = object({
 var exclusiveConfigSchema = object({
 	"change-template": string$1().optional().default("* $TITLE (#$NUMBER) $AUTHORS"),
 	"change-author-template": string$1().optional().default("$AUTHOR_MENTION"),
+	"change-authors-exclude-bots": src_xnCw1jiX_boolean().optional().default(false),
 	"change-authors-separator": string$1().optional().default(", "),
 	"change-authors-final-separator": string$1().optional(),
 	"change-title-escapes": string$1().optional(),
@@ -45401,7 +45404,7 @@ var exclusiveConfigSchema = object({
 	"no-contributors-template": string$1().optional().default("No contributors"),
 	"sort-by": _enum(["merged_at", "title"]).optional().default("merged_at"),
 	"sort-direction": _enum(["ascending", "descending"]).optional().default("descending"),
-	"filter-by-commitish": src_Bp2nxB0_boolean().optional().default(false),
+	"filter-by-commitish": src_xnCw1jiX_boolean().optional().default(false),
 	"pull-request-limit": number().int().positive().optional().default(5),
 	"history-limit": number().int().positive().optional().default(15),
 	replacers: array(union([object({
@@ -45452,8 +45455,7 @@ var configSchemaDefaults = Object.fromEntries(Object.entries({
 	if (value instanceof ZodDefault) return [key, value.def.defaultValue];
 	return [key, void 0];
 }));
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/identity.js
+// ../../node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = Symbol.for("yaml.alias");
 var DOC = Symbol.for("yaml.document");
 var MAP = Symbol.for("yaml.map");
@@ -45484,8 +45486,7 @@ function isNode(node) {
 	return false;
 }
 var hasAnchor = (node) => (isScalar(node) || isCollection(node)) && !!node.anchor;
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/visit.js
+// ../../node_modules/yaml/browser/dist/visit.js
 var BREAK$1 = Symbol("break visit");
 var SKIP$1 = Symbol("skip children");
 var REMOVE$1 = Symbol("remove node");
@@ -45603,8 +45604,7 @@ function replaceNode(key, path, node) {
 		throw new Error(`Cannot replace node with ${pt} parent`);
 	}
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/doc/directives.js
+// ../../node_modules/yaml/browser/dist/doc/directives.js
 var escapeChars = {
 	"!": "%21",
 	",": "%2C",
@@ -45739,8 +45739,7 @@ Directives.defaultYaml = {
 	version: "1.2"
 };
 Directives.defaultTags = { "!!": "tag:yaml.org,2002:" };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/doc/anchors.js
+// ../../node_modules/yaml/browser/dist/doc/anchors.js
 function anchorIsValid(anchor) {
 	if (/[\x00-\x19\s,[\]{}]/.test(anchor)) {
 		const msg = `Anchor must not contain whitespace or control characters: ${JSON.stringify(anchor)}`;
@@ -45787,8 +45786,7 @@ function createNodeAnchors(doc, prefix) {
 		sourceObjects
 	};
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/doc/applyReviver.js
+// ../../node_modules/yaml/browser/dist/doc/applyReviver.js
 function applyReviver(reviver, obj, key, val) {
 	if (val && typeof val === "object") {
 		if (Array.isArray(val)) for (let i = 0, len = val.length; i < len; ++i) {
@@ -45819,8 +45817,7 @@ function applyReviver(reviver, obj, key, val) {
 	}
 	return reviver.call(obj, key, val);
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/toJS.js
+// ../../node_modules/yaml/browser/dist/nodes/toJS.js
 function toJS(value, arg, ctx) {
 	if (Array.isArray(value)) return value.map((v, i) => toJS(v, String(i), ctx));
 	if (value && typeof value.toJSON === "function") {
@@ -45842,8 +45839,7 @@ function toJS(value, arg, ctx) {
 	if (typeof value === "bigint" && !ctx?.keep) return Number(value);
 	return value;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/Node.js
+// ../../node_modules/yaml/browser/dist/nodes/Node.js
 var NodeBase = class {
 	constructor(type) {
 		Object.defineProperty(this, NODE_TYPE, { value: type });
@@ -45868,8 +45864,7 @@ var NodeBase = class {
 		return typeof reviver === "function" ? applyReviver(reviver, { "": res }, "", res) : res;
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/Alias.js
+// ../../node_modules/yaml/browser/dist/nodes/Alias.js
 var Alias = class extends NodeBase {
 	constructor(source) {
 		super(ALIAS);
@@ -45951,8 +45946,7 @@ function getAliasCount(doc, node, anchors) {
 	}
 	return 1;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/Scalar.js
+// ../../node_modules/yaml/browser/dist/nodes/Scalar.js
 var isScalarValue = (value) => !value || typeof value !== "function" && typeof value !== "object";
 var Scalar = class extends NodeBase {
 	constructor(value) {
@@ -45971,8 +45965,7 @@ Scalar.BLOCK_LITERAL = "BLOCK_LITERAL";
 Scalar.PLAIN = "PLAIN";
 Scalar.QUOTE_DOUBLE = "QUOTE_DOUBLE";
 Scalar.QUOTE_SINGLE = "QUOTE_SINGLE";
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/doc/createNode.js
+// ../../node_modules/yaml/browser/dist/doc/createNode.js
 var defaultTagPrefix = "tag:yaml.org,2002:";
 function findTagObject(value, tagName, tags) {
 	if (tagName) {
@@ -46028,8 +46021,7 @@ function createNode(value, tagName, ctx) {
 	if (ref) ref.node = node;
 	return node;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/Collection.js
+// ../../node_modules/yaml/browser/dist/nodes/Collection.js
 function collectionFromPath(schema, path, value) {
 	let v = value;
 	for (let i = path.length - 1; i >= 0; --i) {
@@ -46051,7 +46043,7 @@ function collectionFromPath(schema, path, value) {
 	});
 }
 var isEmptyPath = (path) => path == null || typeof path === "object" && !!path[Symbol.iterator]().next().done;
-var src_Bp2nxB0_Collection = class extends NodeBase {
+var src_xnCw1jiX_Collection = class extends NodeBase {
 	constructor(type, schema) {
 		super(type);
 		Object.defineProperty(this, "schema", {
@@ -46115,16 +46107,14 @@ var src_Bp2nxB0_Collection = class extends NodeBase {
 		}
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/stringify/stringifyComment.js
+// ../../node_modules/yaml/browser/dist/stringify/stringifyComment.js
 var stringifyComment = (str) => str.replace(/^(?!$)(?: $)?/gm, "#");
 function indentComment(comment, indent) {
 	if (/^\n+$/.test(comment)) return comment.substring(1);
 	return indent ? comment.replace(/^(?! *$)/gm, indent) : comment;
 }
 var lineComment = (str, indent, comment) => str.endsWith("\n") ? indentComment(comment, indent) : comment.includes("\n") ? "\n" + indentComment(comment, indent) : (str.endsWith(" ") ? "" : " ") + comment;
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/stringify/foldFlowLines.js
+// ../../node_modules/yaml/browser/dist/stringify/foldFlowLines.js
 var FOLD_FLOW = "flow";
 var FOLD_BLOCK = "block";
 var FOLD_QUOTED = "quoted";
@@ -46228,8 +46218,7 @@ function consumeMoreIndentedLines(text, i, indent) {
 	}
 	return end;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/stringify/stringifyString.js
+// ../../node_modules/yaml/browser/dist/stringify/stringifyString.js
 var getFoldOptions = (ctx, isBlock) => ({
 	indentAtStart: isBlock ? ctx.indent.length : ctx.indentAtStart,
 	lineWidth: ctx.options.lineWidth,
@@ -46447,8 +46436,7 @@ function stringifyString(item, ctx, onComment, onChompKeep) {
 	}
 	return res;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/stringify/stringify.js
+// ../../node_modules/yaml/browser/dist/stringify/stringify.js
 function createStringifyContext(doc, options) {
 	const opt = Object.assign({
 		blockQuote: true,
@@ -46547,8 +46535,7 @@ function stringify(item, ctx, onComment, onChompKeep) {
 	if (!props) return str;
 	return isScalar(node) || str[0] === "{" || str[0] === "[" ? `${props} ${str}` : `${props}\n${ctx.indent}${str}`;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/stringify/stringifyPair.js
+// ../../node_modules/yaml/browser/dist/stringify/stringifyPair.js
 function stringifyPair({ key, value }, ctx, onComment, onChompKeep) {
 	const { allNullValues, doc, indent, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
 	let keyComment = isNode(key) && key.comment || null;
@@ -46637,15 +46624,13 @@ function stringifyPair({ key, value }, ctx, onComment, onChompKeep) {
 	else if (chompKeep && onChompKeep) onChompKeep();
 	return str;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/log.js
+// ../../node_modules/yaml/browser/dist/log.js
 function warn(logLevel, warning) {
 	if (logLevel === "debug" || logLevel === "warn") console.warn(warning);
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/merge.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/merge.js
 var MERGE_KEY = "<<";
-var src_Bp2nxB0_merge = {
+var src_xnCw1jiX_merge = {
 	identify: (value) => value === MERGE_KEY || typeof value === "symbol" && value.description === MERGE_KEY,
 	default: "key",
 	tag: "tag:yaml.org,2002:merge",
@@ -46653,7 +46638,7 @@ var src_Bp2nxB0_merge = {
 	resolve: () => Object.assign(new Scalar(Symbol(MERGE_KEY)), { addToJSMap: addMergeToJSMap }),
 	stringify: () => MERGE_KEY
 };
-var isMergeKey = (ctx, key) => (src_Bp2nxB0_merge.identify(key) || isScalar(key) && (!key.type || key.type === Scalar.PLAIN) && src_Bp2nxB0_merge.identify(key.value)) && ctx?.doc.schema.tags.some((tag) => tag.tag === src_Bp2nxB0_merge.tag && tag.default);
+var isMergeKey = (ctx, key) => (src_xnCw1jiX_merge.identify(key) || isScalar(key) && (!key.type || key.type === Scalar.PLAIN) && src_xnCw1jiX_merge.identify(key.value)) && ctx?.doc.schema.tags.some((tag) => tag.tag === src_xnCw1jiX_merge.tag && tag.default);
 function addMergeToJSMap(ctx, map, value) {
 	const source = resolveAliasValue(ctx, value);
 	if (isSeq(source)) for (const it of source.items) mergeValue(ctx, map, it);
@@ -46678,8 +46663,7 @@ function mergeValue(ctx, map, value) {
 function resolveAliasValue(ctx, value) {
 	return ctx && isAlias(value) ? value.resolve(ctx.doc, ctx) : value;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/addPairToJSMap.js
+// ../../node_modules/yaml/browser/dist/nodes/addPairToJSMap.js
 function addPairToJSMap(ctx, map, { key, value }) {
 	if (isNode(key) && key.addToJSMap) key.addToJSMap(ctx, map, value);
 	else if (isMergeKey(ctx, key)) addMergeToJSMap(ctx, map, value);
@@ -46721,8 +46705,7 @@ function stringifyKey(key, jsKey, ctx) {
 	}
 	return JSON.stringify(jsKey);
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/Pair.js
+// ../../node_modules/yaml/browser/dist/nodes/Pair.js
 function createPair(key, value, ctx) {
 	return new Pair(createNode(key, void 0, ctx), createNode(value, void 0, ctx));
 }
@@ -46745,8 +46728,7 @@ var Pair = class Pair {
 		return ctx?.doc ? stringifyPair(this, ctx, onComment, onChompKeep) : JSON.stringify(this);
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/stringify/stringifyCollection.js
+// ../../node_modules/yaml/browser/dist/stringify/stringifyCollection.js
 function stringifyCollection(collection, ctx, options) {
 	return (ctx.inFlow ?? collection.flow ? stringifyFlowCollection : stringifyBlockCollection)(collection, ctx, options);
 }
@@ -46857,8 +46839,7 @@ function addCommentBefore({ indent, options: { commentString } }, lines, comment
 		lines.push(ic.trimStart());
 	}
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/YAMLMap.js
+// ../../node_modules/yaml/browser/dist/nodes/YAMLMap.js
 function findPair(items, key) {
 	const k = isScalar(key) ? key.value : key;
 	for (const it of items) if (isPair(it)) {
@@ -46866,7 +46847,7 @@ function findPair(items, key) {
 		if (isScalar(it.key) && it.key.value === k) return it;
 	}
 }
-var YAMLMap = class extends src_Bp2nxB0_Collection {
+var YAMLMap = class extends src_xnCw1jiX_Collection {
 	static get tagName() {
 		return "tag:yaml.org,2002:map";
 	}
@@ -46941,8 +46922,7 @@ var YAMLMap = class extends src_Bp2nxB0_Collection {
 		});
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/common/map.js
+// ../../node_modules/yaml/browser/dist/schema/common/map.js
 var map = {
 	collection: "map",
 	default: true,
@@ -46954,9 +46934,8 @@ var map = {
 	},
 	createNode: (schema, obj, ctx) => YAMLMap.from(schema, obj, ctx)
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/nodes/YAMLSeq.js
-var YAMLSeq = class extends src_Bp2nxB0_Collection {
+// ../../node_modules/yaml/browser/dist/nodes/YAMLSeq.js
+var YAMLSeq = class extends src_xnCw1jiX_Collection {
 	static get tagName() {
 		return "tag:yaml.org,2002:seq";
 	}
@@ -47030,8 +47009,7 @@ function asItemIndex(key) {
 	if (idx && typeof idx === "string") idx = Number(idx);
 	return typeof idx === "number" && Number.isInteger(idx) && idx >= 0 ? idx : null;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/common/seq.js
+// ../../node_modules/yaml/browser/dist/schema/common/seq.js
 var seq = {
 	collection: "seq",
 	default: true,
@@ -47043,8 +47021,7 @@ var seq = {
 	},
 	createNode: (schema, obj, ctx) => YAMLSeq.from(schema, obj, ctx)
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/common/string.js
+// ../../node_modules/yaml/browser/dist/schema/common/string.js
 var string = {
 	identify: (value) => typeof value === "string",
 	default: true,
@@ -47055,8 +47032,7 @@ var string = {
 		return stringifyString(item, ctx, onComment, onChompKeep);
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/common/null.js
+// ../../node_modules/yaml/browser/dist/schema/common/null.js
 var nullTag = {
 	identify: (value) => value == null,
 	createNode: () => new Scalar(null),
@@ -47066,8 +47042,7 @@ var nullTag = {
 	resolve: () => new Scalar(null),
 	stringify: ({ source }, ctx) => typeof source === "string" && nullTag.test.test(source) ? source : ctx.options.nullStr
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/core/bool.js
+// ../../node_modules/yaml/browser/dist/schema/core/bool.js
 var boolTag = {
 	identify: (value) => typeof value === "boolean",
 	default: true,
@@ -47081,8 +47056,7 @@ var boolTag = {
 		return value ? ctx.options.trueStr : ctx.options.falseStr;
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/stringify/stringifyNumber.js
+// ../../node_modules/yaml/browser/dist/stringify/stringifyNumber.js
 function stringifyNumber({ format, minFractionDigits, tag, value }) {
 	if (typeof value === "bigint") return String(value);
 	const num = typeof value === "number" ? value : Number(value);
@@ -47099,8 +47073,7 @@ function stringifyNumber({ format, minFractionDigits, tag, value }) {
 	}
 	return n;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/core/float.js
+// ../../node_modules/yaml/browser/dist/schema/core/float.js
 var floatNaN$1 = {
 	identify: (value) => typeof value === "number",
 	default: true,
@@ -47134,8 +47107,7 @@ var float$1 = {
 	},
 	stringify: stringifyNumber
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/core/int.js
+// ../../node_modules/yaml/browser/dist/schema/core/int.js
 var intIdentify$2 = (value) => typeof value === "bigint" || Number.isInteger(value);
 var intResolve$1 = (str, offset, radix, { intAsBigInt }) => intAsBigInt ? BigInt(str) : parseInt(str.substring(offset), radix);
 function intStringify$1(node, radix, prefix) {
@@ -47169,8 +47141,7 @@ var intHex$1 = {
 	resolve: (str, _onError, opt) => intResolve$1(str, 2, 16, opt),
 	stringify: (node) => intStringify$1(node, 16, "0x")
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/core/schema.js
+// ../../node_modules/yaml/browser/dist/schema/core/schema.js
 var schema$2 = [
 	map,
 	seq,
@@ -47184,8 +47155,7 @@ var schema$2 = [
 	floatExp$1,
 	float$1
 ];
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/json/schema.js
+// ../../node_modules/yaml/browser/dist/schema/json/schema.js
 function intIdentify$1(value) {
 	return typeof value === "bigint" || Number.isInteger(value);
 }
@@ -47241,8 +47211,7 @@ var schema$1 = [map, seq].concat(jsonScalars, {
 		return str;
 	}
 });
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/binary.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/binary.js
 var binary = {
 	identify: (value) => value instanceof Uint8Array,
 	default: false,
@@ -47282,8 +47251,7 @@ var binary = {
 		}, ctx, onComment, onChompKeep);
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/pairs.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/pairs.js
 function resolvePairs(seq, onError) {
 	if (isSeq(seq)) for (let i = 0; i < seq.items.length; ++i) {
 		let item = seq.items[i];
@@ -47334,8 +47302,7 @@ var pairs = {
 	resolve: resolvePairs,
 	createNode: createPairs
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/omap.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/omap.js
 var YAMLOMap = class YAMLOMap extends YAMLSeq {
 	constructor() {
 		super();
@@ -47386,8 +47353,7 @@ var omap = {
 	},
 	createNode: (schema, iterable, ctx) => YAMLOMap.from(schema, iterable, ctx)
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/bool.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/bool.js
 function boolStringify({ value, source }, ctx) {
 	if (source && (value ? trueTag : falseTag).test.test(source)) return source;
 	return value ? ctx.options.trueStr : ctx.options.falseStr;
@@ -47408,8 +47374,7 @@ var falseTag = {
 	resolve: () => new Scalar(false),
 	stringify: boolStringify
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/float.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/float.js
 var floatNaN = {
 	identify: (value) => typeof value === "number",
 	default: true,
@@ -47430,7 +47395,7 @@ var floatExp = {
 		return isFinite(num) ? num.toExponential() : stringifyNumber(node);
 	}
 };
-var src_Bp2nxB0_float = {
+var src_xnCw1jiX_float = {
 	identify: (value) => typeof value === "number",
 	default: true,
 	tag: "tag:yaml.org,2002:float",
@@ -47446,8 +47411,7 @@ var src_Bp2nxB0_float = {
 	},
 	stringify: stringifyNumber
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/int.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/int.js
 var intIdentify = (value) => typeof value === "bigint" || Number.isInteger(value);
 function intResolve(str, offset, radix, { intAsBigInt }) {
 	const sign = str[0];
@@ -47495,7 +47459,7 @@ var intOct = {
 	resolve: (str, _onError, opt) => intResolve(str, 1, 8, opt),
 	stringify: (node) => intStringify(node, 8, "0")
 };
-var src_Bp2nxB0_int = {
+var src_xnCw1jiX_int = {
 	identify: intIdentify,
 	default: true,
 	tag: "tag:yaml.org,2002:int",
@@ -47512,8 +47476,7 @@ var intHex = {
 	resolve: (str, _onError, opt) => intResolve(str, 2, 16, opt),
 	stringify: (node) => intStringify(node, 16, "0x")
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/set.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/set.js
 var YAMLSet = class YAMLSet extends YAMLMap {
 	constructor(schema) {
 		super(schema);
@@ -47555,7 +47518,7 @@ var YAMLSet = class YAMLSet extends YAMLMap {
 	}
 };
 YAMLSet.tag = "tag:yaml.org,2002:set";
-var src_Bp2nxB0_set = {
+var src_xnCw1jiX_set = {
 	collection: "map",
 	identify: (value) => value instanceof Set,
 	nodeClass: YAMLSet,
@@ -47570,8 +47533,7 @@ var src_Bp2nxB0_set = {
 		return map;
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/timestamp.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/timestamp.js
 function parseSexagesimal(str, asBigInt) {
 	const sign = str[0];
 	const parts = sign === "-" || sign === "+" ? str.substring(1) : str;
@@ -47641,8 +47603,7 @@ var timestamp = {
 	},
 	stringify: ({ value }) => value?.toISOString().replace(/(T00:00:00)?\.000Z$/, "") ?? ""
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/yaml-1.1/schema.js
+// ../../node_modules/yaml/browser/dist/schema/yaml-1.1/schema.js
 var schema = [
 	map,
 	seq,
@@ -47652,22 +47613,21 @@ var schema = [
 	falseTag,
 	intBin,
 	intOct,
-	src_Bp2nxB0_int,
+	src_xnCw1jiX_int,
 	intHex,
 	floatNaN,
 	floatExp,
-	src_Bp2nxB0_float,
+	src_xnCw1jiX_float,
 	binary,
-	src_Bp2nxB0_merge,
+	src_xnCw1jiX_merge,
 	omap,
 	pairs,
-	src_Bp2nxB0_set,
+	src_xnCw1jiX_set,
 	intTime,
 	floatTime,
 	timestamp
 ];
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/tags.js
+// ../../node_modules/yaml/browser/dist/schema/tags.js
 var schemas = new Map([
 	["core", schema$2],
 	["failsafe", [
@@ -47691,25 +47651,25 @@ var tagsByName = {
 	intOct: intOct$1,
 	intTime,
 	map,
-	merge: src_Bp2nxB0_merge,
+	merge: src_xnCw1jiX_merge,
 	null: nullTag,
 	omap,
 	pairs,
 	seq,
-	set: src_Bp2nxB0_set,
+	set: src_xnCw1jiX_set,
 	timestamp
 };
 var coreKnownTags = {
 	"tag:yaml.org,2002:binary": binary,
-	"tag:yaml.org,2002:merge": src_Bp2nxB0_merge,
+	"tag:yaml.org,2002:merge": src_xnCw1jiX_merge,
 	"tag:yaml.org,2002:omap": omap,
 	"tag:yaml.org,2002:pairs": pairs,
-	"tag:yaml.org,2002:set": src_Bp2nxB0_set,
+	"tag:yaml.org,2002:set": src_xnCw1jiX_set,
 	"tag:yaml.org,2002:timestamp": timestamp
 };
 function getTags(customTags, schemaName, addMergeTag) {
 	const schemaTags = schemas.get(schemaName);
-	if (schemaTags && !customTags) return addMergeTag && !schemaTags.includes(src_Bp2nxB0_merge) ? schemaTags.concat(src_Bp2nxB0_merge) : schemaTags.slice();
+	if (schemaTags && !customTags) return addMergeTag && !schemaTags.includes(src_xnCw1jiX_merge) ? schemaTags.concat(src_xnCw1jiX_merge) : schemaTags.slice();
 	let tags = schemaTags;
 	if (!tags) {
 		if (Array.isArray(customTags)) tags = [];
@@ -47720,7 +47680,7 @@ function getTags(customTags, schemaName, addMergeTag) {
 	}
 	if (Array.isArray(customTags)) for (const tag of customTags) tags = tags.concat(tag);
 	else if (typeof customTags === "function") tags = customTags(tags.slice());
-	if (addMergeTag) tags = tags.concat(src_Bp2nxB0_merge);
+	if (addMergeTag) tags = tags.concat(src_xnCw1jiX_merge);
 	return tags.reduce((tags, tag) => {
 		const tagObj = typeof tag === "string" ? tagsByName[tag] : tag;
 		if (!tagObj) {
@@ -47732,8 +47692,7 @@ function getTags(customTags, schemaName, addMergeTag) {
 		return tags;
 	}, []);
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/schema/Schema.js
+// ../../node_modules/yaml/browser/dist/schema/Schema.js
 var sortMapEntriesByKey = (a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
 var Schema = class Schema {
 	constructor({ compat, customTags, merge, resolveKnownTags, schema, sortMapEntries, toStringDefaults }) {
@@ -47753,8 +47712,7 @@ var Schema = class Schema {
 		return copy;
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/stringify/stringifyDocument.js
+// ../../node_modules/yaml/browser/dist/stringify/stringifyDocument.js
 function stringifyDocument(doc, options) {
 	const lines = [];
 	let hasDirectives = options.directives === true;
@@ -47809,8 +47767,7 @@ function stringifyDocument(doc, options) {
 	}
 	return lines.join("\n") + "\n";
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/doc/Document.js
+// ../../node_modules/yaml/browser/dist/doc/Document.js
 var Document = class Document {
 	constructor(value, replacer, options) {
 		this.commentBefore = null;
@@ -48004,8 +47961,7 @@ function assertCollection(contents) {
 	if (isCollection(contents)) return true;
 	throw new Error("Expected a YAML collection as document contents");
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/errors.js
+// ../../node_modules/yaml/browser/dist/errors.js
 var YAMLError = class extends Error {
 	constructor(name, pos, code, message) {
 		super();
@@ -48051,8 +48007,7 @@ var prettifyError = (src, lc) => (error) => {
 		error.message += `:\n\n${lineStr}\n${pointer}\n`;
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/resolve-props.js
+// ../../node_modules/yaml/browser/dist/compose/resolve-props.js
 function resolveProps(tokens, { flow, indicator, next, offset, onError, parentIndent, startOnNewline }) {
 	let spaceBefore = false;
 	let atNewline = startOnNewline;
@@ -48155,8 +48110,7 @@ function resolveProps(tokens, { flow, indicator, next, offset, onError, parentIn
 		start: start ?? end
 	};
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/util-contains-newline.js
+// ../../node_modules/yaml/browser/dist/compose/util-contains-newline.js
 function containsNewline(key) {
 	if (!key) return null;
 	switch (key.type) {
@@ -48181,24 +48135,21 @@ function containsNewline(key) {
 		default: return true;
 	}
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/util-flow-indent-check.js
+// ../../node_modules/yaml/browser/dist/compose/util-flow-indent-check.js
 function flowIndentCheck(indent, fc, onError) {
 	if (fc?.type === "flow-collection") {
 		const end = fc.end[0];
 		if (end.indent === indent && (end.source === "]" || end.source === "}") && containsNewline(fc)) onError(end, "BAD_INDENT", "Flow end indicator should be more indented than parent", true);
 	}
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/util-map-includes.js
+// ../../node_modules/yaml/browser/dist/compose/util-map-includes.js
 function mapIncludes(ctx, items, search) {
 	const { uniqueKeys } = ctx.options;
 	if (uniqueKeys === false) return false;
 	const isEqual = typeof uniqueKeys === "function" ? uniqueKeys : (a, b) => a === b || isScalar(a) && isScalar(b) && a.value === b.value;
 	return items.some((pair) => isEqual(pair.key, search));
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/resolve-block-map.js
+// ../../node_modules/yaml/browser/dist/compose/resolve-block-map.js
 var startColMsg = "All mapping items must start at the same column";
 function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError, tag) {
 	const map = new ((tag?.nodeClass) ?? YAMLMap)(ctx.schema);
@@ -48276,8 +48227,7 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError, ta
 	];
 	return map;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/resolve-block-seq.js
+// ../../node_modules/yaml/browser/dist/compose/resolve-block-seq.js
 function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError, tag) {
 	const seq = new ((tag?.nodeClass) ?? YAMLSeq)(ctx.schema);
 	if (ctx.atRoot) ctx.atRoot = false;
@@ -48315,8 +48265,7 @@ function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError, ta
 	];
 	return seq;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/resolve-end.js
+// ../../node_modules/yaml/browser/dist/compose/resolve-end.js
 function resolveEnd(end, offset, reqSpace, onError) {
 	let comment = "";
 	if (end) {
@@ -48350,8 +48299,7 @@ function resolveEnd(end, offset, reqSpace, onError) {
 		offset
 	};
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/resolve-flow-collection.js
+// ../../node_modules/yaml/browser/dist/compose/resolve-flow-collection.js
 var blockMsg = "Block collections are not allowed within flow collections";
 var isBlock = (token) => token && (token.type === "block-map" || token.type === "block-seq");
 function resolveFlowCollection({ composeNode, composeEmptyNode }, ctx, fc, onError, tag) {
@@ -48502,8 +48450,7 @@ function resolveFlowCollection({ composeNode, composeEmptyNode }, ctx, fc, onErr
 	];
 	return coll;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/compose-collection.js
+// ../../node_modules/yaml/browser/dist/compose/compose-collection.js
 function resolveCollection(CN, ctx, token, onError, tagName, tag) {
 	const coll = token.type === "block-map" ? resolveBlockMap(CN, ctx, token, onError, tag) : token.type === "block-seq" ? resolveBlockSeq(CN, ctx, token, onError, tag) : resolveFlowCollection(CN, ctx, token, onError, tag);
 	const Coll = coll.constructor;
@@ -48544,8 +48491,7 @@ function composeCollection(CN, ctx, token, props, onError) {
 	if (tag?.format) node.format = tag.format;
 	return node;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/resolve-block-scalar.js
+// ../../node_modules/yaml/browser/dist/compose/resolve-block-scalar.js
 function resolveBlockScalar(ctx, scalar, onError) {
 	const start = scalar.offset;
 	const header = parseBlockScalarHeader(scalar, ctx.options.strict, onError);
@@ -48713,8 +48659,7 @@ function splitLines(source) {
 	for (let i = 1; i < split.length; i += 2) lines.push([split[i], split[i + 1]]);
 	return lines;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/resolve-flow-scalar.js
+// ../../node_modules/yaml/browser/dist/compose/resolve-flow-scalar.js
 function resolveFlowScalar(scalar, strict, onError) {
 	const { offset, type, source, end } = scalar;
 	let _type;
@@ -48900,8 +48845,7 @@ function parseCharCode(source, offset, length, onError) {
 		return raw;
 	}
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/compose-scalar.js
+// ../../node_modules/yaml/browser/dist/compose/compose-scalar.js
 function composeScalar(ctx, token, tagToken, onError) {
 	const { value, type, comment, range } = token.type === "block-scalar" ? resolveBlockScalar(ctx, token, onError) : resolveFlowScalar(token, ctx.options.strict, onError);
 	const tagName = tagToken ? ctx.directives.tagName(tagToken.source, (msg) => onError(tagToken, "TAG_RESOLVE_FAILED", msg)) : null;
@@ -48954,8 +48898,7 @@ function findScalarTagByTest({ atKey, directives, schema }, value, token, onErro
 	}
 	return tag;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/util-empty-scalar-position.js
+// ../../node_modules/yaml/browser/dist/compose/util-empty-scalar-position.js
 function emptyScalarPosition(offset, before, pos) {
 	if (before) {
 		pos ?? (pos = before.length);
@@ -48978,8 +48921,7 @@ function emptyScalarPosition(offset, before, pos) {
 	}
 	return offset;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/compose-node.js
+// ../../node_modules/yaml/browser/dist/compose/compose-node.js
 var CN = {
 	composeNode,
 	composeEmptyNode
@@ -49058,8 +49000,7 @@ function composeAlias({ options }, { offset, source, end }, onError) {
 	if (re.comment) alias.comment = re.comment;
 	return alias;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/compose-doc.js
+// ../../node_modules/yaml/browser/dist/compose/compose-doc.js
 function composeDoc(options, directives, { offset, start, value, end }, onError) {
 	const doc = new Document(void 0, Object.assign({ _directives: directives }, options));
 	const ctx = {
@@ -49092,8 +49033,7 @@ function composeDoc(options, directives, { offset, start, value, end }, onError)
 	];
 	return doc;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/compose/composer.js
+// ../../node_modules/yaml/browser/dist/compose/composer.js
 function getErrorPos(src) {
 	if (typeof src === "number") return [src, src + 1];
 	if (Array.isArray(src)) return src.length === 2 ? src : [src[0], src[1]];
@@ -49126,7 +49066,7 @@ function parsePrelude(prelude) {
 		afterEmptyLine
 	};
 }
-var src_Bp2nxB0_Composer = class {
+var src_xnCw1jiX_Composer = class {
 	constructor(options = {}) {
 		this.doc = null;
 		this.atDirectives = false;
@@ -49249,8 +49189,7 @@ var src_Bp2nxB0_Composer = class {
 		}
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/parse/cst-visit.js
+// ../../node_modules/yaml/browser/dist/parse/cst-visit.js
 var BREAK = Symbol("break visit");
 var SKIP = Symbol("skip children");
 var REMOVE = Symbol("remove item");
@@ -49335,8 +49274,7 @@ function tokenType(source) {
 	}
 	return null;
 }
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/parse/lexer.js
+// ../../node_modules/yaml/browser/dist/parse/lexer.js
 function isEmpty(ch) {
 	switch (ch) {
 		case void 0:
@@ -49815,8 +49753,7 @@ var Lexer = class {
 		return yield* this.pushToIndex(i, false);
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/parse/line-counter.js
+// ../../node_modules/yaml/browser/dist/parse/line-counter.js
 var LineCounter = class {
 	constructor() {
 		this.lineStarts = [];
@@ -49845,8 +49782,7 @@ var LineCounter = class {
 		};
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/parse/parser.js
+// ../../node_modules/yaml/browser/dist/parse/parser.js
 function includesToken(list, type) {
 	for (let i = 0; i < list.length; ++i) if (list[i].type === type) return true;
 	return false;
@@ -50646,8 +50582,7 @@ var Parser = class {
 		}
 	}
 };
-//#endregion
-//#region ../../node_modules/yaml/browser/dist/public-api.js
+// ../../node_modules/yaml/browser/dist/public-api.js
 function parseOptions(options) {
 	const prettyErrors = options.prettyErrors !== false;
 	return {
@@ -50658,7 +50593,7 @@ function parseOptions(options) {
 function parseDocument(source, options = {}) {
 	const { lineCounter, prettyErrors } = parseOptions(options);
 	const parser = new Parser(lineCounter?.addNewLine);
-	const composer = new src_Bp2nxB0_Composer(options);
+	const composer = new src_xnCw1jiX_Composer(options);
 	let doc = null;
 	for (const _doc of composer.compose(parser.parse(source), true, source.length)) if (!doc) doc = _doc;
 	else if (doc.options.logLevel !== "silent") {
@@ -50684,8 +50619,7 @@ function parse$1(src, reviver, options) {
 	}
 	return doc.toJS(Object.assign({ reviver: _reviver }, options));
 }
-//#endregion
-//#region ../core/src/config/local-config-file.ts
+// ../core/src/config/local-config-file.ts
 var LOCAL_CONFIG_OPEN_FLAGS = external_node_fs_namespaceObject.constants.O_RDONLY | (typeof external_node_fs_namespaceObject.constants.O_NOFOLLOW === "number" ? external_node_fs_namespaceObject.constants.O_NOFOLLOW : 0);
 var LOCAL_CONFIG_CWD_FLAGS = external_node_fs_namespaceObject.constants.O_RDONLY | (typeof external_node_fs_namespaceObject.constants.O_DIRECTORY === "number" ? external_node_fs_namespaceObject.constants.O_DIRECTORY : 0);
 var LocalConfigFileBoundaryError = class extends Error {
@@ -50731,8 +50665,7 @@ var createLocalConfigFileReader = (fileSystem) => async (path, cwd) => {
 		await cwdHandle.close();
 	}
 };
-//#endregion
-//#region ../core/src/config/load-config.ts
+// ../core/src/config/load-config.ts
 var SUPPORTED_EXTENSIONS = [
 	"json",
 	"yml",
@@ -51094,8 +51027,7 @@ async function loadConfig(options) {
 		throw error;
 	}
 }
-//#endregion
-//#region ../../node_modules/verkit/dist/comparison-CmVirWIW.js
+// ../../node_modules/verkit/dist/comparison-CmVirWIW.js
 var LETTER_DASH_NUMBER = "[a-zA-Z0-9-]";
 var NUMERIC_IDENTIFIER = String.raw`0|[1-9]\d*`;
 var NUMERIC_IDENTIFIER_LOOSE = String.raw`\d+`;
@@ -51143,7 +51075,7 @@ function formatFullVersion(version) {
 	const comparable = formatComparableVersion(version);
 	return version.build?.length ? `${comparable}+${version.build.join(".")}` : comparable;
 }
-function src_Bp2nxB0_parse(version, options = {}) {
+function src_xnCw1jiX_parse(version, options = {}) {
 	if (typeof version !== "string") return version;
 	if (version.length > 256) throw new TypeError(`Version exceeds the maximum length of 256 characters`);
 	const match = version.trim().match(options.loose ? LOOSE : FULL);
@@ -51171,7 +51103,7 @@ function src_Bp2nxB0_parse(version, options = {}) {
 }
 function tryParse$1(version, options = {}) {
 	try {
-		return src_Bp2nxB0_parse(version, options);
+		return src_xnCw1jiX_parse(version, options);
 	} catch {
 		return null;
 	}
@@ -51206,8 +51138,7 @@ function comparePrereleaseParsed(left, right) {
 function compareParsed(left, right) {
 	return compareMainParsed(left, right) || comparePrereleaseParsed(left, right);
 }
-//#endregion
-//#region ../../node_modules/verkit/dist/set-BGFWKKE8.js
+// ../../node_modules/verkit/dist/set-BGFWKKE8.js
 var STRICT_COMPARATOR = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${FULL_PLAIN})$|^$`);
 var LOOSE_COMPARATOR$1 = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${LOOSE_PLAIN})$|^$`);
 function formatComparator(comparator) {
@@ -51219,7 +51150,7 @@ function parseComparator(comparator, options = {}) {
 	const match = normalized.match(options.loose ? LOOSE_COMPARATOR$1 : STRICT_COMPARATOR);
 	if (!match) throw new TypeError(`Invalid comparator: ${normalized}`);
 	const operator = match[1] === "=" ? "" : match[1] || "";
-	const version = match[2] ? src_Bp2nxB0_parse(match[2], options) : null;
+	const version = match[2] ? src_xnCw1jiX_parse(match[2], options) : null;
 	return {
 		operator,
 		options,
@@ -51246,8 +51177,7 @@ function testComparatorSet(set, version, options) {
 	if (set.some((comparator) => !testParsedComparator(comparator, version))) return false;
 	return !version.prerelease?.length || !!options.includePrerelease || set.some((comparator) => comparatorAllowsPrerelease(comparator, version));
 }
-//#endregion
-//#region ../../node_modules/verkit/dist/range-C5wjdo9a.js
+// ../../node_modules/verkit/dist/range-C5wjdo9a.js
 function formatRange(range) {
 	return range.sets.map((set) => set.map(formatComparator).join(" ")).join("||");
 }
@@ -51415,8 +51345,7 @@ function satisfies(version, range, options = {}) {
 	const parsed = tryParseRange(range, options);
 	return parsed ? testRangeVersion(parsed, version) : false;
 }
-//#endregion
-//#region ../../node_modules/verkit/dist/version-Co1j9Tpq.js
+// ../../node_modules/verkit/dist/version-Co1j9Tpq.js
 var COERCE_EXACT = safeRegex(COERCE);
 var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);
 var PRERELEASE_EXACT = safeRegex(`^${PRERELEASE}$`);
@@ -51540,32 +51469,30 @@ function incrementParsedVersion(parsed, release, identifier, identifierBase, loo
 }
 function increment(version, release, options = {}) {
 	try {
-		return incrementParsedVersion(src_Bp2nxB0_parse(version, options), release, options.identifier, options.identifierBase, options.loose);
+		return incrementParsedVersion(src_xnCw1jiX_parse(version, options), release, options.identifier, options.identifierBase, options.loose);
 	} catch {
 		return null;
 	}
 }
 function getMajor(version, options = {}) {
-	return src_Bp2nxB0_parse(version, options).major;
+	return src_xnCw1jiX_parse(version, options).major;
 }
 function getMinor(version, options = {}) {
-	return src_Bp2nxB0_parse(version, options).minor;
+	return src_xnCw1jiX_parse(version, options).minor;
 }
 function getPatch(version, options = {}) {
-	return src_Bp2nxB0_parse(version, options).patch;
+	return src_xnCw1jiX_parse(version, options).patch;
 }
 function getPrerelease(version, options = {}) {
 	const parsed = tryParse$1(version, options);
 	return parsed ? [...parsed.prerelease || []] : null;
 }
-//#endregion
-//#region ../../node_modules/escape-string-regexp/index.js
+// ../../node_modules/escape-string-regexp/index.js
 function escapeStringRegexp(string) {
 	if (typeof string !== "string") throw new TypeError("Expected a string");
 	return string.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
 }
-//#endregion
-//#region ../core/src/string-to-regex.ts
+// ../core/src/string-to-regex.ts
 var regexLiteral = /^\/.+\/[AJUXgimsux]*$/;
 var supportedFlags = new Set("gimsuy");
 var stringToRegex = (search) => {
@@ -51574,8 +51501,7 @@ var stringToRegex = (search) => {
 	const flags = [...new Set(search.slice(delimiter + 1))].filter((flag) => supportedFlags.has(flag)).join("");
 	return new RegExp(search.slice(1, delimiter), flags);
 };
-//#endregion
-//#region ../core/src/config/parse-categories.ts
+// ../core/src/config/parse-categories.ts
 var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
 var withMigrationDocumentationLink = (message) => `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`;
 var normalizeConventional = (conventional, logger) => {
@@ -51728,8 +51654,7 @@ function parseCategories(categories, deprecatedConfig, logger) {
 	}
 	return parsedCategories;
 }
-//#endregion
-//#region ../core/src/config/parse-group-changes.ts
+// ../core/src/config/parse-group-changes.ts
 var templatableName = /^[A-Za-z_]+$/;
 var isGroupName = (name) => /^group(_|$)/i.test(name);
 var parseGroupChanges = (params) => {
@@ -51770,8 +51695,7 @@ var captureNamesOf = (pattern) => {
 		return [];
 	}
 };
-//#endregion
-//#region ../core/src/config/merge-input-and-config.ts
+// ../core/src/config/merge-input-and-config.ts
 var mergeInputAndConfig = (params) => {
 	const { config: originalConfig, input, defaultCommitish, logger } = params;
 	const { "exclude-labels": excludeLabels, "include-labels": includeLabels, "include-paths": includePaths, "exclude-paths": excludePaths, "version-resolver": versionResolver, ...config } = structuredClone(originalConfig);
@@ -51784,7 +51708,7 @@ var mergeInputAndConfig = (params) => {
 	};
 	applyOverrides(config, input, logger);
 	const commitish = config.commitish || defaultCommitish || "";
-	const latest = typeof config.latest !== "boolean" ? true : config.latest;
+	const latest = config.latest ?? true;
 	const prerelease = typeof config.prerelease !== "boolean" ? false : config.prerelease;
 	const replacers = config.replacers.map((replacer) => {
 		if (replacer.section !== void 0) return replacer;
@@ -51822,9 +51746,16 @@ var applyOverrides = (config, input, logger) => {
 	applyStringOverride(config, input, "prerelease-identifier", logger);
 	applyBooleanOverride(config, input, "prerelease", logger);
 	applyBooleanOverride(config, input, "include-pre-releases", logger);
-	applyBooleanOverride(config, input, "latest", logger);
+	applyLatestOverride(config, input, logger);
 	applyStringOverride(config, input, "filter-by-range", logger);
 	applyReleaseModeOverrides(config, input, logger);
+};
+var applyLatestOverride = (config, input, logger) => {
+	const inputValue = input.latest;
+	if (inputValue === void 0) return;
+	const configValue = config.latest;
+	if (configValue !== void 0 && configValue !== inputValue) logger.info(`Input's latest "${inputValue}" overrides config's latest "${configValue}"`);
+	config.latest = inputValue;
 };
 var applyReleaseModeOverrides = (config, input, logger) => {
 	const hasInputPrerelease = typeof input.prerelease === "boolean";
@@ -51835,6 +51766,7 @@ var applyReleaseModeOverrides = (config, input, logger) => {
 	}
 	if (config.prerelease) {
 		if (config.latest === true) logger.warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
+		else if (config.latest === "legacy") logger.warning("'latest' cannot be 'legacy' when 'prerelease' is true. Switch 'latest' to false - release will be a pre-release.");
 		config.latest = false;
 	}
 };
@@ -51858,16 +51790,14 @@ var validateParsedConfig = (parsedConfig) => {
 	if (parsedConfig.categories.filter((category) => category.type === "changelog" && category.when.length === 0).length > 1) throw new Error("Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized changes.");
 	if (parsedConfig["filter-by-range"] && !normalizeRange(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
 };
-//#endregion
-//#region ../core/src/ports.ts
+// ../core/src/ports.ts
 var noopLogger = {
 	debug() {},
 	info() {},
 	warning() {},
 	error() {}
 };
-//#endregion
-//#region ../core/src/release/categorize-pull-requests.ts
+// ../core/src/release/categorize-pull-requests.ts
 var categorizePullRequests = (params) => {
 	const { pullRequests, config } = params;
 	const changelogCategories = getChangelogCategories(config.categories);
@@ -51890,8 +51820,7 @@ var categorizePullRequests = (params) => {
 	}
 	return [uncategorizedPullRequests, categorizedPullRequests];
 };
-//#endregion
-//#region ../core/src/release/render-template/select-section.ts
+// ../core/src/release/render-template/select-section.ts
 var parseHeading = (line) => {
 	const match = /^ {0,3}(#{1,6})(?:[ \t]+(.*)|[ \t]*)$/.exec(line);
 	if (!match) return void 0;
@@ -51902,7 +51831,7 @@ var parseHeading = (line) => {
 };
 var selectSection = (input, selector) => {
 	const selected = parseHeading(selector);
-	if (!selected || !selected.text) throw new Error("Section selectors must be nonempty hash-style headings, such as ## Release information");
+	if (!selected?.text) throw new Error("Section selectors must be nonempty hash-style headings, such as ## Release information");
 	let start;
 	let fence;
 	let inComment = false;
@@ -51938,8 +51867,7 @@ var selectSection = (input, selector) => {
 	}
 	return start === void 0 ? void 0 : input.slice(start);
 };
-//#endregion
-//#region ../core/src/release/render-template/util/charCode.ts
+// ../core/src/release/render-template/util/charCode.ts
 var CharCode = function(CharCode) {
 	CharCode[CharCode["Backslash"] = 92] = "Backslash";
 	CharCode[CharCode["Tab"] = 9] = "Tab";
@@ -51969,8 +51897,7 @@ var CharCode = function(CharCode) {
 	CharCode[CharCode["u"] = 117] = "u";
 	return CharCode;
 }({});
-//#endregion
-//#region ../core/src/release/render-template/util/search.ts
+// ../core/src/release/render-template/util/search.ts
 function containsUppercaseCharacter(target) {
 	if (!target) return false;
 	return target.toLowerCase() !== target;
@@ -52000,8 +51927,7 @@ function buildReplaceStringForSpecificSpecialCharacter(matches, pattern, special
 	});
 	return replaceString.slice(0, -1);
 }
-//#endregion
-//#region ../core/src/release/render-template/util/replacePattern.ts
+// ../core/src/release/render-template/util/replacePattern.ts
 var StaticValueReplacePattern = class {
 	staticValue;
 	kind = 0;
@@ -52223,8 +52149,7 @@ function parseReplaceString(replaceString) {
 	}
 	return result.finalize();
 }
-//#endregion
-//#region ../core/src/release/render-template/apply-replacers.ts
+// ../core/src/release/render-template/apply-replacers.ts
 var searchCache = new WeakMap();
 var getSearch = (search) => {
 	const cached = searchCache.get(search);
@@ -52259,8 +52184,7 @@ var applyReplacers = (input, replacers = [], target = "global") => {
 	}
 	return input;
 };
-//#endregion
-//#region ../core/src/release/render-template/render-template.ts
+// ../core/src/release/render-template/render-template.ts
 var renderTemplate = (params) => {
 	const { template, object, replacers } = params;
 	return applyReplacers(template.replace(/(\$[A-Z_]+)/g, (_, k) => {
@@ -52277,8 +52201,7 @@ var renderTemplate = (params) => {
 		return result;
 	}), replacers);
 };
-//#endregion
-//#region ../core/src/release/group-changes.ts
+// ../core/src/release/group-changes.ts
 var groupChanges = (params) => {
 	const { pullRequests, rules = [], logger } = params;
 	if (rules.length === 0) return pullRequests.map((pullRequest) => ({
@@ -52356,8 +52279,7 @@ var groupTitle = (params) => {
 	logger?.debug(`Grouped ${pullRequests.map(({ number }) => `#${number}`).join(", ")} into '${title}'`);
 	return title;
 };
-//#endregion
-//#region ../core/src/release/generate-contributors-sentence.ts
+// ../core/src/release/generate-contributors-sentence.ts
 var botSuffix = "[bot]";
 var pullRequestKey$1 = (pullRequest) => `${pullRequest.baseRepository}#${pullRequest.number}`;
 var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
@@ -52385,10 +52307,13 @@ var generateAuthorsSentence = (params) => {
 	const pullRequestAuthorLogins = new Set();
 	for (const commit of commits) {
 		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey$1(pullRequest)))) continue;
-		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) if (author?.login) {
-			const login = normalizeLogin(author.login);
-			contributors.set(`login:${login}`, { login });
-		} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
+		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) {
+			if (params.excludeBots && (author?.type === "Bot" || author?.login?.endsWith(botSuffix))) continue;
+			if (author?.login) {
+				const login = normalizeLogin(author.login);
+				contributors.set(`login:${login}`, { login });
+			} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
+		}
 	}
 	for (const pullRequest of pullRequests) if (pullRequest.author) {
 		const isBot = pullRequest.author.type === "Bot";
@@ -52451,8 +52376,7 @@ var generateNewContributorsList = (params) => {
 		}
 	})).join("\n");
 };
-//#endregion
-//#region ../core/src/release/pull-request-to-string.ts
+// ../core/src/release/pull-request-to-string.ts
 var numbersSeparator = ", ";
 var pullRequestToString = (params) => params.changes.map((change) => {
 	const pullRequest = change.representative;
@@ -52474,6 +52398,7 @@ var pullRequestToString = (params) => params.changes.map((change) => {
 				commits: params.commits,
 				pullRequests: change.pullRequests,
 				serverUrl: params.serverUrl,
+				excludeBots: params.config["change-authors-exclude-bots"],
 				noAuthorsTemplate: renderTemplate({
 					template: authorTemplate,
 					object: {
@@ -52511,8 +52436,7 @@ var escapeChangeText = (params) => {
 		return `\\${match}`;
 	});
 };
-//#endregion
-//#region ../core/src/release/generate-changelog.ts
+// ../core/src/release/generate-changelog.ts
 var generateChangeLog = (params) => {
 	const { commits = [], logger = noopLogger, pullRequests, serverUrl, config } = params;
 	const [uncategorizedPullRequests, categorizedPullRequests] = categorizePullRequests({
@@ -52553,8 +52477,7 @@ var generateChangeLog = (params) => {
 	}
 	return changeLog.join("").trim();
 };
-//#endregion
-//#region ../core/src/release/version-descriptor.ts
+// ../core/src/release/version-descriptor.ts
 var VersionDescriptor = class VersionDescriptor {
 	version = null;
 	major = null;
@@ -52622,8 +52545,7 @@ var VersionDescriptor = class VersionDescriptor {
 		});
 	}
 };
-//#endregion
-//#region ../core/src/release/get-version-info.ts
+// ../core/src/release/get-version-info.ts
 var getVersionInfo = (params) => {
 	const { lastRelease, config, input, logger, versionKeyIncrement: _versionKeyIncrement } = params;
 	logger.info(`Resolving version info based on:`);
@@ -52688,8 +52610,7 @@ var getVersionInfo = (params) => {
 		$RESOLVED_VERSION_PRERELEASE: referenceVersion.incremented(_localIncrement).prerelease
 	};
 };
-//#endregion
-//#region ../core/src/release/last-release-not-found.ts
+// ../core/src/release/last-release-not-found.ts
 var lastReleaseNotFoundTemplate = `> [!WARNING]
 > Release Drafter could not find a previous **published release** for \`$OWNER/$REPOSITORY\`. This draft was created **without a comparison baseline**.
 
@@ -52699,8 +52620,7 @@ var lastReleaseNotFoundTemplate = `> [!WARNING]
 
 If you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).
 `;
-//#endregion
-//#region ../core/src/release/render-release-name.ts
+// ../core/src/release/render-release-name.ts
 var renderReleaseName = (params) => {
 	let name = structuredClone(params.inputName);
 	const { config, versionInfo, logger } = params;
@@ -52715,8 +52635,7 @@ var renderReleaseName = (params) => {
 	logger.debug(`name: ${name}`);
 	return name;
 };
-//#endregion
-//#region ../core/src/release/render-tag-name.ts
+// ../core/src/release/render-tag-name.ts
 var renderTagName = (params) => {
 	let tagName = structuredClone(params.inputTagName);
 	const { config, versionInfo, logger } = params;
@@ -52731,8 +52650,7 @@ var renderTagName = (params) => {
 	logger.debug(`tag: ${tagName}`);
 	return tagName;
 };
-//#endregion
-//#region ../core/src/release/resolve-version-increment.ts
+// ../core/src/release/resolve-version-increment.ts
 var priority = {
 	patch: 1,
 	minor: 2,
@@ -52760,8 +52678,7 @@ var resolveVersionKeyIncrement = (params) => {
 	logger.info(`Resolved version increment: ${versionKeyIncrement}`);
 	return versionKeyIncrement;
 };
-//#endregion
-//#region ../core/src/release/sort-pull-requests.ts
+// ../core/src/release/sort-pull-requests.ts
 var sortPullRequests = (params) => {
 	const { pullRequests, logger, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
 	const getSortField = sortBy === "title" ? getTitle : getMergedAt;
@@ -52794,8 +52711,7 @@ var sortDescending = (a, b) => {
 	if (a < b) return 1;
 	return 0;
 };
-//#endregion
-//#region ../core/src/release/build-release-payload.ts
+// ../core/src/release/build-release-payload.ts
 var buildReleasePayload = async (params) => {
 	const { adapter, commits, config, input, lastRelease, logger, newContributorLogins = new Set(), pullRequests, repository } = params;
 	logger.info("Building release payload and body...");
@@ -52900,8 +52816,7 @@ var buildReleasePayload = async (params) => {
 	logger.info(`  RESOLVED_VERSION_PRERELEASE: ${releasePayload.prereleaseVersion}`);
 	return releasePayload;
 };
-//#endregion
-//#region ../../node_modules/compare-versions/lib/esm/utils.js
+// ../../node_modules/compare-versions/lib/esm/utils.js
 var semver = /^[v^~<>=]*?(\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+))?(?:-([\da-z\-]+(?:\.[\da-z\-]+)*))?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?)?)?$/i;
 var validateAndParse = (version) => {
 	if (typeof version !== "string") throw new TypeError("Invalid argument expected string");
@@ -52930,8 +52845,7 @@ var compareSegments = (a, b) => {
 	}
 	return 0;
 };
-//#endregion
-//#region ../../node_modules/compare-versions/lib/esm/compareVersions.js
+// ../../node_modules/compare-versions/lib/esm/compareVersions.js
 var compareVersions = (v1, v2) => {
 	const n1 = validateAndParse(v1);
 	const n2 = validateAndParse(v2);
@@ -52943,8 +52857,7 @@ var compareVersions = (v1, v2) => {
 	else if (p1 || p2) return p1 ? -1 : 1;
 	return 0;
 };
-//#endregion
-//#region ../core/src/release-orchestration.ts
+// ../core/src/release-orchestration.ts
 var stripHeadRef = (commitish) => commitish.replace(/^refs\/heads\//, "");
 var sortReleases = (params) => {
 	const stripTagPrefix = (tagName) => params.tagPrefix && tagName.startsWith(params.tagPrefix) ? tagName.slice(params.tagPrefix.length) : tagName;
@@ -53121,8 +53034,7 @@ var draftRelease = async (params) => {
 		}))].sort()
 	};
 };
-//#endregion
-//#region ../rest-adapter/src/client.ts
+// ../rest-adapter/src/client.ts
 var defaultRestAdapterLimits = {
 	timeoutMs: 1e4,
 	maxResponseBytes: 2097152,
@@ -53318,8 +53230,7 @@ var mapConcurrent$2 = async (inputs, concurrency, callback) => {
 	await Promise.all(workers);
 	return outputs;
 };
-//#endregion
-//#region ../rest-adapter/src/index.ts
+// ../rest-adapter/src/index.ts
 var encoded = (value) => encodeURIComponent(String(value));
 var repositoryKey$1 = (repository) => `${repository.owner}/${repository.name}`;
 var pullRequestKey = (repository, number) => `${repositoryKey$1(repository)}#${number}`;
@@ -53336,7 +53247,8 @@ var normalizeCommit$2 = (commit) => {
 		...commit.commit?.message ? { message: commit.commit.message } : {},
 		...login || name ? { author: {
 			...name ? { name } : {},
-			...login ? { login } : {}
+			...login ? { login } : {},
+			...commit.author?.type ? { type: commit.author.type } : {}
 		} } : {}
 	};
 };
@@ -53663,8 +53575,7 @@ var createGiteaCompatibleRestProfile = (qualifiedRefMode) => ({
 		}
 	}
 });
-//#endregion
-//#region ../forgejo-adapter/src/index.ts
+// ../forgejo-adapter/src/index.ts
 var forgejoProfile = createGiteaCompatibleRestProfile("preserve");
 var ForgejoAdapter = class {
 	capabilities = forgejoProfile.capabilities;
@@ -53681,8 +53592,7 @@ var ForgejoAdapter = class {
 	getDefaultBranch = (repository) => this.adapter.getDefaultBranch(repository);
 	getRepositoryConfig = (options) => this.adapter.getRepositoryConfig(options);
 };
-//#endregion
-//#region ../gitea-adapter/src/index.ts
+// ../gitea-adapter/src/index.ts
 var giteaProfile = createGiteaCompatibleRestProfile("normalize");
 var GiteaAdapter = class {
 	capabilities = giteaProfile.capabilities;
@@ -53699,8 +53609,7 @@ var GiteaAdapter = class {
 	getDefaultBranch = (repository) => this.adapter.getDefaultBranch(repository);
 	getRepositoryConfig = (options) => this.adapter.getRepositoryConfig(options);
 };
-//#endregion
-//#region ../github-adapter/src/types/github.graphql.generated.ts
+// ../github-adapter/src/types/github.graphql.generated.ts
 var TypedDocumentString = class extends String {
 	__apiType;
 	value;
@@ -53894,8 +53803,7 @@ var ResolvePullRequestCommitishDocument = new TypedDocumentString(`
   }
 }
     `);
-//#endregion
-//#region ../github-adapter/src/utils/map-concurrent.ts
+// ../github-adapter/src/utils/map-concurrent.ts
 var mapConcurrent$1 = async (items, concurrency, task) => {
 	const results = new Array(items.length);
 	let next = 0;
@@ -53908,8 +53816,7 @@ var mapConcurrent$1 = async (items, concurrency, task) => {
 	await Promise.all(workers);
 	return results;
 };
-//#endregion
-//#region ../github-adapter/src/utils/normalize.ts
+// ../github-adapter/src/utils/normalize.ts
 var normalizeRelease$1 = (release) => ({
 	id: release.id,
 	tagName: release.tag_name,
@@ -53959,8 +53866,7 @@ var normalizeCommit$1 = (commit) => ({
 		baseRepository: pullRequest.baseRepository?.nameWithOwner ?? null
 	} : pullRequest) : commit.associatedPullRequests
 });
-//#endregion
-//#region ../github-adapter/src/utils/octokit.ts
+// ../github-adapter/src/utils/octokit.ts
 var GitHubOctokitClient = Octokit.plugin(restEndpointMethods, paginateRest, paginateGraphQL, retry);
 var deriveEndpoints = (options) => {
 	const serverUrl = (options.serverUrl ?? "https://github.com").replace(/\/$/, "");
@@ -53971,8 +53877,7 @@ var deriveEndpoints = (options) => {
 		graphqlUrl: (options.graphqlUrl ?? (githubDotCom ? "https://api.github.com/graphql" : `${serverUrl}/api/graphql`)).replace(/\/$/, "")
 	};
 };
-//#endregion
-//#region ../github-adapter/src/index.ts
+// ../github-adapter/src/index.ts
 var RELEASE_COUNT_LIMIT = 1e3;
 var RECENT_PULL_REQUEST_LOOKBACK = 5;
 var DEFAULT_CONCURRENCY = 5;
@@ -54249,7 +54154,7 @@ var GitHubAdapter = class {
 			body: payload.body,
 			draft: payload.draft,
 			prerelease: payload.prerelease,
-			make_latest: payload.prerelease ? "false" : payload.makeLatest ? "true" : "false",
+			make_latest: this.toMakeLatest(payload),
 			name: payload.name,
 			tag_name: payload.tag,
 			target_commitish: payload.targetCommitish
@@ -54264,11 +54169,16 @@ var GitHubAdapter = class {
 			body: payload.body,
 			draft: payload.draft,
 			prerelease: payload.prerelease,
-			make_latest: payload.prerelease ? "false" : payload.makeLatest ? "true" : "false",
+			make_latest: this.toMakeLatest(payload),
 			...payload.name || release.name ? { name: payload.name || release.name || void 0 } : {},
 			...payload.tag || release.tagName ? { tag_name: payload.tag || release.tagName } : {},
 			...payload.targetCommitish ? { target_commitish: payload.targetCommitish } : {}
 		})).data);
+	}
+	toMakeLatest(payload) {
+		if (payload.prerelease) return "false";
+		if (payload.makeLatest === "legacy") return "legacy";
+		return payload.makeLatest ? "true" : "false";
 	}
 	async getRepositoryConfig({ repository, path, ref }) {
 		const target = `${repository.owner}/${repository.name}:${path}${ref ? `@${ref}` : ""}`;
@@ -54300,8 +54210,7 @@ var GitHubAdapter = class {
 		throw new Error(`Fetched content is not a string. (target: ${target})`);
 	}
 };
-//#endregion
-//#region ../gitlab-adapter/src/gitlab-client.ts
+// ../gitlab-adapter/src/gitlab-client.ts
 var trimSlash = (value) => value.replace(/\/+$/, "");
 var snake = (value) => value.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 var decamelize = (value) => {
@@ -54567,8 +54476,7 @@ var GitLabClient = class {
 		return this.transport.response(budget, () => this.api.ProjectReleases.edit(project, tag, options));
 	}
 };
-//#endregion
-//#region ../gitlab-adapter/src/types.ts
+// ../gitlab-adapter/src/types.ts
 var defaultGitLabAdapterLimits = {
 	timeoutMs: 1e4,
 	maxResponseBytes: 2097152,
@@ -54585,8 +54493,7 @@ var defaultGitLabAdapterLimits = {
 	retryBaseDelayMs: 100,
 	maxRetryDelayMs: 5e3
 };
-//#endregion
-//#region ../gitlab-adapter/src/index.ts
+// ../gitlab-adapter/src/index.ts
 var repositoryKey = (request) => `${request.repository.owner}/${request.repository.name}`;
 var mergeRequestKey = (repository, iid) => `${repository}#${iid}`;
 var mapConcurrent = async (inputs, concurrency, callback) => {
@@ -54839,7 +54746,6 @@ var GitLabAdapter = class {
 		}, client.budget())).data);
 	}
 };
-//#endregion
 
 
 ;// CONCATENATED MODULE: external "node:fs/promises"
@@ -54847,7 +54753,7 @@ const external_node_fs_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequi
 ;// CONCATENATED MODULE: ./node_modules/release-drafter/dist/index.js
 
 
-//#region src/index.ts
+// src/index.ts
 var createForgeAdapter = (options) => {
 	const defaults = {
 		github: "https://github.com",
@@ -54911,7 +54817,6 @@ var dist_draftRelease = async (options) => {
 	};
 };
 var RELEASE_DRAFTER_PACKAGE_NAME = "release-drafter";
-//#endregion
 
 
 ;// CONCATENATED MODULE: external "node:os"

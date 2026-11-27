@@ -101,7 +101,7 @@ jobs:
               }
             }
 
-      - uses: release-drafter/release-drafter/autolabeler@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+      - uses: release-drafter/release-drafter/autolabeler@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0
         if: github.event_name == 'pull_request'
         with:
           token: ${{ secrets.github-token || secrets.GITHUB_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env] reusable workflow token override is intentional
